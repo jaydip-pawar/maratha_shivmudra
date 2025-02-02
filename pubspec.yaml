@@ -1,0 +1,59 @@
+name: maratha_shivmudra
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  cupertino_icons: ^1.0.8
+  otpless_flutter_web: ^1.2.6
+  lottie: ^3.2.0
+  dotlottie_loader: ^0.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+
+  assets:
+    - assets/images/bg.png
+    - assets/lotties/
+
+  fonts:
+    - family: NotoSerifDevanagari
+      fonts:
+        - asset: assets/fonts/NotoSerifDevanagari-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/static/NotoSerifDevanagari-Regular.ttf
+        - asset: assets/fonts/static/NotoSerifDevanagari-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/static/NotoSerifDevanagari-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/static/NotoSerifDevanagari-Light.ttf
+          weight: 300
+        - asset: assets/fonts/static/NotoSerifDevanagari-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/static/NotoSerifDevanagari-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/static/NotoSerifDevanagari-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/static/NotoSerifDevanagari-Black.ttf
+          weight: 900
+
+flutter_intl:
+  enabled: true
+  arb_dir: lib\l10n
+  output_dir: lib\l10n\generated

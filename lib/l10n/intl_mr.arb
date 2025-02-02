@@ -1,0 +1,13 @@
+{
+  "enter_your_mobile_number": "तुमचा मोबाइल नंबर प्रविष्ट करा.",
+  "we_will_sign_you_in_or_create_an_account_automatically": "आम्ही तुम्हाला लॉगिन करू किंवा नवीन खाते स्वयंचलितपणे तयार करू.",
+  "login": "लॉगिन करा",
+  "continue_text": "सुरू ठेवा",
+  "please_enter_a_phone_number": "कृपया फोन नंबर प्रविष्ट करा",
+  "phone_number_must_be_10_digits": "फोन नंबर 10 अंकी असणे आवश्यक आहे",
+  "please_enter_a_valid_indian_mobile_number": "कृपया वैध भारतीय मोबाइल नंबर प्रविष्ट करा",
+  "verify_your_account": "तुमचे खाते सत्यापित करा",
+  "enter_the_verification_code_sent_to_your_phone": "तुमच्या फोनवर पाठवलेला सत्यापन कोड प्रविष्ट करा",
+  "havent_received_the_code": "कोड मिळाला नाही का?",
+  "send_again": "पुन्हा पाठवा"
+}
