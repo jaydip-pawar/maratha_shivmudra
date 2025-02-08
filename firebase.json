@@ -1,0 +1,64 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "maratha-shivmudra",
+          "appId": "1:295460515512:android:70e0dca8c5b9e36d5ace4d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "maratha-shivmudra",
+          "configurations": {
+            "android": "1:295460515512:android:70e0dca8c5b9e36d5ace4d",
+            "ios": "1:295460515512:ios:626fd9baa560046e5ace4d",
+            "macos": "1:295460515512:ios:626fd9baa560046e5ace4d",
+            "web": "1:295460515512:web:1888f0c624f24e1f5ace4d",
+            "windows": "1:295460515512:web:b39d8b208acd6ba85ace4d"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "apphosting": {
+      "port": 5001,
+      "rootDirectory": "./"
+    },
+    "functions": {
+      "port": 5002
+    },
+    "firestore": {
+      "port": 5003
+    },
+    "database": {
+      "port": 5004
+    },
+    "hosting": {
+      "port": 5005
+    },
+    "pubsub": {
+      "port": 5006
+    },
+    "storage": {
+      "port": 5007
+    },
+    "eventarc": {
+      "port": 5008
+    },
+    "dataconnect": {
+      "port": 5009,
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    },
+    "tasks": {
+      "port": 5100
+    },
+    "ui": {
+      "enabled": true,
+      "port": 6000
+    },
+    "singleProjectMode": true
+  }
+}

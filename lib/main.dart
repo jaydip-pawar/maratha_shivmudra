@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/l10n/generated/l10n.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.dart';
+import 'package:maratha_shivmudra/firebase_options.dart';
 
 void main() async {
   LicenseRegistry.addLicense(() async* {
@@ -13,6 +15,9 @@ void main() async {
   });
 
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await initDependencyInjection();
   runApp(const MyApp());
 }

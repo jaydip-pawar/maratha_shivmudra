@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "295460515512",
+    "project_id": "maratha-shivmudra",
+    "storage_bucket": "maratha-shivmudra.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:295460515512:android:70e0dca8c5b9e36d5ace4d",
+        "android_client_info": {
+          "package_name": "com.example.maratha_shivmudra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFgVSdzURCo5vuxl9KmhQJeufJ9K4nF8E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
