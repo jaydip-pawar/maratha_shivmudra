@@ -4,9 +4,14 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 
 class PhoneNumberField extends StatelessWidget {
-  const PhoneNumberField({super.key, required this.controller});
+  const PhoneNumberField({
+    super.key,
+    required this.controller,
+    this.validator,
+  });
 
   final TextEditingController controller;
+  final String? Function(String?)? validator;
 
   InputBorder _inputBorder(Color color) {
     return UnderlineInputBorder(
@@ -34,6 +39,9 @@ class PhoneNumberField extends StatelessWidget {
         }
         if (!RegExp(r'^[6-9]\d{9}$').hasMatch(cleanNumber)) {
           return context.l10n.please_enter_a_valid_indian_mobile_number;
+        }
+        if (validator != null) {
+          return validator!(value);
         }
         return null;
       },

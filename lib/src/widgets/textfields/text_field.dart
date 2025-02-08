@@ -53,13 +53,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return child;
   }
 
-  OutlineInputBorder getOutlineInputBorder({bool isError = false}) {
+  OutlineInputBorder getOutlineInputBorder({bool hasError = false}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(4),
       gapPadding: 0,
       borderSide: BorderSide(
         width: .8,
-        color: isError ? AppColors.errorColor : AppColors.borderColor,
+        color: hasError ? AppColors.errorColor : AppColors.borderColor,
       ),
     );
   }
@@ -76,8 +76,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
             border: getOutlineInputBorder(),
             focusedBorder: getOutlineInputBorder(),
             enabledBorder: getOutlineInputBorder(),
-            errorBorder: getOutlineInputBorder(isError: true),
-            focusedErrorBorder: getOutlineInputBorder(isError: true),
+            errorBorder: getOutlineInputBorder(hasError: true),
+            focusedErrorBorder: getOutlineInputBorder(hasError: true),
             prefixIcon: widget.prefixIconData != null
                 ? Icon(
                     widget.prefixIconData,

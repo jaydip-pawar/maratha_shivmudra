@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 class CustomMaterialButton extends StatelessWidget {
   const CustomMaterialButton({
     super.key,
-    required this.text,
     required this.onTap,
+    this.text,
+    this.child,
     this.style,
-  });
+  }) : assert((text == null) != (child == null),
+            'Either text or child must be provided, but not both.');
 
-  final String text;
+  final String? text;
+  final Widget? child;
   final VoidCallback onTap;
   final TextStyle? style;
 
@@ -25,7 +28,7 @@ class CustomMaterialButton extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Text(text, style: style),
+        child: child ?? Text(text!, style: style),
       ),
     );
   }

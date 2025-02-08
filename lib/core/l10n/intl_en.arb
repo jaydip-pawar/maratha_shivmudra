@@ -12,5 +12,7 @@
   "send_again": "Send again",
   "account_verified": "Account verified!",
   "welcome": "Welcome to Maratha Shivmudra",
-  "go_to_dashboard": "Go to dashboard"
+  "go_to_dashboard": "Go to dashboard",
+  "something_went_wrong": "Something went wrong. Please try again later!",
+  "waiting_for_verification": "Waiting for verification"
 }

@@ -20,7 +20,7 @@ class _OtpFieldState extends State<OtpField>
   String _currentOtp = '';
   bool _isReadOnly = false;
   bool _isSuccess = false;
-  bool _isError = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class _OtpFieldState extends State<OtpField>
 
       setState(() {
         _isSuccess = isSuccess;
-        _isError = !_isSuccess;
+        _hasError = !_isSuccess;
         if (!_isSuccess) {
           _animationController.forward().then((_) {
             Future.delayed(const Duration(milliseconds: 300), _clearOtp);
@@ -93,7 +93,7 @@ class _OtpFieldState extends State<OtpField>
     setState(() {
       _isReadOnly = false;
       _isSuccess = false;
-      _isError = false;
+      _hasError = false;
     });
     _animationController.reset();
     FocusScope.of(context).requestFocus(_focusNodes[0]);
@@ -135,7 +135,7 @@ class _OtpFieldState extends State<OtpField>
               animation: _shakeAnimation,
               builder: (context, child) {
                 return Transform.translate(
-                  offset: Offset(_isError ? _shakeAnimation.value : 0, 0),
+                  offset: Offset(_hasError ? _shakeAnimation.value : 0, 0),
                   child: child,
                 );
               },
@@ -163,7 +163,7 @@ class _OtpFieldState extends State<OtpField>
                     fontWeight: FontWeight.bold,
                     color: _isSuccess
                         ? Colors.green.shade900
-                        : _isError
+                        : _hasError
                             ? Colors.red.shade900
                             : Colors.black,
                   ),
@@ -174,7 +174,7 @@ class _OtpFieldState extends State<OtpField>
                       borderSide: BorderSide(
                         color: _isSuccess
                             ? Colors.green
-                            : _isError
+                            : _hasError
                                 ? Colors.red
                                 : Colors.grey,
                         width: 1.5,
@@ -185,7 +185,7 @@ class _OtpFieldState extends State<OtpField>
                       borderSide: BorderSide(
                         color: _isSuccess
                             ? Colors.green
-                            : _isError
+                            : _hasError
                                 ? Colors.red
                                 : Colors.black87,
                         width: 1.5,
@@ -194,7 +194,7 @@ class _OtpFieldState extends State<OtpField>
                     filled: true,
                     fillColor: _isSuccess
                         ? Colors.green.withValues(alpha: 0.2)
-                        : _isError
+                        : _hasError
                             ? Colors.red.withValues(alpha: 0.2)
                             : Colors.white,
                   ),

@@ -19,6 +19,9 @@ class AuthDialog {
             insetPadding:
                 context.isMobile ? EdgeInsets.symmetric(horizontal: 16) : null,
             child: BlocBuilder<AuthBloc, AuthState>(
+              buildWhen: (previous, current) {
+                return previous.runtimeType != current.runtimeType;
+              },
               builder: (context, state) {
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 600),

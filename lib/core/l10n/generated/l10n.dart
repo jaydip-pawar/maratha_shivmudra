@@ -18,17 +18,20 @@ class S {
   static S? _current;
 
   static S get current {
-    assert(_current != null,
-        'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.');
+    assert(
+      _current != null,
+      'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.',
+    );
     return _current!;
   }
 
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final name = (locale.countryCode?.isEmpty ?? false)
-        ? locale.languageCode
-        : locale.toString();
+    final name =
+        (locale.countryCode?.isEmpty ?? false)
+            ? locale.languageCode
+            : locale.toString();
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -41,8 +44,10 @@ class S {
 
   static S of(BuildContext context) {
     final instance = S.maybeOf(context);
-    assert(instance != null,
-        'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?');
+    assert(
+      instance != null,
+      'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?',
+    );
     return instance!;
   }
 
@@ -72,22 +77,12 @@ class S {
 
   /// `Login`
   String get login {
-    return Intl.message(
-      'Login',
-      name: 'login',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Login', name: 'login', desc: '', args: []);
   }
 
   /// `Continue`
   String get continue_text {
-    return Intl.message(
-      'Continue',
-      name: 'continue_text',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Continue', name: 'continue_text', desc: '', args: []);
   }
 
   /// `Please enter a phone number`
@@ -152,12 +147,7 @@ class S {
 
   /// `Send again`
   String get send_again {
-    return Intl.message(
-      'Send again',
-      name: 'send_again',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Send again', name: 'send_again', desc: '', args: []);
   }
 
   /// `Account verified!`
@@ -185,6 +175,26 @@ class S {
     return Intl.message(
       'Go to dashboard',
       name: 'go_to_dashboard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Something went wrong. Please try again later!`
+  String get something_went_wrong {
+    return Intl.message(
+      'Something went wrong. Please try again later!',
+      name: 'something_went_wrong',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Waiting for verification`
+  String get waiting_for_verification {
+    return Intl.message(
+      'Waiting for verification',
+      name: 'waiting_for_verification',
       desc: '',
       args: [],
     );

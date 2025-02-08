@@ -2,13 +2,43 @@ import 'package:dotlottie_loader/dotlottie_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/core/utils/responsive.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
+import 'package:maratha_shivmudra/src/widgets/animation/loading_text.dart';
 import 'package:maratha_shivmudra/src/widgets/textfields/otp_field.dart';
 
 class OtpVerificationView extends StatelessWidget {
   const OtpVerificationView({super.key});
+
+  Widget _buildLoaderErrorWidget(
+    BuildContext context, {
+    required Widget child,
+    required dynamic state,
+  }) {
+    if (state.hasError || state.isLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (state.hasError) ...[
+            16.h,
+            Text(
+              context.l10n.something_went_wrong,
+              style: TextStyle(
+                color: AppColors.errorColor,
+              ),
+            ),
+          ] else ...[
+            16.h,
+            AnimatedLoadingText(text: context.l10n.waiting_for_verification),
+          ],
+          child,
+        ],
+      );
+    }
+    return child;
+  }
 
   Widget _buildOtpFieldSection(BuildContext context) {
     final isMobile = context.isMobile || context.isMobileLarge;
@@ -37,9 +67,27 @@ class OtpVerificationView extends StatelessWidget {
             ),
             24.h,
             OtpField(
-              onDone: (otp) => bloc.verifyOtp(otp),
+              onDone: (otp) {
+                bloc.add(ApiStatusEvent(
+                  isLoading: true,
+                  hasError: false,
+                ));
+                return bloc.verifyOtp(otp);
+              },
             ),
-            24.h,
+            BlocBuilder<AuthBloc, AuthState>(
+              bloc: bloc,
+              builder: (context, blocState) {
+                final state = blocState as dynamic;
+                print(state.hasError);
+                print(state.isLoading);
+                return _buildLoaderErrorWidget(
+                  context,
+                  state: state,
+                  child: 24.h,
+                );
+              },
+            ),
             Wrap(
               spacing: 8,
               children: [

@@ -18,7 +18,7 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
-  intl: any
+  intl_utils: any
 
   cupertino_icons: ^1.0.8
   otpless_flutter_web:

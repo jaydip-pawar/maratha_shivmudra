@@ -22,33 +22,48 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
-        "account_verified":
-            MessageLookupByLibrary.simpleMessage("Account verified!"),
-        "continue_text": MessageLookupByLibrary.simpleMessage("Continue"),
-        "enter_the_verification_code_sent_to_your_phone":
-            MessageLookupByLibrary.simpleMessage(
-                "Enter the verification code sent to your phone"),
-        "enter_your_mobile_number":
-            MessageLookupByLibrary.simpleMessage("Enter your mobile number."),
-        "go_to_dashboard":
-            MessageLookupByLibrary.simpleMessage("Go to dashboard"),
-        "havent_received_the_code":
-            MessageLookupByLibrary.simpleMessage("Haven\'t received the code?"),
-        "login": MessageLookupByLibrary.simpleMessage("Login"),
-        "phone_number_must_be_10_digits": MessageLookupByLibrary.simpleMessage(
-            "Phone number must be 10 digits"),
-        "please_enter_a_phone_number":
-            MessageLookupByLibrary.simpleMessage("Please enter a phone number"),
-        "please_enter_a_valid_indian_mobile_number":
-            MessageLookupByLibrary.simpleMessage(
-                "Please enter a valid Indian mobile number"),
-        "send_again": MessageLookupByLibrary.simpleMessage("Send again"),
-        "verify_your_account":
-            MessageLookupByLibrary.simpleMessage("Verify your account"),
-        "we_will_sign_you_in_or_create_an_account_automatically":
-            MessageLookupByLibrary.simpleMessage(
-                "We\'ll sign you in or create an account automatically."),
-        "welcome":
-            MessageLookupByLibrary.simpleMessage("Welcome to Maratha Shivmudra")
-      };
+    "account_verified": MessageLookupByLibrary.simpleMessage(
+      "Account verified!",
+    ),
+    "continue_text": MessageLookupByLibrary.simpleMessage("Continue"),
+    "enter_the_verification_code_sent_to_your_phone":
+        MessageLookupByLibrary.simpleMessage(
+          "Enter the verification code sent to your phone",
+        ),
+    "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
+      "Enter your mobile number.",
+    ),
+    "go_to_dashboard": MessageLookupByLibrary.simpleMessage("Go to dashboard"),
+    "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
+      "Haven\'t received the code?",
+    ),
+    "login": MessageLookupByLibrary.simpleMessage("Login"),
+    "phone_number_must_be_10_digits": MessageLookupByLibrary.simpleMessage(
+      "Phone number must be 10 digits",
+    ),
+    "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
+      "Please enter a phone number",
+    ),
+    "please_enter_a_valid_indian_mobile_number":
+        MessageLookupByLibrary.simpleMessage(
+          "Please enter a valid Indian mobile number",
+        ),
+    "send_again": MessageLookupByLibrary.simpleMessage("Send again"),
+    "something_went_wrong": MessageLookupByLibrary.simpleMessage(
+      "Something went wrong. Please try again later!",
+    ),
+    "verify_your_account": MessageLookupByLibrary.simpleMessage(
+      "Verify your account",
+    ),
+    "waiting_for_verification": MessageLookupByLibrary.simpleMessage(
+      "Waiting for verification",
+    ),
+    "we_will_sign_you_in_or_create_an_account_automatically":
+        MessageLookupByLibrary.simpleMessage(
+          "We\'ll sign you in or create an account automatically.",
+        ),
+    "welcome": MessageLookupByLibrary.simpleMessage(
+      "Welcome to Maratha Shivmudra",
+    ),
+  };
 }

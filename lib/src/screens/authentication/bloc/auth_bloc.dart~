@@ -14,7 +14,7 @@ part 'auth_state.dart';
 
 @injectable
 class AuthBloc extends BlocBase<AuthEvent, AuthState> {
-  AuthBloc() : super(AuthInitialState());
+  AuthBloc() : super(AuthVerificationState());
 
   late final GlobalKey<FormState> formKey;
   late final TextEditingController phoneController;
