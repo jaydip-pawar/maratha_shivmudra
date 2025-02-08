@@ -20,6 +20,9 @@ class AuthInitialState extends AuthState {
       hasError: hasError ?? this.hasError,
     );
   }
+
+  @override
+  List<Object> get props => [isLoading, hasError];
 }
 
 class AuthVerificationState extends AuthState {
@@ -40,6 +43,9 @@ class AuthVerificationState extends AuthState {
       hasError: hasError ?? this.hasError,
     );
   }
+
+  @override
+  List<Object> get props => [isLoading, hasError];
 }
 
 class AuthSuccessState extends AuthState {}

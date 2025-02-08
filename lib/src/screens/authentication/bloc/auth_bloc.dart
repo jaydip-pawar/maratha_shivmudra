@@ -36,10 +36,14 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
     on<OtpVerifiedEvent>((event, emit) => emit(AuthSuccessState()));
 
     on<ApiStatusEvent>((event, emit) {
-      print('state:::: $state');
-      if (state is AuthInitialState || state is AuthVerificationState) {
-        print('Emitted');
-        emit((state as dynamic).copyWith(
+      if (state is AuthInitialState) {
+        emit((state as AuthInitialState).copyWith(
+          isLoading: event.isLoading,
+          hasError: event.hasError,
+        ));
+      } else if (state is AuthVerificationState) {
+        print('isLoading: ${event.isLoading}, hasError: ${event.hasError}');
+        emit((state as AuthVerificationState).copyWith(
           isLoading: event.isLoading,
           hasError: event.hasError,
         ));
@@ -48,7 +52,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
   }
 
   Future<bool> _onHeadlessResult(dynamic result) async {
-    print(result);
+    debugPrint(result);
     final json = jsonDecode(result);
 
     if (json['statusCode'] == 200) {
@@ -57,32 +61,25 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
           final model = OLInitiateModel.fromJson(json);
           if (model.success) {
             add(OtpInitiatedEvent());
-            add(ApiStatusEvent(isLoading: false, hasError: false));
             return true;
           }
-          add(ApiStatusEvent(isLoading: false, hasError: true));
           return false;
         case 'VERIFY':
           final model = OLInitiateModel.fromJson(json);
           if (model.success) {
-            // add(OtpVerifiedEvent());
-            add(ApiStatusEvent(isLoading: false, hasError: false));
+            add(OtpVerifiedEvent());
             return true;
           }
-          add(ApiStatusEvent(isLoading: false, hasError: true));
           return false;
         case 'ONETAP':
           final model = OLVerifiedModel.fromJson(json);
           if (model.success) {
-            add(ApiStatusEvent(isLoading: false, hasError: false));
             add(OtpVerifiedEvent());
             return true;
           }
-          add(ApiStatusEvent(isLoading: false, hasError: true));
           return false;
         case 'OTP_AUTO_READ':
           add(OtpVerifiedEvent());
-          add(ApiStatusEvent(isLoading: false, hasError: false));
           return true;
         default:
           return false;
@@ -103,6 +100,11 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
 
     _otpLess.initiatePhoneAuth((result) async {
       final isSuccess = await _onHeadlessResult(result);
+      if (isSuccess) {
+        add(ApiStatusEvent(isLoading: false, hasError: false));
+      } else {
+        add(ApiStatusEvent(isLoading: false, hasError: true));
+      }
       completer.complete(isSuccess);
     }, arg);
 
@@ -124,7 +126,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
       if (isSuccess) {
         add(ApiStatusEvent(isLoading: false, hasError: false));
       } else {
-        add(ApiStatusEvent(isLoading: false, hasError: false));
+        add(ApiStatusEvent(isLoading: false, hasError: true));
       }
       completer.complete(isSuccess);
     }, arg);

@@ -79,8 +79,6 @@ class OtpVerificationView extends StatelessWidget {
               bloc: bloc,
               builder: (context, blocState) {
                 final state = blocState as dynamic;
-                print(state.hasError);
-                print(state.isLoading);
                 return _buildLoaderErrorWidget(
                   context,
                   state: state,
