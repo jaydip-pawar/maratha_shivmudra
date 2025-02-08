@@ -42,7 +42,6 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
           hasError: event.hasError,
         ));
       } else if (state is AuthVerificationState) {
-        print('isLoading: ${event.isLoading}, hasError: ${event.hasError}');
         emit((state as AuthVerificationState).copyWith(
           isLoading: event.isLoading,
           hasError: event.hasError,
