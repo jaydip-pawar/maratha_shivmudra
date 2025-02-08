@@ -13,11 +13,11 @@ class AuthDialog {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return BlocProvider(
-          create: (context) => getIt<AuthBloc>(),
-          child: Dialog(
-            insetPadding:
-                context.isMobile ? EdgeInsets.symmetric(horizontal: 16) : null,
+        return Dialog(
+          insetPadding:
+              context.isMobile ? EdgeInsets.symmetric(horizontal: 16) : null,
+          child: BlocProvider(
+            create: (context) => getIt<AuthBloc>(),
             child: BlocBuilder<AuthBloc, AuthState>(
               buildWhen: (previous, current) {
                 return previous.runtimeType != current.runtimeType;
@@ -34,29 +34,34 @@ class AuthDialog {
                       child: child,
                     );
                   },
-                  child: Container(
-                    key: ValueKey(state.runtimeType),
-                    constraints: BoxConstraints(maxWidth: 700, maxHeight: 400),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(0x80),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                    child: Container(
+                      key: ValueKey(state.runtimeType),
+                      constraints:
+                          BoxConstraints(maxWidth: 700, maxHeight: 400),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(0x80),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: () {
+                        if (state is AuthVerificationState) {
+                          return OtpVerificationView();
+                        } else if (state is AuthSuccessState) {
+                          return SuccessView();
+                        } else {
+                          return LoginView();
+                        }
+                      }(),
                     ),
-                    child: () {
-                      if (state is AuthVerificationState) {
-                        return OtpVerificationView();
-                      } else if (state is AuthSuccessState) {
-                        return SuccessView();
-                      } else {
-                        return LoginView();
-                      }
-                    }(),
                   ),
                 );
               },

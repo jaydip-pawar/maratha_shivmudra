@@ -127,6 +127,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
       } else {
         add(ApiStatusEvent(isLoading: false, hasError: true));
       }
+      if (completer.isCompleted) return;
       completer.complete(isSuccess);
     }, arg);
 
