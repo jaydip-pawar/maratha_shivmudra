@@ -1,10 +1,41 @@
 import 'package:auto_route/annotations.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/di/di.dart';
+import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/auth_dialog.dart';
 
 @RoutePage()
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
+  @override
+  void initState() {
+    super.initState();
+    _checkReferralFlow(context);
+  }
+
+  Future<void> _checkReferralFlow(BuildContext context) async {
+    final ss = getIt<SecureStorage>();
+    final isLoggedIn = await ss.isUserLoggedIn();
+
+    final uri = Uri.base;
+    if (uri.queryParameters.containsKey('ref')) {
+      String? referralId = uri.queryParameters['ref'];
+      debugPrint('Referral ID: $referralId');
+
+      if (!isLoggedIn) {
+        if (context.mounted) {
+          AuthDialog.show(context);
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

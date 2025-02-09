@@ -68,10 +68,7 @@ class OtpVerificationView extends StatelessWidget {
             24.h,
             OtpField(
               onDone: (otp) {
-                bloc.add(ApiStatusEvent(
-                  isLoading: true,
-                  hasError: false,
-                ));
+                bloc.add(ApiStatusEvent(isLoading: true, hasError: false));
                 return bloc.verifyOtp(otp);
               },
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/l10n/generated/l10n.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.dart';
@@ -13,6 +14,7 @@ void main() async {
     final license = await rootBundle.loadString('assets/fonts/OFL.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
   });
+  setUrlStrategy(PathUrlStrategy());
 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(

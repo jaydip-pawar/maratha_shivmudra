@@ -7,6 +7,7 @@ export 'src/model/error/network_error.dart';
 export 'src/model/headless/initiate/ol_initiate_model.dart';
 export 'src/model/headless/verified/ol_verified_model.dart';
 export 'src/repository/article_repository/article_repository.dart';
+export 'src/repository/secure_storage/secure_storage.dart';
 export 'src/usecase/base/base_usecase.dart';
 export 'src/usecase/base/params.dart';
 export 'src/usecase/get_article/get_article.dart';

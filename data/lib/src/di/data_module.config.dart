@@ -1,3 +1,4 @@
+// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -12,6 +13,8 @@ import 'package:data/src/di/network_module.dart' as _i377;
 import 'package:data/src/network/retrofit_service.dart' as _i1066;
 import 'package:data/src/repository/article_repository/article_repository_impl.dart'
     as _i503;
+import 'package:data/src/repository/secure_storage/secure_storage_impl.dart'
+    as _i746;
 import 'package:data/src/source/article_data_source/article_ds.dart' as _i492;
 import 'package:data/src/source/article_data_source/article_ds_impl.dart'
     as _i634;
@@ -37,6 +40,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i528.PrettyDioLogger>(() => networkModule.logger());
     gh.singleton<_i519.ApiInterceptor>(
         () => networkModule.provideApiInterceptor());
+    gh.factory<_i494.SecureStorage>(() => _i746.SecureStorageImpl());
     gh.singleton<List<_i361.Interceptor>>(
         () => networkModule.providerInterceptors(gh<_i519.ApiInterceptor>()));
     gh.lazySingleton<_i361.Dio>(

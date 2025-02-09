@@ -1,8 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/src/widgets/responsive_rc.dart';
 import 'package:maratha_shivmudra/src/widgets/section.dart';
 import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
 
+@RoutePage()
 class FormScreen extends StatelessWidget {
   const FormScreen({super.key});
 

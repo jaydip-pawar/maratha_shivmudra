@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:maratha_shivmudra/core/base/bloc/bloc_base/bloc_base.dart';
 import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
+import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:otpless_flutter_web/otpless_flutter_web.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 @injectable
-class AuthBloc extends BlocBase<AuthEvent, AuthState> {
+class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   AuthBloc() : super(AuthInitialState());
 
   late final GlobalKey<FormState> formKey;
@@ -50,6 +52,15 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
     });
   }
 
+  Future<void> setUserData() async {
+    final db = FirebaseFirestore.instance;
+    final phoneNumber = getData<String>('mobileNumber');
+
+    await db.collection(phoneNumber!).doc('personal_info').set({
+      'mobile_no': phoneNumber,
+    }, SetOptions(merge: true));
+  }
+
   Future<bool> _onHeadlessResult(dynamic result) async {
     debugPrint(result);
     final json = jsonDecode(result);
@@ -73,6 +84,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
         case 'ONETAP':
           final model = OLVerifiedModel.fromJson(json);
           if (model.success) {
+            setUserData();
             add(OtpVerifiedEvent());
             return true;
           }
@@ -90,6 +102,8 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
 
   Future<bool> initiateOtp() async {
     final phoneNumber = phoneController.text.replaceAll(' ', '');
+
+    setData<String>('mobileNumber', phoneNumber);
     final completer = Completer<bool>();
 
     Map<String, dynamic> arg = {
@@ -111,7 +125,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> {
   }
 
   Future<bool> verifyOtp(String otp) async {
-    final phoneNumber = phoneController.text.replaceAll(' ', '');
+    final phoneNumber = getData<String>('mobileNumber');
     final completer = Completer<bool>();
 
     Map<String, dynamic> arg = {
