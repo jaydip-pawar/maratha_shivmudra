@@ -5,7 +5,13 @@ abstract class SecureStorage {
 
   Future<void> delete({required String key});
 
+  Future<void> setLoginFlag(bool value);
+
   Future<bool> isUserLoggedIn();
+
+  Future<String> getMobileNumber();
+
+  Future<void> setMobileNumber(String mobileNumber);
 
   Future<void> clear();
 }

@@ -36,6 +36,19 @@ class SecureStorageImpl implements SecureStorage {
   }
 
   @override
+  Future<void> setLoginFlag(bool value) async {
+    if (kIsWeb) {
+      await write(key: SecuredStorageConstants.login, value: value.toString());
+    }
+    if (Platform.isIOS) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(SecuredStorageConstants.sharedLogin, value);
+    } else {
+      await write(key: SecuredStorageConstants.login, value: value.toString());
+    }
+  }
+
+  @override
   Future<bool> isUserLoggedIn() async {
     return _getAndClear();
   }
@@ -62,5 +75,15 @@ class SecureStorageImpl implements SecureStorage {
     final prefs = await SharedPreferences.getInstance();
     _flutterSecureStorage.deleteAll();
     prefs.clear();
+  }
+
+  @override
+  Future<String> getMobileNumber() async {
+    return await read(key: SecuredStorageConstants.mobileNumber);
+  }
+
+  @override
+  Future<void> setMobileNumber(String mobileNumber) async {
+    await write(key: SecuredStorageConstants.mobileNumber, value: mobileNumber);
   }
 }

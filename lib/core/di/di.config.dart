@@ -34,7 +34,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i218.AuthBloc>(() => _i218.AuthBloc());
     gh.factory<_i669.LandingBloc>(() => _i669.LandingBloc());
-    gh.factory<_i457.FormBloc>(() => _i457.FormBloc());
+    gh.factory<_i457.MemberFormBloc>(() => _i457.MemberFormBloc());
     gh.factory<_i316.HomeBloc>(
         () => _i316.HomeBloc(gh<_i494.GetArticleUseCase>()));
     return this;

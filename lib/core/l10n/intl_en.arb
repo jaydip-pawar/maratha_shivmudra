@@ -29,5 +29,17 @@
   "mobile_no": "Mobile No",
   "email": "Email",
   "member_form": "Member form",
-  "submit": "Submit"
+  "submit": "Submit",
+  "please_enter_your_first_name": "Please enter your first name.",
+  "please_enter_your_last_name": "Please enter your last name.",
+  "please_enter_your_date_of_birth": "Please enter your date of birth.",
+  "please_enter_your_address": "Please enter your address.",
+  "please_enter_your_room_number": "Please enter your room number.",
+  "please_enter_your_city": "Please enter your city.",
+  "please_enter_your_state": "Please enter your state.",
+  "please_enter_your_pincode": "Please enter your pincode.",
+  "please_enter_your_country": "Please enter your country.",
+  "please_enter_your_mobile_number": "Please enter your mobile number.",
+  "please_enter_your_email": "Please enter your email.",
+  "please_enter_a_valid_email": "Please enter a valid email."
 }

@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 import 'package:maratha_shivmudra/core/base/bloc/bloc_base/bloc_base.dart';
 import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
+import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:otpless_flutter_web/otpless_flutter_web.dart';
 
@@ -35,20 +36,25 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   void mapEventToState() {
     on<OtpInitiatedEvent>((event, emit) => emit(AuthVerificationState()));
 
-    on<OtpVerifiedEvent>((event, emit) =>
-        emit(AuthSuccessState(isFormFilled: event.isFormFilled)));
+    on<OtpVerifiedEvent>(
+      (event, emit) => emit(AuthSuccessState(isFormFilled: event.isFormFilled)),
+    );
 
     on<ApiStatusEvent>((event, emit) {
       if (state is AuthInitialState) {
-        emit((state as AuthInitialState).copyWith(
-          isLoading: event.isLoading,
-          hasError: event.hasError,
-        ));
+        emit(
+          (state as AuthInitialState).copyWith(
+            isLoading: event.isLoading,
+            hasError: event.hasError,
+          ),
+        );
       } else if (state is AuthVerificationState) {
-        emit((state as AuthVerificationState).copyWith(
-          isLoading: event.isLoading,
-          hasError: event.hasError,
-        ));
+        emit(
+          (state as AuthVerificationState).copyWith(
+            isLoading: event.isLoading,
+            hasError: event.hasError,
+          ),
+        );
       }
     });
   }
@@ -63,10 +69,13 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     final docSnapshot = await docRef.get();
 
     if (!docSnapshot.exists) {
-      await docRef.set({
-        'mobile_no': phoneNumber,
-        'referral_id': referralId ?? 'NONE',
-      }, SetOptions(merge: true));
+      await docRef.set(
+        {
+          'mobile_no': phoneNumber,
+          'referral_id': referralId ?? 'NONE',
+        },
+        SetOptions(merge: true),
+      );
       add(OtpVerifiedEvent(isFormFilled: false));
     } else {
       final docRef = db.collection(phoneNumber).doc('form_info');
@@ -74,6 +83,8 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
       final docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {
+        final ss = getIt<SecureStorage>();
+        ss.setLoginFlag(true);
         add(OtpVerifiedEvent(isFormFilled: true));
       } else {
         add(OtpVerifiedEvent(isFormFilled: false));
@@ -128,15 +139,18 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
       "countryCode": "91",
     };
 
-    _otpLess.initiatePhoneAuth((result) async {
-      final isSuccess = await _onHeadlessResult(result);
-      if (isSuccess) {
-        add(ApiStatusEvent(isLoading: false, hasError: false));
-      } else {
-        add(ApiStatusEvent(isLoading: false, hasError: true));
-      }
-      completer.complete(isSuccess);
-    }, arg);
+    _otpLess.initiatePhoneAuth(
+      (result) async {
+        final isSuccess = await _onHeadlessResult(result);
+        if (isSuccess) {
+          add(ApiStatusEvent(isLoading: false, hasError: false));
+        } else {
+          add(ApiStatusEvent(isLoading: false, hasError: true));
+        }
+        completer.complete(isSuccess);
+      },
+      arg,
+    );
 
     return completer.future;
   }
@@ -151,16 +165,19 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
       "otp": otp,
     };
 
-    _otpLess.verifyAuth((result) async {
-      final isSuccess = await _onHeadlessResult(result);
-      if (isSuccess) {
-        add(ApiStatusEvent(isLoading: false, hasError: false));
-      } else {
-        add(ApiStatusEvent(isLoading: false, hasError: true));
-      }
-      if (completer.isCompleted) return;
-      completer.complete(isSuccess);
-    }, arg);
+    _otpLess.verifyAuth(
+      (result) async {
+        final isSuccess = await _onHeadlessResult(result);
+        if (isSuccess) {
+          add(ApiStatusEvent(isLoading: false, hasError: false));
+        } else {
+          add(ApiStatusEvent(isLoading: false, hasError: true));
+        }
+        if (completer.isCompleted) return;
+        completer.complete(isSuccess);
+      },
+      arg,
+    );
 
     return completer.future;
   }

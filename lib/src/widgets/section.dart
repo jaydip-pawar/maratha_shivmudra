@@ -8,12 +8,18 @@ class Section extends StatelessWidget {
     this.child,
     this.spacing,
     this.children,
-  })  : assert(!(child != null && children != null),
-            'You can provide either a child or children, but not both.'),
-        assert(!(spacing != null && children == null),
-            'Spacing must be null if children is not provided.'),
-        assert(!(child == null && children == null),
-            'You must provide either a child or children.');
+  })  : assert(
+          !(child != null && children != null),
+          'You can provide either a child or children, but not both.',
+        ),
+        assert(
+          !(spacing != null && children == null),
+          'Spacing must be null if children is not provided.',
+        ),
+        assert(
+          !(child == null && children == null),
+          'You must provide either a child or children.',
+        );
 
   final Widget? child;
   final double? spacing;
@@ -31,6 +37,7 @@ class Section extends StatelessWidget {
       child: child != null
           ? child!
           : Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               spacing: spacing ?? 0,
               children: children!,
             ),

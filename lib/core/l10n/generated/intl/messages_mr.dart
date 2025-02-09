@@ -58,10 +58,46 @@ class MessageLookup extends MessageLookupByLibrary {
     "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
       "कृपया फोन नंबर प्रविष्ट करा",
     ),
+    "please_enter_a_valid_email": MessageLookupByLibrary.simpleMessage(
+      "कृपया वैध ईमेल प्रविष्ट करा.",
+    ),
     "please_enter_a_valid_indian_mobile_number":
         MessageLookupByLibrary.simpleMessage(
           "कृपया वैध भारतीय मोबाइल नंबर प्रविष्ट करा",
         ),
+    "please_enter_your_address": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपला पत्ता टाका.",
+    ),
+    "please_enter_your_city": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपले शहर टाका.",
+    ),
+    "please_enter_your_country": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपले देशाचे नाव टाका.",
+    ),
+    "please_enter_your_date_of_birth": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपली जन्मतारीख टाका.",
+    ),
+    "please_enter_your_email": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपला ईमेल टाका.",
+    ),
+    "please_enter_your_first_name": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपले पहिले नाव टाका.",
+    ),
+    "please_enter_your_last_name": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपले आडनाव टाका.",
+    ),
+    "please_enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपला मोबाईल क्रमांक टाका.",
+    ),
+    "please_enter_your_pincode": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपला पिनकोड टाका.",
+    ),
+    "please_enter_your_room_number": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपला खोली क्रमांक टाका.",
+    ),
+    "please_enter_your_state": MessageLookupByLibrary.simpleMessage(
+      "कृपया आपले राज्य टाका.",
+    ),
     "room_no": MessageLookupByLibrary.simpleMessage("रूम नं व सोसायटी नाव"),
     "send_again": MessageLookupByLibrary.simpleMessage("पुन्हा पाठवा"),
     "something_went_wrong": MessageLookupByLibrary.simpleMessage(

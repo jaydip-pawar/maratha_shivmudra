@@ -29,5 +29,17 @@
   "mobile_no": "मोबाईल नंबर",
   "email": "ईमेल",
   "member_form": "सभासद फॉर्म",
-  "submit": "सबमिट करा"
+  "submit": "सबमिट करा",
+  "please_enter_your_first_name": "कृपया आपले पहिले नाव टाका.",
+  "please_enter_your_last_name": "कृपया आपले आडनाव टाका.",
+  "please_enter_your_date_of_birth": "कृपया आपली जन्मतारीख टाका.",
+  "please_enter_your_address": "कृपया आपला पत्ता टाका.",
+  "please_enter_your_room_number": "कृपया आपला खोली क्रमांक टाका.",
+  "please_enter_your_city": "कृपया आपले शहर टाका.",
+  "please_enter_your_state": "कृपया आपले राज्य टाका.",
+  "please_enter_your_pincode": "कृपया आपला पिनकोड टाका.",
+  "please_enter_your_country": "कृपया आपले देशाचे नाव टाका.",
+  "please_enter_your_mobile_number": "कृपया आपला मोबाईल क्रमांक टाका.",
+  "please_enter_your_email": "कृपया आपला ईमेल टाका.",
+  "please_enter_a_valid_email": "कृपया वैध ईमेल प्रविष्ट करा."
 }

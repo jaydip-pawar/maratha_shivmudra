@@ -1,12 +1,12 @@
 part of 'form_bloc.dart';
 
-class FormState extends BaseState {
+class MemberFormState extends BaseState {
   final List<ArticleModel> list;
 
-  FormState({this.list = const <ArticleModel>[]});
+  MemberFormState({this.list = const <ArticleModel>[]});
 
-  FormState copyWith({List<ArticleModel>? list}) {
-    return FormState(
+  MemberFormState copyWith({List<ArticleModel>? list}) {
+    return MemberFormState(
       list: list ?? this.list,
     );
   }

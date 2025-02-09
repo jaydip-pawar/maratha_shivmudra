@@ -58,10 +58,46 @@ class MessageLookup extends MessageLookupByLibrary {
     "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
       "Please enter a phone number",
     ),
+    "please_enter_a_valid_email": MessageLookupByLibrary.simpleMessage(
+      "Please enter a valid email.",
+    ),
     "please_enter_a_valid_indian_mobile_number":
         MessageLookupByLibrary.simpleMessage(
           "Please enter a valid Indian mobile number",
         ),
+    "please_enter_your_address": MessageLookupByLibrary.simpleMessage(
+      "Please enter your address.",
+    ),
+    "please_enter_your_city": MessageLookupByLibrary.simpleMessage(
+      "Please enter your city.",
+    ),
+    "please_enter_your_country": MessageLookupByLibrary.simpleMessage(
+      "Please enter your country.",
+    ),
+    "please_enter_your_date_of_birth": MessageLookupByLibrary.simpleMessage(
+      "Please enter your date of birth.",
+    ),
+    "please_enter_your_email": MessageLookupByLibrary.simpleMessage(
+      "Please enter your email.",
+    ),
+    "please_enter_your_first_name": MessageLookupByLibrary.simpleMessage(
+      "Please enter your first name.",
+    ),
+    "please_enter_your_last_name": MessageLookupByLibrary.simpleMessage(
+      "Please enter your last name.",
+    ),
+    "please_enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
+      "Please enter your mobile number.",
+    ),
+    "please_enter_your_pincode": MessageLookupByLibrary.simpleMessage(
+      "Please enter your pincode.",
+    ),
+    "please_enter_your_room_number": MessageLookupByLibrary.simpleMessage(
+      "Please enter your room number.",
+    ),
+    "please_enter_your_state": MessageLookupByLibrary.simpleMessage(
+      "Please enter your state.",
+    ),
     "room_no": MessageLookupByLibrary.simpleMessage("Room No & Society"),
     "send_again": MessageLookupByLibrary.simpleMessage("Send again"),
     "something_went_wrong": MessageLookupByLibrary.simpleMessage(

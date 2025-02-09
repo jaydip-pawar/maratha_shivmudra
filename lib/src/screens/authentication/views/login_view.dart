@@ -99,10 +99,12 @@ class _LoginViewState extends State<LoginView> {
                           onTap: () {
                             if (state.isLoading) return;
                             if (bloc.formKey.currentState!.validate()) {
-                              bloc.add(ApiStatusEvent(
-                                isLoading: true,
-                                hasError: false,
-                              ));
+                              bloc.add(
+                                ApiStatusEvent(
+                                  isLoading: true,
+                                  hasError: false,
+                                ),
+                              );
                               bloc.initiateOtp();
                             }
                           },

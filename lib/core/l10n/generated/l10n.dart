@@ -289,6 +289,126 @@ class S {
   String get submit {
     return Intl.message('Submit', name: 'submit', desc: '', args: []);
   }
+
+  /// `Please enter your first name.`
+  String get please_enter_your_first_name {
+    return Intl.message(
+      'Please enter your first name.',
+      name: 'please_enter_your_first_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your last name.`
+  String get please_enter_your_last_name {
+    return Intl.message(
+      'Please enter your last name.',
+      name: 'please_enter_your_last_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your date of birth.`
+  String get please_enter_your_date_of_birth {
+    return Intl.message(
+      'Please enter your date of birth.',
+      name: 'please_enter_your_date_of_birth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your address.`
+  String get please_enter_your_address {
+    return Intl.message(
+      'Please enter your address.',
+      name: 'please_enter_your_address',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your room number.`
+  String get please_enter_your_room_number {
+    return Intl.message(
+      'Please enter your room number.',
+      name: 'please_enter_your_room_number',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your city.`
+  String get please_enter_your_city {
+    return Intl.message(
+      'Please enter your city.',
+      name: 'please_enter_your_city',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your state.`
+  String get please_enter_your_state {
+    return Intl.message(
+      'Please enter your state.',
+      name: 'please_enter_your_state',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your pincode.`
+  String get please_enter_your_pincode {
+    return Intl.message(
+      'Please enter your pincode.',
+      name: 'please_enter_your_pincode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your country.`
+  String get please_enter_your_country {
+    return Intl.message(
+      'Please enter your country.',
+      name: 'please_enter_your_country',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your mobile number.`
+  String get please_enter_your_mobile_number {
+    return Intl.message(
+      'Please enter your mobile number.',
+      name: 'please_enter_your_mobile_number',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter your email.`
+  String get please_enter_your_email {
+    return Intl.message(
+      'Please enter your email.',
+      name: 'please_enter_your_email',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a valid email.`
+  String get please_enter_a_valid_email {
+    return Intl.message(
+      'Please enter a valid email.',
+      name: 'please_enter_a_valid_email',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

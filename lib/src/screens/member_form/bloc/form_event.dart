@@ -1,9 +1,9 @@
 part of 'form_bloc.dart';
 
 @immutable
-sealed class FormEvent extends BaseEvent {}
+sealed class MemberFormEvent extends BaseEvent {}
 
-class GetArticlesEvent extends FormEvent {
+class GetArticlesEvent extends MemberFormEvent {
   final List<ArticleModel> list;
 
   GetArticlesEvent(this.list);

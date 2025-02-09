@@ -1,16 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:maratha_shivmudra/core/base/bloc/bloc_base/bloc_base.dart';
 import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
+import 'package:maratha_shivmudra/core/di/di.dart';
+import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 
 part 'form_event.dart';
 part 'form_state.dart';
 
 @injectable
-class FormBloc extends BlocBase<FormEvent, FormState> {
-  FormBloc() : super(FormState());
+class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
+    with GetItHelperMixin {
+  MemberFormBloc() : super(MemberFormState());
 
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
@@ -24,15 +28,20 @@ class FormBloc extends BlocBase<FormEvent, FormState> {
   final TextEditingController countryController = TextEditingController();
   final TextEditingController mobileNoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  String mobileNumber = '';
+
+  Future<void> setMobileNumber() async {
+    final ss = getIt<SecureStorage>();
+    mobileNoController.text =
+        getData<String>('mobileNumber') ?? await ss.getMobileNumber();
+    mobileNumber = mobileNoController.text;
+  }
 
   @override
   void init() {
     super.init();
-    // apiCall<List<ArticleModel>>(
-    //   _getArticleUseCase,
-    //   params: GetArticleParams(category: ''),
-    //   onSuccess: (data) => add(GetArticlesEvent(data)),
-    // );
+    setMobileNumber();
   }
 
   @override
@@ -40,6 +49,34 @@ class FormBloc extends BlocBase<FormEvent, FormState> {
     on<GetArticlesEvent>((event, emit) {
       emit(state.copyWith(list: event.list));
     });
+  }
+
+  Future<bool> setFormData() async {
+    final db = FirebaseFirestore.instance;
+    final formData = {
+      'firstName': firstNameController.text,
+      'middleName': middleNameController.text,
+      'lastName': lastNameController.text,
+      'dateOfBirth': dateOfBirthController.text,
+      'address': addressController.text,
+      'roomNo': roomNoController.text,
+      'city': cityController.text,
+      'state': stateController.text,
+      'pincode': pincodeController.text,
+      'country': countryController.text,
+      'mobileNo': mobileNoController.text,
+      'email': emailController.text,
+    };
+
+    return await db
+        .collection(mobileNumber)
+        .doc('form_info')
+        .set(formData)
+        .then((_) {
+      final ss = getIt<SecureStorage>();
+      ss.setLoginFlag(true);
+      return true;
+    }).catchError((_) => false);
   }
 
   @override

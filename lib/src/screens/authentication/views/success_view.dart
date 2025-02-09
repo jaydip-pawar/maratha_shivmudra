@@ -1,14 +1,17 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maratha_shivmudra/core/di/di.dart';
+import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/material_button.dart';
 
-class SuccessView extends StatelessWidget {
+class SuccessView extends StatelessWidget with GetItHelperMixin {
   const SuccessView({super.key});
 
   @override
@@ -68,11 +71,14 @@ class SuccessView extends StatelessWidget {
                   text: state.isFormFilled
                       ? context.l10n.go_to_dashboard
                       : context.l10n.fill_the_member_form,
-                  onTap: () {
+                  onTap: () async {
+                    final ss = getIt<SecureStorage>();
+                    final phoneNumber = getData<String>('mobileNumber');
+                    await ss.setMobileNumber(phoneNumber!);
                     if (state.isFormFilled) {
-                      Navigator.of(context);
+                      Navigator.of(context).pop();
                     } else {
-                      context.navigateTo(FormRoute());
+                      context.navigateTo(MemberFormRoute());
                     }
                   },
                 ),

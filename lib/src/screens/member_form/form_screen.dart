@@ -1,29 +1,25 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart' hide FormState;
+import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/base/base_widget/base_page.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/form_view.dart';
 
 @RoutePage()
-class FormScreen extends BasePage<FormBloc> {
-  const FormScreen({super.key});
+class MemberFormScreen extends BasePage<MemberFormBloc> {
+  const MemberFormScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _FormScreenState();
+  State<StatefulWidget> createState() => _MemberFormScreenState();
 }
 
-class _FormScreenState extends BaseStatefulPage<FormBloc, FormScreen> {
+class _MemberFormScreenState
+    extends BaseStatefulPage<MemberFormBloc, MemberFormScreen> {
   @override
-  FormBloc get provideBase => getIt<FormBloc>();
+  MemberFormBloc get provideBase => getIt<MemberFormBloc>();
 
   @override
-  Widget buildView(BuildContext context, FormBloc model) {
-    return FormView(model);
-  }
-
-  @override
-  PreferredSizeWidget? buildAppbar() {
-    return AppBar();
+  Widget buildView(BuildContext context, MemberFormBloc model) {
+    return MemberFormView(model);
   }
 }

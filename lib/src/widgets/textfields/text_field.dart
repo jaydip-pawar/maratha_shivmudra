@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
+import 'package:maratha_shivmudra/src/widgets/plain_ink_well.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
@@ -11,6 +12,7 @@ class CustomTextField extends StatefulWidget {
     this.onTap,
     this.readOnly = false,
     this.absorbPointer = false,
+    this.validator,
   });
 
   final String? labelText;
@@ -20,6 +22,7 @@ class CustomTextField extends StatefulWidget {
   final VoidCallback? onTap;
   final bool readOnly;
   final bool absorbPointer;
+  final String? Function(String?)? validator;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -27,6 +30,8 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   late final TextEditingController _controller;
+  String? _errorMessage;
+
   @override
   void initState() {
     _controller = widget.controller ?? TextEditingController();
@@ -69,13 +74,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return child;
   }
 
-  OutlineInputBorder getOutlineInputBorder({bool hasError = false}) {
+  OutlineInputBorder getOutlineInputBorder() {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(4),
       gapPadding: 0,
       borderSide: BorderSide(
         width: .8,
-        color: hasError ? AppColors.errorColor : AppColors.borderColor,
+        color: _errorMessage != null
+            ? AppColors.errorColor
+            : AppColors.borderColor,
       ),
     );
   }
@@ -83,41 +90,68 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     Widget textField = labelOrNot(
-      child: SizedBox(
-        height: 40,
-        child: TextFormField(
-          controller: _controller,
-          textAlignVertical: TextAlignVertical.center,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.fromLTRB(8, 20, 30, 10),
-            border: getOutlineInputBorder(),
-            focusedBorder: getOutlineInputBorder(),
-            enabledBorder: getOutlineInputBorder(),
-            errorBorder: getOutlineInputBorder(hasError: true),
-            focusedErrorBorder: getOutlineInputBorder(hasError: true),
-            prefixIcon: widget.prefixIconData != null
-                ? Icon(
-                    widget.prefixIconData,
-                    size: 18,
-                  )
-                : null,
-          ),
-          cursorHeight: 17,
-          cursorColor: AppColors.fieldTextColor,
-          cursorWidth: 1,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: AppColors.fieldTextColor,
-          ),
-          readOnly: widget.readOnly,
+      child: MouseRegion(
+        cursor: widget.readOnly
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.text,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 40,
+              child: TextFormField(
+                controller: _controller,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.fromLTRB(8, 20, 30, 10),
+                  border: getOutlineInputBorder(),
+                  focusedBorder: getOutlineInputBorder(),
+                  enabledBorder: getOutlineInputBorder(),
+                  errorBorder: getOutlineInputBorder(),
+                  focusedErrorBorder: getOutlineInputBorder(),
+                  prefixIcon: widget.prefixIconData != null
+                      ? Icon(
+                          widget.prefixIconData,
+                          size: 18,
+                        )
+                      : null,
+                ),
+                cursorHeight: 17,
+                cursorColor: AppColors.fieldTextColor,
+                cursorWidth: 1,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.fieldTextColor,
+                ),
+                validator: (value) {
+                  if (widget.validator != null) {
+                    setState(() {
+                      _errorMessage = widget.validator!(value);
+                    });
+                  }
+                  return null;
+                },
+                readOnly: widget.readOnly,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                _errorMessage ?? '',
+                style: TextStyle(fontSize: 12, color: AppColors.errorColor),
+              ),
+            ),
+          ],
         ),
       ),
     );
 
     if (widget.absorbPointer) {
-      textField = AbsorbPointer(
-        child: textField,
+      textField = PlainInkWell(
+        onTap: widget.onTap,
+        child: AbsorbPointer(child: textField),
       );
     }
 
