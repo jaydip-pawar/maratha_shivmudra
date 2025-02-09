@@ -15,5 +15,19 @@
   "go_to_dashboard": "डॅशबोर्डवर जा",
   "something_went_wrong": "काहीतरी चूक झाली आहे, कृपया नंतर पुन्हा प्रयत्न करा!",
   "waiting_for_verification": "सत्यापनाची वाट पाहत आहे",
-  "fill_the_member_form": "सदस्य फॉर्म भरा"
+  "fill_the_member_form": "सदस्य फॉर्म भरा",
+  "first_name": "पहिले नाव",
+  "middle_name": "मधले नाव",
+  "last_name": "आडनाव",
+  "date_of_birth": "जन्मतारीख",
+  "address": "पत्ता",
+  "room_no": "रूम नं व सोसायटी नाव",
+  "state": "राज्य",
+  "city": "शहर",
+  "pincode": "पिनकोड",
+  "country": "देश",
+  "mobile_no": "मोबाईल नंबर",
+  "email": "ईमेल",
+  "member_form": "सभासद फॉर्म",
+  "submit": "सबमिट करा"
 }

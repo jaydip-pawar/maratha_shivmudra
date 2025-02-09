@@ -15,5 +15,19 @@
   "go_to_dashboard": "Go to dashboard",
   "something_went_wrong": "Something went wrong. Please try again later!",
   "waiting_for_verification": "Waiting for verification",
-  "fill_the_member_form": "Fill the Member Form"
+  "fill_the_member_form": "Fill the Member Form",
+  "first_name": "First Name",
+  "middle_name": "Middle Name",
+  "last_name": "Last Name",
+  "date_of_birth": "Date of Birth",
+  "address": "Address",
+  "room_no": "Room No & Society",
+  "state": "State",
+  "city": "City",
+  "pincode": "Pincode",
+  "country": "Country",
+  "mobile_no": "Mobile No",
+  "email": "Email",
+  "member_form": "Member form",
+  "submit": "Submit"
 }

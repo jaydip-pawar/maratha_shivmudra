@@ -209,6 +209,86 @@ class S {
       args: [],
     );
   }
+
+  /// `First Name`
+  String get first_name {
+    return Intl.message('First Name', name: 'first_name', desc: '', args: []);
+  }
+
+  /// `Middle Name`
+  String get middle_name {
+    return Intl.message('Middle Name', name: 'middle_name', desc: '', args: []);
+  }
+
+  /// `Last Name`
+  String get last_name {
+    return Intl.message('Last Name', name: 'last_name', desc: '', args: []);
+  }
+
+  /// `Date of Birth`
+  String get date_of_birth {
+    return Intl.message(
+      'Date of Birth',
+      name: 'date_of_birth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Address`
+  String get address {
+    return Intl.message('Address', name: 'address', desc: '', args: []);
+  }
+
+  /// `Room No & Society`
+  String get room_no {
+    return Intl.message(
+      'Room No & Society',
+      name: 'room_no',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `State`
+  String get state {
+    return Intl.message('State', name: 'state', desc: '', args: []);
+  }
+
+  /// `City`
+  String get city {
+    return Intl.message('City', name: 'city', desc: '', args: []);
+  }
+
+  /// `Pincode`
+  String get pincode {
+    return Intl.message('Pincode', name: 'pincode', desc: '', args: []);
+  }
+
+  /// `Country`
+  String get country {
+    return Intl.message('Country', name: 'country', desc: '', args: []);
+  }
+
+  /// `Mobile No`
+  String get mobile_no {
+    return Intl.message('Mobile No', name: 'mobile_no', desc: '', args: []);
+  }
+
+  /// `Email`
+  String get email {
+    return Intl.message('Email', name: 'email', desc: '', args: []);
+  }
+
+  /// `Member form`
+  String get member_form {
+    return Intl.message('Member form', name: 'member_form', desc: '', args: []);
+  }
+
+  /// `Submit`
+  String get submit {
+    return Intl.message('Submit', name: 'submit', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

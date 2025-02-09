@@ -7,17 +7,32 @@ class CustomTextField extends StatefulWidget {
     this.labelText,
     this.isCompulsory = false,
     this.prefixIconData,
+    this.controller,
+    this.onTap,
+    this.readOnly = false,
+    this.absorbPointer = false,
   });
 
   final String? labelText;
   final bool isCompulsory;
   final IconData? prefixIconData;
+  final TextEditingController? controller;
+  final VoidCallback? onTap;
+  final bool readOnly;
+  final bool absorbPointer;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
 }
 
 class _CustomTextFieldState extends State<CustomTextField> {
+  late final TextEditingController _controller;
+  @override
+  void initState() {
+    _controller = widget.controller ?? TextEditingController();
+    super.initState();
+  }
+
   Widget labelOrNot({required Widget child}) {
     if (widget.labelText != null) {
       return Column(
@@ -25,10 +40,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
         spacing: 2,
         children: [
           compulsoryField(
-              child: Text(
-            widget.labelText!,
-            style: TextStyle(fontSize: 16, color: AppColors.fieldTextColor),
-          )),
+            child: Text(
+              widget.labelText!,
+              style: TextStyle(fontSize: 16, color: AppColors.fieldTextColor),
+            ),
+          ),
           child,
         ],
       );
@@ -66,10 +82,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return labelOrNot(
+    Widget textField = labelOrNot(
       child: SizedBox(
         height: 40,
         child: TextFormField(
+          controller: _controller,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.fromLTRB(8, 20, 30, 10),
@@ -93,8 +110,23 @@ class _CustomTextFieldState extends State<CustomTextField> {
             fontWeight: FontWeight.w400,
             color: AppColors.fieldTextColor,
           ),
+          readOnly: widget.readOnly,
         ),
       ),
     );
+
+    if (widget.absorbPointer) {
+      textField = AbsorbPointer(
+        child: textField,
+      );
+    }
+
+    return textField;
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller == null) _controller.dispose();
+    super.dispose();
   }
 }

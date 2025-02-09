@@ -25,7 +25,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "account_verified": MessageLookupByLibrary.simpleMessage(
       "Account verified!",
     ),
+    "address": MessageLookupByLibrary.simpleMessage("Address"),
+    "city": MessageLookupByLibrary.simpleMessage("City"),
     "continue_text": MessageLookupByLibrary.simpleMessage("Continue"),
+    "country": MessageLookupByLibrary.simpleMessage("Country"),
+    "date_of_birth": MessageLookupByLibrary.simpleMessage("Date of Birth"),
+    "email": MessageLookupByLibrary.simpleMessage("Email"),
     "enter_the_verification_code_sent_to_your_phone":
         MessageLookupByLibrary.simpleMessage(
           "Enter the verification code sent to your phone",
@@ -36,14 +41,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
       "Fill the Member Form",
     ),
+    "first_name": MessageLookupByLibrary.simpleMessage("First Name"),
     "go_to_dashboard": MessageLookupByLibrary.simpleMessage("Go to dashboard"),
     "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
       "Haven\'t received the code?",
     ),
+    "last_name": MessageLookupByLibrary.simpleMessage("Last Name"),
     "login": MessageLookupByLibrary.simpleMessage("Login"),
+    "member_form": MessageLookupByLibrary.simpleMessage("Member form"),
+    "middle_name": MessageLookupByLibrary.simpleMessage("Middle Name"),
+    "mobile_no": MessageLookupByLibrary.simpleMessage("Mobile No"),
     "phone_number_must_be_10_digits": MessageLookupByLibrary.simpleMessage(
       "Phone number must be 10 digits",
     ),
+    "pincode": MessageLookupByLibrary.simpleMessage("Pincode"),
     "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
       "Please enter a phone number",
     ),
@@ -51,10 +62,13 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "Please enter a valid Indian mobile number",
         ),
+    "room_no": MessageLookupByLibrary.simpleMessage("Room No & Society"),
     "send_again": MessageLookupByLibrary.simpleMessage("Send again"),
     "something_went_wrong": MessageLookupByLibrary.simpleMessage(
       "Something went wrong. Please try again later!",
     ),
+    "state": MessageLookupByLibrary.simpleMessage("State"),
+    "submit": MessageLookupByLibrary.simpleMessage("Submit"),
     "verify_your_account": MessageLookupByLibrary.simpleMessage(
       "Verify your account",
     ),

@@ -25,7 +25,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "account_verified": MessageLookupByLibrary.simpleMessage(
       "तुमचे खाते यशस्वीपणे पडताळले गेले आहे!",
     ),
+    "address": MessageLookupByLibrary.simpleMessage("पत्ता"),
+    "city": MessageLookupByLibrary.simpleMessage("शहर"),
     "continue_text": MessageLookupByLibrary.simpleMessage("सुरू ठेवा"),
+    "country": MessageLookupByLibrary.simpleMessage("देश"),
+    "date_of_birth": MessageLookupByLibrary.simpleMessage("जन्मतारीख"),
+    "email": MessageLookupByLibrary.simpleMessage("ईमेल"),
     "enter_the_verification_code_sent_to_your_phone":
         MessageLookupByLibrary.simpleMessage(
           "तुमच्या फोनवर पाठवलेला सत्यापन कोड प्रविष्ट करा",
@@ -36,14 +41,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
       "सदस्य फॉर्म भरा",
     ),
+    "first_name": MessageLookupByLibrary.simpleMessage("पहिले नाव"),
     "go_to_dashboard": MessageLookupByLibrary.simpleMessage("डॅशबोर्डवर जा"),
     "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
       "कोड मिळाला नाही का?",
     ),
+    "last_name": MessageLookupByLibrary.simpleMessage("आडनाव"),
     "login": MessageLookupByLibrary.simpleMessage("लॉगिन करा"),
+    "member_form": MessageLookupByLibrary.simpleMessage("सभासद फॉर्म"),
+    "middle_name": MessageLookupByLibrary.simpleMessage("मधले नाव"),
+    "mobile_no": MessageLookupByLibrary.simpleMessage("मोबाईल नंबर"),
     "phone_number_must_be_10_digits": MessageLookupByLibrary.simpleMessage(
       "फोन नंबर 10 अंकी असणे आवश्यक आहे",
     ),
+    "pincode": MessageLookupByLibrary.simpleMessage("पिनकोड"),
     "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
       "कृपया फोन नंबर प्रविष्ट करा",
     ),
@@ -51,10 +62,13 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "कृपया वैध भारतीय मोबाइल नंबर प्रविष्ट करा",
         ),
+    "room_no": MessageLookupByLibrary.simpleMessage("रूम नं व सोसायटी नाव"),
     "send_again": MessageLookupByLibrary.simpleMessage("पुन्हा पाठवा"),
     "something_went_wrong": MessageLookupByLibrary.simpleMessage(
       "काहीतरी चूक झाली आहे, कृपया नंतर पुन्हा प्रयत्न करा!",
     ),
+    "state": MessageLookupByLibrary.simpleMessage("राज्य"),
+    "submit": MessageLookupByLibrary.simpleMessage("सबमिट करा"),
     "verify_your_account": MessageLookupByLibrary.simpleMessage(
       "तुमचे खाते सत्यापित करा",
     ),
