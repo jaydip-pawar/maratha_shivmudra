@@ -35,8 +35,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   void mapEventToState() {
     on<OtpInitiatedEvent>((event, emit) => emit(AuthVerificationState()));
 
-    on<OtpVerifiedEvent>((event, emit) =>
-        emit(AuthSuccessState(isFormFilled: event.isFormFilled)));
+    on<OtpVerifiedEvent>((event, emit) => emit(AuthSuccessState(isFormFilled: event.isFormFilled)));
 
     on<ApiStatusEvent>((event, emit) {
       if (state is AuthInitialState) {

@@ -14,5 +14,6 @@
   "welcome": "Welcome to Maratha Shivmudra",
   "go_to_dashboard": "Go to dashboard",
   "something_went_wrong": "Something went wrong. Please try again later!",
-  "waiting_for_verification": "Waiting for verification"
+  "waiting_for_verification": "Waiting for verification",
+  "fill_the_member_form": "Fill the Member Form"
 }

@@ -17,7 +17,9 @@ class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
   @override
   void initState() {
     super.initState();
-    _checkReferralFlow(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkReferralFlow(context);
+    });
   }
 
   Future<void> _checkReferralFlow(BuildContext context) async {
@@ -26,9 +28,6 @@ class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
 
     final uri = Uri.base;
     if (uri.queryParameters.containsKey('ref')) {
-      String? referralId = uri.queryParameters['ref'];
-      debugPrint('Referral ID: $referralId');
-
       if (!isLoggedIn) {
         if (context.mounted) {
           AuthDialog.show(context);

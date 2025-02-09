@@ -5,7 +5,11 @@ sealed class AuthEvent extends BaseEvent {}
 
 class OtpInitiatedEvent extends AuthEvent {}
 
-class OtpVerifiedEvent extends AuthEvent {}
+class OtpVerifiedEvent extends AuthEvent {
+  OtpVerifiedEvent({required this.isFormFilled});
+
+  final bool isFormFilled;
+}
 
 class ApiStatusEvent extends AuthEvent {
   ApiStatusEvent({

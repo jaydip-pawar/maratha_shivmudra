@@ -33,6 +33,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
       "तुमचा मोबाइल नंबर प्रविष्ट करा.",
     ),
+    "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
+      "सदस्य फॉर्म भरा",
+    ),
     "go_to_dashboard": MessageLookupByLibrary.simpleMessage("डॅशबोर्डवर जा"),
     "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
       "कोड मिळाला नाही का?",

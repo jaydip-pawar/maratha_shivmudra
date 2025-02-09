@@ -199,6 +199,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Fill the Member Form`
+  String get fill_the_member_form {
+    return Intl.message(
+      'Fill the Member Form',
+      name: 'fill_the_member_form',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

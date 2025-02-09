@@ -48,4 +48,17 @@ class AuthVerificationState extends AuthState {
   List<Object> get props => [isLoading, hasError];
 }
 
-class AuthSuccessState extends AuthState {}
+class AuthSuccessState extends AuthState {
+  AuthSuccessState({required this.isFormFilled});
+
+  final bool isFormFilled;
+
+  AuthSuccessState copyWith({bool? isFormFilled}) {
+    return AuthSuccessState(
+      isFormFilled: isFormFilled ?? this.isFormFilled,
+    );
+  }
+
+  @override
+  List<Object> get props => [isFormFilled];
+}

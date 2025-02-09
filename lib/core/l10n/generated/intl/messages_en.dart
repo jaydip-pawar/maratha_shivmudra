@@ -33,6 +33,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
       "Enter your mobile number.",
     ),
+    "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
+      "Fill the Member Form",
+    ),
     "go_to_dashboard": MessageLookupByLibrary.simpleMessage("Go to dashboard"),
     "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
       "Haven\'t received the code?",
