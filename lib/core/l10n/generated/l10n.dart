@@ -409,6 +409,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Maratha Shivmudra Pratishthan`
+  String get maratha_shivmudra {
+    return Intl.message(
+      'Maratha Shivmudra Pratishthan',
+      name: 'maratha_shivmudra',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

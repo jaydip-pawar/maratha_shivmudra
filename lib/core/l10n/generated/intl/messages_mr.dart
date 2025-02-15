@@ -48,6 +48,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "last_name": MessageLookupByLibrary.simpleMessage("आडनाव"),
     "login": MessageLookupByLibrary.simpleMessage("लॉगिन करा"),
+    "maratha_shivmudra": MessageLookupByLibrary.simpleMessage(
+      "मराठा शिवमुद्रा प्रतिष्ठान",
+    ),
     "member_form": MessageLookupByLibrary.simpleMessage("सभासद फॉर्म"),
     "middle_name": MessageLookupByLibrary.simpleMessage("मधले नाव"),
     "mobile_no": MessageLookupByLibrary.simpleMessage("मोबाईल नंबर"),

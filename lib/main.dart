@@ -32,13 +32,21 @@ class MyApp extends StatelessWidget {
     final appRouter = AppRouter();
 
     return MaterialApp.router(
-      title: 'Flutter Demo',
+      title: 'मराठा शिवमुद्रा प्रतिष्ठान',
       theme: ThemeData(
         fontFamily: 'NotoSerifDevanagari',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      routerConfig: appRouter.config(),
+      routerConfig: appRouter.config(
+        includePrefixMatches: true,
+        // deepLinkBuilder: (PlatformDeepLink deepLink) {
+        //   // Handle the initial deep link
+        //   return DeepLink.path(deepLink.path + '?ref=rrr');
+        //   // Or if you want to force specific query params on startup:
+        //   // return DeepLink.path('/?tab=home&section=featured');
+        // },
+      ),
       supportedLocales: const [
         Locale('mr', ''),
         Locale('en', ''),
