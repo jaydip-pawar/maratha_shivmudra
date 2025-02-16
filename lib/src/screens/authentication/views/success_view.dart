@@ -78,7 +78,7 @@ class SuccessView extends StatelessWidget with GetItHelperMixin {
                     if (state.isFormFilled) {
                       Navigator.of(context).pop();
                     } else {
-                      context.navigateTo(MemberFormRoute());
+                      context.router.replaceAll([MemberFormRoute()]);
                     }
                   },
                 ),

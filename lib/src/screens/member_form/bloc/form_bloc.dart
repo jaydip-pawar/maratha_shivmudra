@@ -14,7 +14,9 @@ part 'form_state.dart';
 @injectable
 class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     with GetItHelperMixin {
-  MemberFormBloc() : super(MemberFormState());
+  MemberFormBloc() : super(MemberFormState()) {
+    stateController.addListener(_onStateChanged);
+  }
 
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
@@ -28,8 +30,14 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
   final TextEditingController subDistrictController = TextEditingController();
   final TextEditingController mobileNoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final ValueNotifier<bool> showDropDown = ValueNotifier(true);
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String mobileNumber = '';
+
+  void _onStateChanged() {
+    final state = stateController.text.toLowerCase();
+    showDropDown.value = state == 'maharashtra' || state == 'महाराष्ट्र';
+  }
 
   Future<void> setMobileNumber() async {
     final ss = getIt<SecureStorage>();
@@ -100,12 +108,14 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     dateOfBirthController.dispose();
     addressController.dispose();
     cityController.dispose();
+    stateController.removeListener(_onStateChanged);
     stateController.dispose();
     pincodeController.dispose();
     districtController.dispose();
     subDistrictController.dispose();
     mobileNoController.dispose();
     emailController.dispose();
+    showDropDown.dispose();
     return super.close();
   }
 }

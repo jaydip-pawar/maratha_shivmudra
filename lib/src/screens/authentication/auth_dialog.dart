@@ -9,7 +9,7 @@ import 'package:maratha_shivmudra/src/screens/authentication/views/success_view.
 
 class AuthDialog {
   static void show(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {

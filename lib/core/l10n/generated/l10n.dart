@@ -410,6 +410,26 @@ class S {
     );
   }
 
+  /// `Thank You for Joining!`
+  String get thank_you_for_joining {
+    return Intl.message(
+      'Thank You for Joining!',
+      name: 'thank_you_for_joining',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your membership form has been successfully submitted. We appreciate your support and commitment to our cause.`
+  String get joining_message {
+    return Intl.message(
+      'Your membership form has been successfully submitted. We appreciate your support and commitment to our cause.',
+      name: 'joining_message',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Maharashtra`
   String get maharashtra {
     return Intl.message('Maharashtra', name: 'maharashtra', desc: '', args: []);

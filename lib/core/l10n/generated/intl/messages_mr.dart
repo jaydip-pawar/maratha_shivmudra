@@ -94,6 +94,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "jalna": MessageLookupByLibrary.simpleMessage("जालना"),
     "jamkhed": MessageLookupByLibrary.simpleMessage("जामखेड"),
     "jiwati": MessageLookupByLibrary.simpleMessage("जिवाटि"),
+    "joining_message": MessageLookupByLibrary.simpleMessage(
+      "आपला सदस्यता फॉर्म यशस्वीरीत्या सबमिट झाला आहे. आमच्या उद्दिष्टासाठी दिलेल्या तुमच्या पाठिंब्याबद्दल आणि बांधिलकीबद्दल आम्ही मनःपूर्वक आभारी आहोत.",
+    ),
     "kaij": MessageLookupByLibrary.simpleMessage("कैज"),
     "kannad": MessageLookupByLibrary.simpleMessage("कन्नड"),
     "karjat": MessageLookupByLibrary.simpleMessage("कर्जत"),
@@ -223,6 +226,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "submit": MessageLookupByLibrary.simpleMessage("सबमिट करा"),
     "telhara": MessageLookupByLibrary.simpleMessage("तेल्हारा"),
     "thane": MessageLookupByLibrary.simpleMessage("ठाणे"),
+    "thank_you_for_joining": MessageLookupByLibrary.simpleMessage(
+      "आपल्या सदस्यतेबद्दल धन्यवाद!",
+    ),
     "tiosa": MessageLookupByLibrary.simpleMessage("तिवसा"),
     "tumsar": MessageLookupByLibrary.simpleMessage("तुमसर"),
     "vaijapur": MessageLookupByLibrary.simpleMessage("वैजापूर"),

@@ -5,6 +5,7 @@ import 'package:maratha_shivmudra/core/base/base_widget/modular_state.dart';
 import 'package:maratha_shivmudra/core/constants/state_constant.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
+import 'package:maratha_shivmudra/src/screens/member_form/dialogs/form_submitted_dialog.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/animated_button.dart';
 import 'package:maratha_shivmudra/src/widgets/responsive_rc.dart';
 import 'package:maratha_shivmudra/src/widgets/section.dart';
@@ -183,25 +184,32 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                             isCompulsory: true,
                             errorMessage: context.l10n.please_enter_your_state,
                           ),
-                          _buildTextField(
-                            context,
-                            label: context.l10n.district,
-                            controller: formBloc.districtController,
-                            isCompulsory: true,
-                            readOnly: true,
-                            absorbPointer: true,
-                            errorMessage:
-                                context.l10n.please_enter_your_district,
-                            onTap: () {
-                              DropDownState<String>(
-                                dropDown: DropDown<String>(
-                                  data: districts,
-                                  onSelected: (selectedItems) {
-                                    model.districtController.text =
-                                        selectedItems.first.data;
-                                  },
-                                ),
-                              ).showModal(context);
+                          ValueListenableBuilder(
+                            valueListenable: formBloc.showDropDown,
+                            builder: (context, value, _) {
+                              return _buildTextField(
+                                context,
+                                label: context.l10n.district,
+                                controller: formBloc.districtController,
+                                isCompulsory: true,
+                                readOnly: value,
+                                absorbPointer: value,
+                                errorMessage:
+                                    context.l10n.please_enter_your_district,
+                                onTap: value
+                                    ? () {
+                                        DropDownState<String>(
+                                          dropDown: DropDown<String>(
+                                            data: districts,
+                                            onSelected: (selectedItems) {
+                                              model.districtController.text =
+                                                  selectedItems.first.data;
+                                            },
+                                          ),
+                                        ).showModal(context);
+                                      }
+                                    : null,
+                              );
                             },
                           ),
                           _buildTextField(
@@ -269,6 +277,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                       child: AnimatedButton(
                         text: context.l10n.submit,
                         onTap: () async {
+                          FormSubmittedDialog.show(context);
                           formBloc.formKey.currentState!.validate();
                           if (model.validate()) {
                             await formBloc.setFormData();
