@@ -5,8 +5,8 @@ import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
-        AutoRoute(page: LandingRoute.page, path: '/member-form'),
-        AutoRoute(page: MemberFormRoute.page, path: '/', initial: true),
+        AutoRoute(page: LandingRoute.page, path: '/', initial: true),
+        AutoRoute(page: MemberFormRoute.page, path: '/member-form'),
       ];
 
   @override
