@@ -21,11 +21,11 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController dateOfBirthController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController roomNoController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController stateController = TextEditingController();
   final TextEditingController pincodeController = TextEditingController();
-  final TextEditingController countryController = TextEditingController();
+  final TextEditingController districtController = TextEditingController();
+  final TextEditingController subDistrictController = TextEditingController();
   final TextEditingController mobileNoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -51,6 +51,19 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     });
   }
 
+  bool validate() {
+    return firstNameController.text.isNotEmpty &&
+        lastNameController.text.isNotEmpty &&
+        dateOfBirthController.text.isNotEmpty &&
+        addressController.text.isNotEmpty &&
+        cityController.text.isNotEmpty &&
+        stateController.text.isNotEmpty &&
+        pincodeController.text.isNotEmpty &&
+        districtController.text.isNotEmpty &&
+        subDistrictController.text.isNotEmpty &&
+        mobileNoController.text.isNotEmpty;
+  }
+
   Future<bool> setFormData() async {
     final db = FirebaseFirestore.instance;
     final formData = {
@@ -59,11 +72,11 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
       'lastName': lastNameController.text,
       'dateOfBirth': dateOfBirthController.text,
       'address': addressController.text,
-      'roomNo': roomNoController.text,
       'city': cityController.text,
       'state': stateController.text,
       'pincode': pincodeController.text,
-      'country': countryController.text,
+      'district': districtController.text,
+      'subDistrict': subDistrictController.text,
       'mobileNo': mobileNoController.text,
       'email': emailController.text,
     };
@@ -86,11 +99,11 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     lastNameController.dispose();
     dateOfBirthController.dispose();
     addressController.dispose();
-    roomNoController.dispose();
     cityController.dispose();
     stateController.dispose();
     pincodeController.dispose();
-    countryController.dispose();
+    districtController.dispose();
+    subDistrictController.dispose();
     mobileNoController.dispose();
     emailController.dispose();
     return super.close();

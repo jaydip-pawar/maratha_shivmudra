@@ -22,4 +22,9 @@ class _MemberFormScreenState
   Widget buildView(BuildContext context, MemberFormBloc model) {
     return MemberFormView(model);
   }
+
+  @override
+  void onModelReady(MemberFormBloc model) {
+    super.onModelReady(model);
+  }
 }

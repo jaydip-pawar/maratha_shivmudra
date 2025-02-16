@@ -1,5 +1,8 @@
+import 'package:drop_down_list/drop_down_list.dart';
+import 'package:drop_down_list/model/selected_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/base/base_widget/modular_state.dart';
+import 'package:maratha_shivmudra/core/constants/state_constant.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/animated_button.dart';
@@ -8,7 +11,9 @@ import 'package:maratha_shivmudra/src/widgets/section.dart';
 import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
 
 class MemberFormView extends ModularState<MemberFormBloc> {
-  const MemberFormView(super.bloc, {super.key});
+  MemberFormView(super.bloc, {super.key});
+
+  final List<SelectedListItem<String>> districts = [];
 
   Widget _buildTextField(
     BuildContext context, {
@@ -53,24 +58,44 @@ class MemberFormView extends ModularState<MemberFormBloc> {
   @override
   Widget build(BuildContext context, MemberFormBloc model) {
     final formBloc = model;
+    if (districts.isEmpty) {
+      final districtList =
+          StateConstant.locationHierarchy(context)[context.l10n.maharashtra]!
+              .keys
+              .toList();
 
-    return Scaffold(
-      backgroundColor: Colors.white10,
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/bg.png'),
-              fit: BoxFit.cover,
+      districts.addAll(
+        districtList
+            .map(
+              (String district) => SelectedListItem<String>(
+                data: district,
+              ),
+            )
+            .toList(),
+      );
+    }
+    if (model.stateController.text.isEmpty) {
+      model.stateController.text = context.l10n.maharashtra;
+      // model.countryController.text = context.l10n.india;
+    }
+
+    return Form(
+      key: formBloc.formKey,
+      child: Scaffold(
+        backgroundColor: Colors.white10,
+        body: SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/bg.png'),
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: SingleChildScrollView(
-              child: Form(
-                key: formBloc.formKey,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -149,13 +174,45 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                         isCompulsory: true,
                         errorMessage: context.l10n.please_enter_your_address,
                       ),
-                      _buildTextField(
-                        context,
-                        label: context.l10n.room_no,
-                        controller: formBloc.roomNoController,
-                        isCompulsory: true,
-                        errorMessage:
-                            context.l10n.please_enter_your_room_number,
+                      ResponsiveRC(
+                        children: [
+                          _buildTextField(
+                            context,
+                            label: context.l10n.state,
+                            controller: formBloc.stateController,
+                            isCompulsory: true,
+                            errorMessage: context.l10n.please_enter_your_state,
+                          ),
+                          _buildTextField(
+                            context,
+                            label: context.l10n.district,
+                            controller: formBloc.districtController,
+                            isCompulsory: true,
+                            readOnly: true,
+                            absorbPointer: true,
+                            errorMessage:
+                                context.l10n.please_enter_your_district,
+                            onTap: () {
+                              DropDownState<String>(
+                                dropDown: DropDown<String>(
+                                  data: districts,
+                                  onSelected: (selectedItems) {
+                                    model.districtController.text =
+                                        selectedItems.first.data;
+                                  },
+                                ),
+                              ).showModal(context);
+                            },
+                          ),
+                          _buildTextField(
+                            context,
+                            label: context.l10n.sub_district,
+                            controller: formBloc.subDistrictController,
+                            isCompulsory: true,
+                            errorMessage:
+                                context.l10n.please_enter_your_sub_district,
+                          ),
+                        ],
                       ),
                       ResponsiveRC(
                         children: [
@@ -168,30 +225,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                           ),
                           _buildTextField(
                             context,
-                            label: context.l10n.state,
-                            controller: formBloc.stateController,
-                            isCompulsory: true,
-                            errorMessage: context.l10n.please_enter_your_state,
-                          ),
-                        ],
-                      ),
-                      ResponsiveRC(
-                        children: [
-                          _buildTextField(
-                            context,
                             label: context.l10n.pincode,
                             controller: formBloc.pincodeController,
                             isCompulsory: true,
                             errorMessage:
                                 context.l10n.please_enter_your_pincode,
-                          ),
-                          _buildTextField(
-                            context,
-                            label: context.l10n.country,
-                            controller: formBloc.countryController,
-                            isCompulsory: true,
-                            errorMessage:
-                                context.l10n.please_enter_your_country,
                           ),
                         ],
                       ),
@@ -214,12 +252,9 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                         context,
                         label: context.l10n.email,
                         controller: formBloc.emailController,
-                        isCompulsory: true,
                         icon: Icons.email_outlined,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return context.l10n.please_enter_your_email;
-                          }
+                          if (value == null || value.isEmpty) return null;
                           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                           if (!emailRegex.hasMatch(value)) {
                             return context.l10n.please_enter_a_valid_email;
@@ -234,7 +269,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                       child: AnimatedButton(
                         text: context.l10n.submit,
                         onTap: () async {
-                          if (formBloc.formKey.currentState!.validate()) {
+                          formBloc.formKey.currentState!.validate();
+                          if (model.validate()) {
                             await formBloc.setFormData();
                           }
                         },
