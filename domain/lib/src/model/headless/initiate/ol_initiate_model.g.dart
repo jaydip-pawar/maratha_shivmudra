@@ -6,9 +6,8 @@ part of 'ol_initiate_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$OLInitiateModelImpl _$$OLInitiateModelImplFromJson(
-        Map<String, dynamic> json) =>
-    _$OLInitiateModelImpl(
+_OLInitiateModel _$OLInitiateModelFromJson(Map<String, dynamic> json) =>
+    _OLInitiateModel(
       responseType: json['responseType'] as String,
       success: json['success'] as bool,
       statusCode: (json['statusCode'] as num).toInt(),
@@ -16,8 +15,7 @@ _$OLInitiateModelImpl _$$OLInitiateModelImplFromJson(
           InitiateResponse.fromJson(json['response'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$$OLInitiateModelImplToJson(
-        _$OLInitiateModelImpl instance) =>
+Map<String, dynamic> _$OLInitiateModelToJson(_OLInitiateModel instance) =>
     <String, dynamic>{
       'responseType': instance.responseType,
       'success': instance.success,
@@ -25,9 +23,8 @@ Map<String, dynamic> _$$OLInitiateModelImplToJson(
       'response': instance.response,
     };
 
-_$InitiateResponseImpl _$$InitiateResponseImplFromJson(
-        Map<String, dynamic> json) =>
-    _$InitiateResponseImpl(
+_InitiateResponse _$InitiateResponseFromJson(Map<String, dynamic> json) =>
+    _InitiateResponse(
       requestID: json['requestID'] as String?,
       verification: json['verification'] as String?,
       errorMessage: json['errorMessage'] as String?,
@@ -38,8 +35,7 @@ _$InitiateResponseImpl _$$InitiateResponseImplFromJson(
       channel: json['channel'] as String?,
     );
 
-Map<String, dynamic> _$$InitiateResponseImplToJson(
-        _$InitiateResponseImpl instance) =>
+Map<String, dynamic> _$InitiateResponseToJson(_InitiateResponse instance) =>
     <String, dynamic>{
       'requestID': instance.requestID,
       'verification': instance.verification,

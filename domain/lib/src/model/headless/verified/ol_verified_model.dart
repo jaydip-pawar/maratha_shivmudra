@@ -4,7 +4,7 @@ part 'ol_verified_model.freezed.dart';
 part 'ol_verified_model.g.dart';
 
 @freezed
-class OLVerifiedModel with _$OLVerifiedModel {
+abstract class OLVerifiedModel with _$OLVerifiedModel {
   const factory OLVerifiedModel({
     required String responseType,
     required VerifiedResponse response,
@@ -17,7 +17,7 @@ class OLVerifiedModel with _$OLVerifiedModel {
 }
 
 @freezed
-class VerifiedResponse with _$VerifiedResponse {
+abstract class VerifiedResponse with _$VerifiedResponse {
   const factory VerifiedResponse({
     Map<String, dynamic>? firebaseInfo,
     required String token,
@@ -36,7 +36,7 @@ class VerifiedResponse with _$VerifiedResponse {
 }
 
 @freezed
-class Identity with _$Identity {
+abstract class Identity with _$Identity {
   const factory Identity({
     required String identityType,
     required String identityValue,
@@ -51,7 +51,7 @@ class Identity with _$Identity {
 }
 
 @freezed
-class Network with _$Network {
+abstract class Network with _$Network {
   const factory Network({
     required String ip,
     required String timezone,
@@ -63,7 +63,7 @@ class Network with _$Network {
 }
 
 @freezed
-class IPLocation with _$IPLocation {
+abstract class IPLocation with _$IPLocation {
   const factory IPLocation({
     City? city,
     Subdivisions? subdivisions,
@@ -79,7 +79,7 @@ class IPLocation with _$IPLocation {
 }
 
 @freezed
-class City with _$City {
+abstract class City with _$City {
   const factory City({
     required String name,
   }) = _City;
@@ -88,7 +88,7 @@ class City with _$City {
 }
 
 @freezed
-class Subdivisions with _$Subdivisions {
+abstract class Subdivisions with _$Subdivisions {
   const factory Subdivisions({
     required String code,
     required String name,
@@ -99,7 +99,7 @@ class Subdivisions with _$Subdivisions {
 }
 
 @freezed
-class Country with _$Country {
+abstract class Country with _$Country {
   const factory Country({
     required String code,
     required String name,
@@ -110,7 +110,7 @@ class Country with _$Country {
 }
 
 @freezed
-class Continent with _$Continent {
+abstract class Continent with _$Continent {
   const factory Continent({
     required String code,
   }) = _Continent;
@@ -120,7 +120,7 @@ class Continent with _$Continent {
 }
 
 @freezed
-class DeviceInfo with _$DeviceInfo {
+abstract class DeviceInfo with _$DeviceInfo {
   const factory DeviceInfo({
     required String userAgent,
     required String platform,

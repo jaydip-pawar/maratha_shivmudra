@@ -93,26 +93,26 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   }
 
   Future<bool> _onHeadlessResult(dynamic result) async {
-    debugPrint(result);
-    final json = jsonDecode(result);
+    debugPrint(result.toString());
+    final json = jsonDecode(result.toString());
 
     if (json['statusCode'] == 200) {
       switch (json['responseType']) {
         case 'INITIATE':
-          final model = OLInitiateModel.fromJson(json);
+          final model = OLInitiateModel.fromJson(json as Map<String, dynamic>);
           if (model.success) {
             add(OtpInitiatedEvent());
             return true;
           }
           return false;
         case 'VERIFY':
-          final model = OLInitiateModel.fromJson(json);
+          final model = OLInitiateModel.fromJson(json as Map<String, dynamic>);
           if (model.success) {
             return true;
           }
           return false;
         case 'ONETAP':
-          final model = OLVerifiedModel.fromJson(json);
+          final model = OLVerifiedModel.fromJson(json as Map<String, dynamic>);
           if (model.success) {
             await setUserData();
             return true;

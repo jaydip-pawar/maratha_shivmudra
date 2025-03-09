@@ -430,6 +430,76 @@ class S {
     );
   }
 
+  /// `What do you do for a living?`
+  String get what_do_you_do_for_a_living {
+    return Intl.message(
+      'What do you do for a living?',
+      name: 'what_do_you_do_for_a_living',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Student`
+  String get student {
+    return Intl.message('Student', name: 'student', desc: '', args: []);
+  }
+
+  /// `Employed`
+  String get employed {
+    return Intl.message('Employed', name: 'employed', desc: '', args: []);
+  }
+
+  /// `Business`
+  String get business {
+    return Intl.message('Business', name: 'business', desc: '', args: []);
+  }
+
+  /// `Self-employed`
+  String get self_employed {
+    return Intl.message(
+      'Self-employed',
+      name: 'self_employed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unemployed`
+  String get unemployed {
+    return Intl.message('Unemployed', name: 'unemployed', desc: '', args: []);
+  }
+
+  /// `Retired`
+  String get retired {
+    return Intl.message('Retired', name: 'retired', desc: '', args: []);
+  }
+
+  /// `Homemaker`
+  String get homemaker {
+    return Intl.message('Homemaker', name: 'homemaker', desc: '', args: []);
+  }
+
+  /// `Job-seeker`
+  String get job_seeker {
+    return Intl.message('Job-seeker', name: 'job_seeker', desc: '', args: []);
+  }
+
+  /// `Farmer`
+  String get farmer {
+    return Intl.message('Farmer', name: 'farmer', desc: '', args: []);
+  }
+
+  /// `Select an option to continue`
+  String get select_an_option_to_continue {
+    return Intl.message(
+      'Select an option to continue',
+      name: 'select_an_option_to_continue',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Maharashtra`
   String get maharashtra {
     return Intl.message('Maharashtra', name: 'maharashtra', desc: '', args: []);

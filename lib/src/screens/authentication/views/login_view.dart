@@ -22,7 +22,7 @@ class _LoginViewState extends State<LoginView> {
       builder: (context, blocState) {
         final state = blocState as dynamic;
 
-        if (state.hasError) {
+        if (state.hasError as bool) {
           bloc.formKey.currentState!.validate();
         }
         return Padding(
@@ -58,7 +58,7 @@ class _LoginViewState extends State<LoginView> {
                           child: PhoneNumberField(
                             controller: bloc.phoneController,
                             validator: (_) {
-                              if (state.hasError) {
+                              if (state.hasError as bool) {
                                 return context.l10n.something_went_wrong;
                               }
                               return null;
@@ -81,7 +81,7 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                               );
                             },
-                            child: state.isLoading
+                            child: state.isLoading as bool
                                 ? SizedBox(
                                     key: ValueKey('loading'),
                                     width: 24,
@@ -97,7 +97,7 @@ class _LoginViewState extends State<LoginView> {
                                   ),
                           ),
                           onTap: () {
-                            if (state.isLoading) return;
+                            if (state.isLoading as bool) return;
                             if (bloc.formKey.currentState!.validate()) {
                               bloc.add(
                                 ApiStatusEvent(

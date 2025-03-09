@@ -17,11 +17,11 @@ class OtpVerificationView extends StatelessWidget {
     required Widget child,
     required dynamic state,
   }) {
-    if (state.hasError || state.isLoading) {
+    if (state.hasError as bool || state.isLoading as bool) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (state.hasError) ...[
+          if (state.hasError as bool) ...[
             16.h,
             Text(
               context.l10n.something_went_wrong,

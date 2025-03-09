@@ -22,15 +22,15 @@ dependencies:
   json_annotation: ^4.9.0
   pretty_dio_logger: ^1.4.0
   retrofit: ^4.4.2
-  shared_preferences: ^2.5.1
+  shared_preferences: ^2.5.2
 
 dev_dependencies:
 
   flutter_test:
     sdk: flutter
 
-  build_runner: ^2.4.14
+  build_runner: ^2.4.15
   flutter_lints: ^5.0.0
   injectable_generator: ^2.7.0
-  json_serializable: ^6.9.3
+  json_serializable: ^6.9.4
   retrofit_generator: ^9.1.4

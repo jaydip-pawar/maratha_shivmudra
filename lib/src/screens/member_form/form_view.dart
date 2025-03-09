@@ -3,10 +3,11 @@ import 'package:drop_down_list/model/selected_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/base/base_widget/modular_state.dart';
 import 'package:maratha_shivmudra/core/constants/state_constant.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
-import 'package:maratha_shivmudra/src/screens/member_form/dialogs/form_submitted_dialog.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/animated_button.dart';
+import 'package:maratha_shivmudra/src/widgets/customRadioGroup.dart';
 import 'package:maratha_shivmudra/src/widgets/responsive_rc.dart';
 import 'package:maratha_shivmudra/src/widgets/section.dart';
 import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
@@ -271,13 +272,75 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                         },
                       ),
                     ]),
+
+                    // Work Details
+                    _buildSection(context, [
+                      Row(
+                        spacing: 2,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'आपण काय करता ?',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.fieldTextColor,
+                            ),
+                          ),
+                          Text(
+                            '*',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.errorColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      8.h,
+                      CustomRadioGroup(
+                        alignment: Axis.vertical,
+                        labels: [
+                          context.l10n.student,
+                          context.l10n.employed,
+                          context.l10n.business,
+                          context.l10n.self_employed,
+                          context.l10n.unemployed,
+                          context.l10n.retired,
+                          context.l10n.homemaker,
+                          context.l10n.job_seeker,
+                          context.l10n.farmer,
+                        ],
+                        onChanged: (val) => formBloc.living = val,
+                      ),
+                      ValueListenableBuilder(
+                        valueListenable: formBloc.showErrorNotifier,
+                        builder: (context, showError, _) {
+                          if (showError)
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                context.l10n.select_an_option_to_continue,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.errorColor,
+                                ),
+                              ),
+                            );
+                          else
+                            return SizedBox.shrink();
+                        },
+                      ),
+                    ]),
                     16.h,
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: 400),
                       child: AnimatedButton(
                         text: context.l10n.submit,
                         onTap: () async {
-                          FormSubmittedDialog.show(context);
+                          if (formBloc.living.isEmpty) {
+                            formBloc.showErrorNotifier.value = true;
+                          } else {
+                            formBloc.showErrorNotifier.value = false;
+                          }
                           formBloc.formKey.currentState!.validate();
                           if (model.validate()) {
                             await formBloc.setFormData();

@@ -45,6 +45,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "brahmapuri": MessageLookupByLibrary.simpleMessage("Brahmapuri"),
     "buldana": MessageLookupByLibrary.simpleMessage("Buldana"),
     "buldhana": MessageLookupByLibrary.simpleMessage("Buldhana"),
+    "business": MessageLookupByLibrary.simpleMessage("Business"),
     "chandrapur": MessageLookupByLibrary.simpleMessage("Chandrapur"),
     "chandur_railway": MessageLookupByLibrary.simpleMessage("Chandur Railway"),
     "chandurbazar": MessageLookupByLibrary.simpleMessage("Chandurbazar"),
@@ -68,6 +69,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "dhule": MessageLookupByLibrary.simpleMessage("Dhule"),
     "district": MessageLookupByLibrary.simpleMessage("District"),
     "email": MessageLookupByLibrary.simpleMessage("Email"),
+    "employed": MessageLookupByLibrary.simpleMessage("Employed"),
     "enter_the_verification_code_sent_to_your_phone":
         MessageLookupByLibrary.simpleMessage(
           "Enter the verification code sent to your phone",
@@ -75,6 +77,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
       "Enter your mobile number.",
     ),
+    "farmer": MessageLookupByLibrary.simpleMessage("Farmer"),
     "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
       "Fill the Member Form",
     ),
@@ -89,11 +92,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Haven\'t received the code?",
     ),
     "hingoli": MessageLookupByLibrary.simpleMessage("Hingoli"),
+    "homemaker": MessageLookupByLibrary.simpleMessage("Homemaker"),
     "jalgaon": MessageLookupByLibrary.simpleMessage("Jalgaon"),
     "jalgaon_jamod": MessageLookupByLibrary.simpleMessage("Jalgaon (Jamod)"),
     "jalna": MessageLookupByLibrary.simpleMessage("Jalna"),
     "jamkhed": MessageLookupByLibrary.simpleMessage("Jamkhed"),
     "jiwati": MessageLookupByLibrary.simpleMessage("Jiwati"),
+    "job_seeker": MessageLookupByLibrary.simpleMessage("Job-seeker"),
     "joining_message": MessageLookupByLibrary.simpleMessage(
       "Your membership form has been successfully submitted. We appreciate your support and commitment to our cause.",
     ),
@@ -200,12 +205,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "raigad": MessageLookupByLibrary.simpleMessage("Raigad"),
     "rajura": MessageLookupByLibrary.simpleMessage("Rajura"),
     "ratnagiri": MessageLookupByLibrary.simpleMessage("Ratnagiri"),
+    "retired": MessageLookupByLibrary.simpleMessage("Retired"),
     "sakoli": MessageLookupByLibrary.simpleMessage("Sakoli"),
     "sangamner": MessageLookupByLibrary.simpleMessage("Sangamner"),
     "sangli": MessageLookupByLibrary.simpleMessage("Sangli"),
     "sangrampur": MessageLookupByLibrary.simpleMessage("Sangrampur"),
     "satara": MessageLookupByLibrary.simpleMessage("Satara"),
     "sawali": MessageLookupByLibrary.simpleMessage("Sawali"),
+    "select_an_option_to_continue": MessageLookupByLibrary.simpleMessage(
+      "Select an option to continue",
+    ),
+    "self_employed": MessageLookupByLibrary.simpleMessage("Self-employed"),
     "send_again": MessageLookupByLibrary.simpleMessage("Send again"),
     "shegaon": MessageLookupByLibrary.simpleMessage("Shegaon"),
     "shevgaon": MessageLookupByLibrary.simpleMessage("Shevgaon"),
@@ -222,6 +232,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Something went wrong. Please try again later!",
     ),
     "state": MessageLookupByLibrary.simpleMessage("State"),
+    "student": MessageLookupByLibrary.simpleMessage("Student"),
     "sub_district": MessageLookupByLibrary.simpleMessage("Sub-District"),
     "submit": MessageLookupByLibrary.simpleMessage("Submit"),
     "telhara": MessageLookupByLibrary.simpleMessage("Telhara"),
@@ -231,6 +242,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tiosa": MessageLookupByLibrary.simpleMessage("Tiosa"),
     "tumsar": MessageLookupByLibrary.simpleMessage("Tumsar"),
+    "unemployed": MessageLookupByLibrary.simpleMessage("Unemployed"),
     "vaijapur": MessageLookupByLibrary.simpleMessage("Vaijapur"),
     "verify_your_account": MessageLookupByLibrary.simpleMessage(
       "Verify your account",
@@ -249,6 +261,9 @@ class MessageLookup extends MessageLookupByLibrary {
         ),
     "welcome": MessageLookupByLibrary.simpleMessage(
       "Welcome to Maratha Shivmudra",
+    ),
+    "what_do_you_do_for_a_living": MessageLookupByLibrary.simpleMessage(
+      "What do you do for a living?",
     ),
     "yavatmal": MessageLookupByLibrary.simpleMessage("Yavatmal"),
   };

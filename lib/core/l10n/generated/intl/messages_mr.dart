@@ -45,6 +45,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "brahmapuri": MessageLookupByLibrary.simpleMessage("ब्रम्हपुरी"),
     "buldana": MessageLookupByLibrary.simpleMessage("बुलडाणा"),
     "buldhana": MessageLookupByLibrary.simpleMessage("बुलढाणा"),
+    "business": MessageLookupByLibrary.simpleMessage("व्यवसाय"),
     "chandrapur": MessageLookupByLibrary.simpleMessage("चंद्रपूर"),
     "chandur_railway": MessageLookupByLibrary.simpleMessage("चांदूर रेल्वे"),
     "chandurbazar": MessageLookupByLibrary.simpleMessage("चांदूर बाजार"),
@@ -68,6 +69,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "dhule": MessageLookupByLibrary.simpleMessage("धुळे"),
     "district": MessageLookupByLibrary.simpleMessage("जिल्हा"),
     "email": MessageLookupByLibrary.simpleMessage("ईमेल"),
+    "employed": MessageLookupByLibrary.simpleMessage("नोकरी"),
     "enter_the_verification_code_sent_to_your_phone":
         MessageLookupByLibrary.simpleMessage(
           "तुमच्या फोनवर पाठवलेला सत्यापन कोड प्रविष्ट करा",
@@ -75,6 +77,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
       "तुमचा मोबाइल नंबर प्रविष्ट करा.",
     ),
+    "farmer": MessageLookupByLibrary.simpleMessage("शेती"),
     "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
       "सदस्य फॉर्म भरा",
     ),
@@ -89,11 +92,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "कोड मिळाला नाही का?",
     ),
     "hingoli": MessageLookupByLibrary.simpleMessage("हिंगोली"),
+    "homemaker": MessageLookupByLibrary.simpleMessage("गृहपालक"),
     "jalgaon": MessageLookupByLibrary.simpleMessage("जळगाव"),
     "jalgaon_jamod": MessageLookupByLibrary.simpleMessage("जळगाव (जामोद)"),
     "jalna": MessageLookupByLibrary.simpleMessage("जालना"),
     "jamkhed": MessageLookupByLibrary.simpleMessage("जामखेड"),
     "jiwati": MessageLookupByLibrary.simpleMessage("जिवाटि"),
+    "job_seeker": MessageLookupByLibrary.simpleMessage("नोकरी शोधत आहे"),
     "joining_message": MessageLookupByLibrary.simpleMessage(
       "आपला सदस्यता फॉर्म यशस्वीरीत्या सबमिट झाला आहे. आमच्या उद्दिष्टासाठी दिलेल्या तुमच्या पाठिंब्याबद्दल आणि बांधिलकीबद्दल आम्ही मनःपूर्वक आभारी आहोत.",
     ),
@@ -200,12 +205,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "raigad": MessageLookupByLibrary.simpleMessage("रायगड"),
     "rajura": MessageLookupByLibrary.simpleMessage("राजुरा"),
     "ratnagiri": MessageLookupByLibrary.simpleMessage("रत्नागिरी"),
+    "retired": MessageLookupByLibrary.simpleMessage("निवृत्त"),
     "sakoli": MessageLookupByLibrary.simpleMessage("साकोली"),
     "sangamner": MessageLookupByLibrary.simpleMessage("संगमनेर"),
     "sangli": MessageLookupByLibrary.simpleMessage("सांगली"),
     "sangrampur": MessageLookupByLibrary.simpleMessage("संग्रामपूर"),
     "satara": MessageLookupByLibrary.simpleMessage("सातारा"),
     "sawali": MessageLookupByLibrary.simpleMessage("सावली"),
+    "select_an_option_to_continue": MessageLookupByLibrary.simpleMessage(
+      "कृपया पुढे जाण्यासाठी पर्याय निवडा",
+    ),
+    "self_employed": MessageLookupByLibrary.simpleMessage("स्वयंरोजगार"),
     "send_again": MessageLookupByLibrary.simpleMessage("पुन्हा पाठवा"),
     "shegaon": MessageLookupByLibrary.simpleMessage("शेगाव"),
     "shevgaon": MessageLookupByLibrary.simpleMessage("शेवगाव"),
@@ -222,6 +232,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "काहीतरी चूक झाली आहे, कृपया नंतर पुन्हा प्रयत्न करा!",
     ),
     "state": MessageLookupByLibrary.simpleMessage("राज्य"),
+    "student": MessageLookupByLibrary.simpleMessage("विद्यार्थी"),
     "sub_district": MessageLookupByLibrary.simpleMessage("तालुका"),
     "submit": MessageLookupByLibrary.simpleMessage("सबमिट करा"),
     "telhara": MessageLookupByLibrary.simpleMessage("तेल्हारा"),
@@ -231,6 +242,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tiosa": MessageLookupByLibrary.simpleMessage("तिवसा"),
     "tumsar": MessageLookupByLibrary.simpleMessage("तुमसर"),
+    "unemployed": MessageLookupByLibrary.simpleMessage("बेरोजगार"),
     "vaijapur": MessageLookupByLibrary.simpleMessage("वैजापूर"),
     "verify_your_account": MessageLookupByLibrary.simpleMessage(
       "तुमचे खाते सत्यापित करा",
@@ -249,6 +261,9 @@ class MessageLookup extends MessageLookupByLibrary {
         ),
     "welcome": MessageLookupByLibrary.simpleMessage(
       "मराठा शिवमुद्रा प्रतिष्ठान मध्ये स्वागत आहे",
+    ),
+    "what_do_you_do_for_a_living": MessageLookupByLibrary.simpleMessage(
+      "तुम्ही काय काम करता?",
     ),
     "yavatmal": MessageLookupByLibrary.simpleMessage("यवतमाळ"),
   };

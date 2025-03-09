@@ -4,7 +4,7 @@ part 'ol_initiate_model.freezed.dart';
 part 'ol_initiate_model.g.dart';
 
 @freezed
-class OLInitiateModel with _$OLInitiateModel {
+abstract class OLInitiateModel with _$OLInitiateModel {
   const factory OLInitiateModel({
     required String responseType,
     required bool success,
@@ -17,7 +17,7 @@ class OLInitiateModel with _$OLInitiateModel {
 }
 
 @freezed
-class InitiateResponse with _$InitiateResponse {
+abstract class InitiateResponse with _$InitiateResponse {
   const factory InitiateResponse({
     String? requestID,
     String? verification,

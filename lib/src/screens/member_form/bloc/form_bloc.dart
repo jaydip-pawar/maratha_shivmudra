@@ -31,7 +31,9 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
   final TextEditingController mobileNoController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final ValueNotifier<bool> showDropDown = ValueNotifier(true);
+  final ValueNotifier<bool> showErrorNotifier = ValueNotifier(false);
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  String living = '';
   String mobileNumber = '';
 
   void _onStateChanged() {
@@ -69,6 +71,7 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
         pincodeController.text.isNotEmpty &&
         districtController.text.isNotEmpty &&
         subDistrictController.text.isNotEmpty &&
+        living.isNotEmpty &&
         mobileNoController.text.isNotEmpty;
   }
 
@@ -87,6 +90,7 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
       'subDistrict': subDistrictController.text,
       'mobileNo': mobileNoController.text,
       'email': emailController.text,
+      'living': living,
     };
 
     return await db
@@ -116,6 +120,7 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     mobileNoController.dispose();
     emailController.dispose();
     showDropDown.dispose();
+    showErrorNotifier.dispose();
     return super.close();
   }
 }

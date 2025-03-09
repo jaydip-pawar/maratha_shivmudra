@@ -6,9 +6,8 @@ part of 'ol_verified_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$OLVerifiedModelImpl _$$OLVerifiedModelImplFromJson(
-        Map<String, dynamic> json) =>
-    _$OLVerifiedModelImpl(
+_OLVerifiedModel _$OLVerifiedModelFromJson(Map<String, dynamic> json) =>
+    _OLVerifiedModel(
       responseType: json['responseType'] as String,
       response:
           VerifiedResponse.fromJson(json['response'] as Map<String, dynamic>),
@@ -16,8 +15,7 @@ _$OLVerifiedModelImpl _$$OLVerifiedModelImplFromJson(
       success: json['success'] as bool,
     );
 
-Map<String, dynamic> _$$OLVerifiedModelImplToJson(
-        _$OLVerifiedModelImpl instance) =>
+Map<String, dynamic> _$OLVerifiedModelToJson(_OLVerifiedModel instance) =>
     <String, dynamic>{
       'responseType': instance.responseType,
       'response': instance.response,
@@ -25,9 +23,8 @@ Map<String, dynamic> _$$OLVerifiedModelImplToJson(
       'success': instance.success,
     };
 
-_$VerifiedResponseImpl _$$VerifiedResponseImplFromJson(
-        Map<String, dynamic> json) =>
-    _$VerifiedResponseImpl(
+_VerifiedResponse _$VerifiedResponseFromJson(Map<String, dynamic> json) =>
+    _VerifiedResponse(
       firebaseInfo: json['firebaseInfo'] as Map<String, dynamic>?,
       token: json['token'] as String,
       status: json['status'] as String,
@@ -46,8 +43,7 @@ _$VerifiedResponseImpl _$$VerifiedResponseImplFromJson(
       sessionInfo: json['sessionInfo'] as Map<String, dynamic>?,
     );
 
-Map<String, dynamic> _$$VerifiedResponseImplToJson(
-        _$VerifiedResponseImpl instance) =>
+Map<String, dynamic> _$VerifiedResponseToJson(_VerifiedResponse instance) =>
     <String, dynamic>{
       'firebaseInfo': instance.firebaseInfo,
       'token': instance.token,
@@ -61,8 +57,7 @@ Map<String, dynamic> _$$VerifiedResponseImplToJson(
       'sessionInfo': instance.sessionInfo,
     };
 
-_$IdentityImpl _$$IdentityImplFromJson(Map<String, dynamic> json) =>
-    _$IdentityImpl(
+_Identity _$IdentityFromJson(Map<String, dynamic> json) => _Identity(
       identityType: json['identityType'] as String,
       identityValue: json['identityValue'] as String,
       channel: json['channel'] as String,
@@ -72,8 +67,7 @@ _$IdentityImpl _$$IdentityImplFromJson(Map<String, dynamic> json) =>
       verifiedAt: json['verifiedAt'] as String,
     );
 
-Map<String, dynamic> _$$IdentityImplToJson(_$IdentityImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$IdentityToJson(_Identity instance) => <String, dynamic>{
       'identityType': instance.identityType,
       'identityValue': instance.identityValue,
       'channel': instance.channel,
@@ -82,8 +76,7 @@ Map<String, dynamic> _$$IdentityImplToJson(_$IdentityImpl instance) =>
       'verifiedAt': instance.verifiedAt,
     };
 
-_$NetworkImpl _$$NetworkImplFromJson(Map<String, dynamic> json) =>
-    _$NetworkImpl(
+_Network _$NetworkFromJson(Map<String, dynamic> json) => _Network(
       ip: json['ip'] as String,
       timezone: json['timezone'] as String,
       ipLocation: json['ipLocation'] == null
@@ -91,15 +84,13 @@ _$NetworkImpl _$$NetworkImplFromJson(Map<String, dynamic> json) =>
           : IPLocation.fromJson(json['ipLocation'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$$NetworkImplToJson(_$NetworkImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$NetworkToJson(_Network instance) => <String, dynamic>{
       'ip': instance.ip,
       'timezone': instance.timezone,
       'ipLocation': instance.ipLocation,
     };
 
-_$IPLocationImpl _$$IPLocationImplFromJson(Map<String, dynamic> json) =>
-    _$IPLocationImpl(
+_IPLocation _$IPLocationFromJson(Map<String, dynamic> json) => _IPLocation(
       city: json['city'] == null
           ? null
           : City.fromJson(json['city'] as Map<String, dynamic>),
@@ -117,7 +108,7 @@ _$IPLocationImpl _$$IPLocationImplFromJson(Map<String, dynamic> json) =>
       postalCode: json['postalCode'] as String?,
     );
 
-Map<String, dynamic> _$$IPLocationImplToJson(_$IPLocationImpl instance) =>
+Map<String, dynamic> _$IPLocationToJson(_IPLocation instance) =>
     <String, dynamic>{
       'city': instance.city,
       'subdivisions': instance.subdivisions,
@@ -128,51 +119,46 @@ Map<String, dynamic> _$$IPLocationImplToJson(_$IPLocationImpl instance) =>
       'postalCode': instance.postalCode,
     };
 
-_$CityImpl _$$CityImplFromJson(Map<String, dynamic> json) => _$CityImpl(
+_City _$CityFromJson(Map<String, dynamic> json) => _City(
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$$CityImplToJson(_$CityImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$CityToJson(_City instance) => <String, dynamic>{
       'name': instance.name,
     };
 
-_$SubdivisionsImpl _$$SubdivisionsImplFromJson(Map<String, dynamic> json) =>
-    _$SubdivisionsImpl(
+_Subdivisions _$SubdivisionsFromJson(Map<String, dynamic> json) =>
+    _Subdivisions(
       code: json['code'] as String,
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$$SubdivisionsImplToJson(_$SubdivisionsImpl instance) =>
+Map<String, dynamic> _$SubdivisionsToJson(_Subdivisions instance) =>
     <String, dynamic>{
       'code': instance.code,
       'name': instance.name,
     };
 
-_$CountryImpl _$$CountryImplFromJson(Map<String, dynamic> json) =>
-    _$CountryImpl(
+_Country _$CountryFromJson(Map<String, dynamic> json) => _Country(
       code: json['code'] as String,
       name: json['name'] as String,
     );
 
-Map<String, dynamic> _$$CountryImplToJson(_$CountryImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$CountryToJson(_Country instance) => <String, dynamic>{
       'code': instance.code,
       'name': instance.name,
     };
 
-_$ContinentImpl _$$ContinentImplFromJson(Map<String, dynamic> json) =>
-    _$ContinentImpl(
+_Continent _$ContinentFromJson(Map<String, dynamic> json) => _Continent(
       code: json['code'] as String,
     );
 
-Map<String, dynamic> _$$ContinentImplToJson(_$ContinentImpl instance) =>
+Map<String, dynamic> _$ContinentToJson(_Continent instance) =>
     <String, dynamic>{
       'code': instance.code,
     };
 
-_$DeviceInfoImpl _$$DeviceInfoImplFromJson(Map<String, dynamic> json) =>
-    _$DeviceInfoImpl(
+_DeviceInfo _$DeviceInfoFromJson(Map<String, dynamic> json) => _DeviceInfo(
       userAgent: json['userAgent'] as String,
       platform: json['platform'] as String,
       vendor: json['vendor'] as String,
@@ -189,7 +175,7 @@ _$DeviceInfoImpl _$$DeviceInfoImplFromJson(Map<String, dynamic> json) =>
       fontFamily: json['fontFamily'] as String,
     );
 
-Map<String, dynamic> _$$DeviceInfoImplToJson(_$DeviceInfoImpl instance) =>
+Map<String, dynamic> _$DeviceInfoToJson(_DeviceInfo instance) =>
     <String, dynamic>{
       'userAgent': instance.userAgent,
       'platform': instance.platform,

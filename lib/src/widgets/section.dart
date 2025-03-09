@@ -8,6 +8,7 @@ class Section extends StatelessWidget {
     this.child,
     this.spacing,
     this.children,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
   })  : assert(
           !(child != null && children != null),
           'You can provide either a child or children, but not both.',
@@ -24,6 +25,7 @@ class Section extends StatelessWidget {
   final Widget? child;
   final double? spacing;
   final List<Widget>? children;
+  final CrossAxisAlignment crossAxisAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +34,14 @@ class Section extends StatelessWidget {
         color: AppColors.sectionColor,
         borderRadius: BorderRadius.circular(10),
       ),
+      width: double.infinity,
       constraints: BoxConstraints(maxWidth: 800),
       padding: EdgeInsets.all(Responsive.isMobile(context) ? 16.0 : 24.0),
       child: child != null
           ? child!
           : Column(
               mainAxisAlignment: MainAxisAlignment.start,
-              spacing: spacing ?? 0,
+              crossAxisAlignment: crossAxisAlignment,
               children: children!,
             ),
     );
