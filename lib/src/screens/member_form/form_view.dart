@@ -6,6 +6,7 @@ import 'package:maratha_shivmudra/core/constants/state_constant.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
+import 'package:maratha_shivmudra/src/screens/member_form/dialogs/form_submitted_dialog.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/animated_button.dart';
 import 'package:maratha_shivmudra/src/widgets/customRadioGroup.dart';
 import 'package:maratha_shivmudra/src/widgets/responsive_rc.dart';
@@ -343,7 +344,10 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                           }
                           formBloc.formKey.currentState!.validate();
                           if (model.validate()) {
-                            await formBloc.setFormData();
+                            final isSuccess = await formBloc.setFormData();
+                            if (isSuccess) {
+                              FormSubmittedDialog.show(context);
+                            }
                           }
                         },
                       ),

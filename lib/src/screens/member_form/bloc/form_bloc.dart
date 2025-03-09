@@ -98,10 +98,14 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
         .doc('form_info')
         .set(formData)
         .then((_) {
+      print('IN THEN');
       final ss = getIt<SecureStorage>();
       ss.setLoginFlag(true);
       return true;
-    }).catchError((_) => false);
+    }).catchError((_) {
+      print('IN catch');
+      return false;
+    });
   }
 
   @override
