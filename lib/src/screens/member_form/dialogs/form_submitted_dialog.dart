@@ -16,7 +16,10 @@ class FormSubmittedDialog {
           insetPadding:
               context.isMobile ? EdgeInsets.symmetric(horizontal: 16) : null,
           child: Container(
-            constraints: BoxConstraints(maxWidth: 700, maxHeight: 400),
+            constraints: BoxConstraints(
+              maxWidth: 700,
+              maxHeight: MediaQuery.sizeOf(context).height,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
