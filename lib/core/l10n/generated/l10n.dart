@@ -260,9 +260,9 @@ class S {
     );
   }
 
-  /// `City`
+  /// `City/Village`
   String get city {
-    return Intl.message('City', name: 'city', desc: '', args: []);
+    return Intl.message('City/Village', name: 'city', desc: '', args: []);
   }
 
   /// `Pincode`

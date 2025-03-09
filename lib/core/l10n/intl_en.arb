@@ -24,7 +24,7 @@
   "state": "State",
   "district": "District",
   "sub_district": "Sub-District",
-  "city": "City",
+  "city": "City/Village",
   "pincode": "Pincode",
   "mobile_no": "Mobile No",
   "email": "Email",

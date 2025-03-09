@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:data/src/constants/secured_storage_constants.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/foundation.dart';
@@ -40,12 +38,6 @@ class SecureStorageImpl implements SecureStorage {
     if (kIsWeb) {
       await write(key: SecuredStorageConstants.login, value: value.toString());
     }
-    if (Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(SecuredStorageConstants.sharedLogin, value);
-    } else {
-      await write(key: SecuredStorageConstants.login, value: value.toString());
-    }
   }
 
   @override
@@ -54,20 +46,7 @@ class SecureStorageImpl implements SecureStorage {
   }
 
   Future<bool> _getAndClear() async {
-    if (kIsWeb) {
-      return await read(key: SecuredStorageConstants.login) == "true";
-    }
-    if (Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      final isLogin = prefs.getBool(SecuredStorageConstants.sharedLogin);
-      if (isLogin != null && isLogin) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return await read(key: SecuredStorageConstants.login) == "true";
-    }
+    return await read(key: SecuredStorageConstants.login) == "true";
   }
 
   @override

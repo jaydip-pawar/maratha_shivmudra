@@ -55,7 +55,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chikhaldara": MessageLookupByLibrary.simpleMessage("चिखलदरा"),
     "chikhli": MessageLookupByLibrary.simpleMessage("चिखली"),
     "chimur": MessageLookupByLibrary.simpleMessage("चिमूर"),
-    "city": MessageLookupByLibrary.simpleMessage("शहर"),
+    "city": MessageLookupByLibrary.simpleMessage("शहर/गाव"),
     "continue_text": MessageLookupByLibrary.simpleMessage("सुरू ठेवा"),
     "daryapur": MessageLookupByLibrary.simpleMessage("दर्यापूर"),
     "date_of_birth": MessageLookupByLibrary.simpleMessage("जन्मतारीख"),
