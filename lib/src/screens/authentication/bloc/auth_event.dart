@@ -15,8 +15,10 @@ class ApiStatusEvent extends AuthEvent {
   ApiStatusEvent({
     required this.isLoading,
     required this.hasError,
+    this.errorMessage,
   });
 
   final bool isLoading;
   final bool hasError;
+  final String? errorMessage;
 }

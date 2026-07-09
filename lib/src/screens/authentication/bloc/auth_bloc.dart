@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:domain/domain.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:maratha_shivmudra/core/base/bloc/bloc_base/bloc_base.dart';
@@ -10,7 +10,6 @@ import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
-import 'package:otpless_flutter_web/otpless_flutter_web.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -21,14 +20,12 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
 
   late final GlobalKey<FormState> formKey;
   late final TextEditingController phoneController;
-  late final Otpless _otpLess;
+  ConfirmationResult? _confirmationResult;
 
   @override
   void init() {
     formKey = GlobalKey<FormState>();
     phoneController = TextEditingController();
-    _otpLess = Otpless();
-    _otpLess.headlessResponse(_onHeadlessResult);
     super.init();
   }
 
@@ -46,6 +43,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
           (state as AuthInitialState).copyWith(
             isLoading: event.isLoading,
             hasError: event.hasError,
+            errorMessage: event.errorMessage,
           ),
         );
       } else if (state is AuthVerificationState) {
@@ -53,6 +51,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
           (state as AuthVerificationState).copyWith(
             isLoading: event.isLoading,
             hasError: event.hasError,
+            errorMessage: event.errorMessage,
           ),
         );
       }
@@ -92,94 +91,115 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     }
   }
 
-  Future<bool> _onHeadlessResult(dynamic result) async {
-    debugPrint(result.toString());
-    final json = jsonDecode(result.toString());
-
-    if (json['statusCode'] == 200) {
-      switch (json['responseType']) {
-        case 'INITIATE':
-          final model = OLInitiateModel.fromJson(json as Map<String, dynamic>);
-          if (model.success) {
-            add(OtpInitiatedEvent());
-            return true;
-          }
-          return false;
-        case 'VERIFY':
-          final model = OLInitiateModel.fromJson(json as Map<String, dynamic>);
-          if (model.success) {
-            return true;
-          }
-          return false;
-        case 'ONETAP':
-          final model = OLVerifiedModel.fromJson(json as Map<String, dynamic>);
-          if (model.success) {
-            await setUserData();
-            return true;
-          }
-          return false;
-        case 'OTP_AUTO_READ':
-          return true;
-        default:
-          return false;
-      }
+  String _mapAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-phone-number':
+        return 'Please enter a valid phone number.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'captcha-check-failed':
+        return 'Verification challenge failed. Please try again.';
+      case 'missing-app-credential':
+        return 'Verification challenge failed. Please reload and try again.';
+      case 'app-not-authorized':
+        return 'This domain is not authorized for phone authentication.';
+      case 'operation-not-allowed':
+        return 'Phone authentication is not enabled for this project.';
+      case 'invalid-verification-code':
+        return 'Invalid OTP. Please enter the correct code.';
+      case 'session-expired':
+        return 'OTP has expired. Please request a new code.';
+      case 'network-request-failed':
+        return 'Network error. Please check your internet connection.';
+      default:
+        return e.message ?? 'Authentication failed. Please try again.';
     }
-
-    return false;
   }
 
   Future<bool> initiateOtp() async {
     final phoneNumber = phoneController.text.replaceAll(' ', '');
+    final normalizedNumber = '+91$phoneNumber';
 
     setData<String>('mobileNumber', phoneNumber);
-    final completer = Completer<bool>();
 
-    Map<String, dynamic> arg = {
-      "phone": phoneNumber,
-      "countryCode": "91",
-    };
+    try {
+      _confirmationResult =
+          await FirebaseAuth.instance.signInWithPhoneNumber(normalizedNumber);
 
-    _otpLess.initiatePhoneAuth(
-      (result) async {
-        final isSuccess = await _onHeadlessResult(result);
-        if (isSuccess) {
-          add(ApiStatusEvent(isLoading: false, hasError: false));
-        } else {
-          add(ApiStatusEvent(isLoading: false, hasError: true));
-        }
-        completer.complete(isSuccess);
-      },
-      arg,
-    );
-
-    return completer.future;
+      add(OtpInitiatedEvent());
+      add(ApiStatusEvent(isLoading: false, hasError: false, errorMessage: null));
+      return true;
+    } on FirebaseAuthException catch (e) {
+      add(
+        ApiStatusEvent(
+          isLoading: false,
+          hasError: true,
+          errorMessage: _mapAuthError(e),
+        ),
+      );
+      return false;
+    } catch (_) {
+      add(
+        ApiStatusEvent(
+          isLoading: false,
+          hasError: true,
+          errorMessage: 'Unable to send OTP right now. Please try again.',
+        ),
+      );
+      return false;
+    }
   }
 
   Future<bool> verifyOtp(String otp) async {
     final phoneNumber = getData<String>('mobileNumber');
-    final completer = Completer<bool>();
+    if (phoneNumber == null || _confirmationResult == null) {
+      add(
+        ApiStatusEvent(
+          isLoading: false,
+          hasError: true,
+          errorMessage: 'Please request OTP again before verifying.',
+        ),
+      );
+      return false;
+    }
 
-    Map<String, dynamic> arg = {
-      "phone": phoneNumber,
-      "countryCode": "91",
-      "otp": otp,
-    };
+    try {
+      final userCredential = await _confirmationResult!.confirm(otp);
+      final isSuccess = userCredential.user != null;
 
-    _otpLess.verifyAuth(
-      (result) async {
-        final isSuccess = await _onHeadlessResult(result);
-        if (isSuccess) {
-          add(ApiStatusEvent(isLoading: false, hasError: false));
-        } else {
-          add(ApiStatusEvent(isLoading: false, hasError: true));
-        }
-        if (completer.isCompleted) return;
-        completer.complete(isSuccess);
-      },
-      arg,
-    );
+      if (!isSuccess) {
+        add(
+          ApiStatusEvent(
+            isLoading: false,
+            hasError: true,
+            errorMessage: 'OTP verification failed. Please try again.',
+          ),
+        );
+        return false;
+      }
 
-    return completer.future;
+      await setUserData();
+      add(ApiStatusEvent(isLoading: false, hasError: false, errorMessage: null));
+      return true;
+    } on FirebaseAuthException catch (e) {
+      add(
+        ApiStatusEvent(
+          isLoading: false,
+          hasError: true,
+          errorMessage: _mapAuthError(e),
+        ),
+      );
+      return false;
+    } catch (_) {
+      add(
+        ApiStatusEvent(
+          isLoading: false,
+          hasError: true,
+          errorMessage: 'Unable to verify OTP right now. Please try again.',
+        ),
+      );
+      return false;
+    }
   }
 
   @override

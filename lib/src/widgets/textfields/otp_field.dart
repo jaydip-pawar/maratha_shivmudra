@@ -12,7 +12,7 @@ class OtpField extends StatefulWidget {
 
 class _OtpFieldState extends State<OtpField>
     with SingleTickerProviderStateMixin {
-  final int _otpLength = 4;
+  final int _otpLength = 6;
   late List<TextEditingController> _controllers;
   late List<FocusNode> _focusNodes;
   late AnimationController _animationController;
@@ -70,7 +70,14 @@ class _OtpFieldState extends State<OtpField>
       });
 
       // Simulating async verification
-      final isSuccess = await widget.onDone(_currentOtp);
+      bool isSuccess = false;
+      try {
+        isSuccess = await widget.onDone(_currentOtp);
+      } catch (_) {
+        isSuccess = false;
+      }
+
+      if (!mounted) return;
 
       setState(() {
         _isSuccess = isSuccess;
@@ -87,6 +94,8 @@ class _OtpFieldState extends State<OtpField>
   }
 
   void _clearOtp() {
+    if (!mounted) return;
+
     for (var controller in _controllers) {
       controller.clear();
     }

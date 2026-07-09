@@ -24,7 +24,8 @@ class OtpVerificationView extends StatelessWidget {
           if (state.hasError as bool) ...[
             16.h,
             Text(
-              context.l10n.something_went_wrong,
+              (state.errorMessage as String?) ??
+                  context.l10n.something_went_wrong,
               style: TextStyle(
                 color: AppColors.errorColor,
               ),
@@ -94,7 +95,12 @@ class OtpVerificationView extends StatelessWidget {
                   style: TextStyle(fontSize: 14),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    bloc.add(
+                      ApiStatusEvent(isLoading: true, hasError: false),
+                    );
+                    bloc.initiateOtp();
+                  },
                   child: Text(
                     context.l10n.send_again,
                     style: TextStyle(fontSize: 14, color: Colors.blue),

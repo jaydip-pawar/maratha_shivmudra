@@ -6,46 +6,54 @@ class AuthInitialState extends AuthState {
   AuthInitialState({
     this.isLoading = false,
     this.hasError = false,
+    this.errorMessage,
   });
 
   final bool isLoading;
   final bool hasError;
+  final String? errorMessage;
 
   AuthInitialState copyWith({
     bool? isLoading,
     bool? hasError,
+    String? errorMessage,
   }) {
     return AuthInitialState(
       isLoading: isLoading ?? this.isLoading,
       hasError: hasError ?? this.hasError,
+      errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object> get props => [isLoading, hasError];
+  List<Object?> get props => [isLoading, hasError, errorMessage];
 }
 
 class AuthVerificationState extends AuthState {
   AuthVerificationState({
     this.isLoading = false,
     this.hasError = false,
+    this.errorMessage,
   });
 
   final bool isLoading;
   final bool hasError;
+  final String? errorMessage;
 
   AuthVerificationState copyWith({
     bool? isLoading,
     bool? hasError,
+    String? errorMessage,
   }) {
     return AuthVerificationState(
       isLoading: isLoading ?? this.isLoading,
       hasError: hasError ?? this.hasError,
+      errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object> get props => [isLoading, hasError];
+  List<Object?> get props => [isLoading, hasError, errorMessage];
 }
 
 class AuthSuccessState extends AuthState {
