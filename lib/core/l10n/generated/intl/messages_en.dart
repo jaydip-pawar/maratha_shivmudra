@@ -49,6 +49,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chandrapur": MessageLookupByLibrary.simpleMessage("Chandrapur"),
     "chandur_railway": MessageLookupByLibrary.simpleMessage("Chandur Railway"),
     "chandurbazar": MessageLookupByLibrary.simpleMessage("Chandurbazar"),
+    "change_number": MessageLookupByLibrary.simpleMessage("Change Mobile Number"),
     "chhatrapati_sambhajinagar": MessageLookupByLibrary.simpleMessage(
       "Chhatrapati Sambhajinagar",
     ),

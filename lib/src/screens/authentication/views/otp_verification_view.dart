@@ -1,4 +1,5 @@
 import 'package:dotlottie_loader/dotlottie_loader.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -64,6 +65,28 @@ class OtpVerificationView extends StatelessWidget {
             Text(
               context.l10n.enter_the_verification_code_sent_to_your_phone,
               style: TextStyle(fontSize: 14),
+            ),
+            4.h,
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 14, color: Colors.black),
+                children: [
+                  TextSpan(text: (){
+                    final number = bloc.phoneController.text.replaceAll(' ', '');
+                    return '+91 $number. ';
+                  }()),
+                  TextSpan(
+                    text: context.l10n.change_number,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => bloc.add(BackEvent()),
+                  ),
+                ],
+              ),
             ),
             24.h,
             OtpField(

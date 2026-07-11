@@ -22,3 +22,5 @@ class ApiStatusEvent extends AuthEvent {
   final bool hasError;
   final bool invalidOtp;
 }
+
+class BackEvent extends AuthEvent {}

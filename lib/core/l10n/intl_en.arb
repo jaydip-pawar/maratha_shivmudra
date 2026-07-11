@@ -8,6 +8,7 @@
   "please_enter_a_valid_indian_mobile_number": "Please enter a valid Indian mobile number",
   "verify_your_account": "Verify your account",
   "enter_the_verification_code_sent_to_your_phone": "Enter the verification code sent to your phone",
+  "change_number": "Change Mobile Number",
   "havent_received_the_code": "Haven't received the code?",
   "send_again": "Send again",
   "account_verified": "Account verified!",

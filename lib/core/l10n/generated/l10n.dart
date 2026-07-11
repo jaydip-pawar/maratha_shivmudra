@@ -200,6 +200,16 @@ class S {
     );
   }
 
+  /// `Change Mobile Number`
+  String get change_number {
+    return Intl.message(
+      'Change Mobile Number',
+      name: 'change_number',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `The OTP you entered is incorrect. Please try again.
   String get invalid_otp {
     return Intl.message(

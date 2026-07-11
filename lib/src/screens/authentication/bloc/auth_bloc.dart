@@ -55,6 +55,19 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
         );
       }
     });
+
+    on<BackEvent>((event, emit) {
+      if (state is AuthVerificationState) {
+        emit(
+          AuthInitialState(
+            isLoading: false,
+            hasError: false,
+            invalidOtp: false,
+          ),
+        );
+        phoneController.clear();
+      }
+    });
   }
 
   Future<void> setUserData() async {

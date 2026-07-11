@@ -25,98 +25,114 @@ class _LoginViewState extends State<LoginView> {
         if (state.hasError as bool) {
           bloc.formKey.currentState!.validate();
         }
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.enter_your_mobile_number,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-              ),
-              Text(
-                context.l10n
-                    .we_will_sign_you_in_or_create_an_account_automatically,
-                style: TextStyle(fontSize: 18),
-              ),
-              24.h,
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey, width: .8),
+        return Stack(
+          children: [
+            Positioned(
+              right: 16,
+              top: 16,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  child: Icon(Icons.close),
+                  onTap: () => Navigator.pop(context),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: 400),
-                        child: Form(
-                          key: bloc.formKey,
-                          child: PhoneNumberField(
-                            controller: bloc.phoneController,
-                            validator: (_) {
-                              if (state.hasError as bool) {
-                                return (state.errorMessage as String?) ??
-                                    context.l10n.something_went_wrong;
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ),
-                      16.h,
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: 400),
-                        child: CustomMaterialButton(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: ScaleTransition(
-                                  scale: animation,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: state.isLoading as bool
-                                ? SizedBox(
-                                    key: ValueKey('loading'),
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    key: ValueKey('login_text'),
-                                    context.l10n.login,
-                                  ),
-                          ),
-                          onTap: () {
-                            if (state.isLoading as bool) return;
-                            if (bloc.formKey.currentState!.validate()) {
-                              bloc.add(
-                                ApiStatusEvent(
-                                  isLoading: true,
-                                  hasError: false,
-                                ),
-                              );
-                              bloc.initiateOtp();
-                            }
-                          },
-                        ),
-                      ),
-                    ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.enter_your_mobile_number,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                   ),
-                ),
-              )
-            ],
-          ),
+                  Text(
+                    context
+                        .l10n
+                        .we_will_sign_you_in_or_create_an_account_automatically,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  24.h,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey, width: .8),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 400),
+                            child: Form(
+                              key: bloc.formKey,
+                              child: PhoneNumberField(
+                                controller: bloc.phoneController,
+                                validator: (_) {
+                                  if (state.hasError as bool) {
+                                    return (state.errorMessage as String?) ??
+                                        context.l10n.something_went_wrong;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ),
+                          16.h,
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 400),
+                            child: CustomMaterialButton(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: state.isLoading as bool
+                                    ? SizedBox(
+                                        key: ValueKey('loading'),
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        key: ValueKey('login_text'),
+                                        context.l10n.login,
+                                      ),
+                              ),
+                              onTap: () {
+                                if (state.isLoading as bool) return;
+                                if (bloc.formKey.currentState!.validate()) {
+                                  bloc.add(
+                                    ApiStatusEvent(
+                                      isLoading: true,
+                                      hasError: false,
+                                    ),
+                                  );
+                                  bloc.initiateOtp();
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
