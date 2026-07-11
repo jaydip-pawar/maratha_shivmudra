@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.6.1
+  sdk: ^3.8.0
 
 dependencies:
   data:
@@ -20,7 +20,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  auto_route: ^10.0.1
+  auto_route: ^11.1.0
   cloud_firestore: ^5.6.5
   cupertino_icons: ^1.0.8
   dotlottie_loader: ^0.0.4
@@ -29,20 +29,18 @@ dependencies:
   firebase_core: ^3.12.1
   flutter_bloc: ^9.1.0
   get_it: ^8.0.3
-  injectable: ^2.5.0
+  injectable: ^3.0.0
   intl_utils: any
   lottie: ^3.2.0
-  otpless_flutter_web:
-    git: https://github.com/jaydip-pawar/flutter-web-otpless
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  auto_route_generator: ^10.0.1
+  auto_route_generator: ^10.6.0
   build_runner: ^2.4.15
   flutter_lints: ^5.0.0
-  injectable_generator: ^2.7.0
+  injectable_generator: ^3.1.0
   very_good_analysis: 7.0.0
 
 flutter:
@@ -52,7 +50,6 @@ flutter:
   assets:
     - assets/images/bg.png
     - assets/lotties/
-    - assets/gifs/
 
   fonts:
     - family: NotoSerifDevanagari

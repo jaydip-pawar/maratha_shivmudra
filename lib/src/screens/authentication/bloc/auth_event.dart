@@ -15,8 +15,10 @@ class ApiStatusEvent extends AuthEvent {
   ApiStatusEvent({
     required this.isLoading,
     required this.hasError,
+     this.invalidOtp = false,
   });
 
   final bool isLoading;
   final bool hasError;
+  final bool invalidOtp;
 }

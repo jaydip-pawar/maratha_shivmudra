@@ -1,49 +1,13 @@
 import 'dart:io';
 
-import 'package:data/src/entity/remote/error/error_entity.dart';
 import 'package:dio/dio.dart';
 import 'package:domain/domain.dart';
-import 'package:retrofit/retrofit.dart';
 
 Future<Either<NetworkError, T>> safeApiCall<T>(Future<T> apiCall) async {
   try {
     final originalResponse = await apiCall;
-    final eitherResponse = originalResponse as HttpResponse<dynamic>;
 
-    if (eitherResponse.response.statusCode == 200) {
-      return right(originalResponse);
-    } else {
-      if (eitherResponse.response.data != null) {
-        try {
-          final ErrorEntity errorResponseEntity =
-              ErrorEntity.fromJson(eitherResponse.response.data);
-          return left(
-            NetworkError(
-              httpError: errorResponseEntity.code,
-              message: errorResponseEntity.message,
-              cause: Exception("Server Response Error"),
-            ),
-          );
-        } catch (exception) {
-          // exception.printStackTrace();
-          return left(
-            NetworkError(
-              cause: Exception("Server Response Error"),
-              httpError: eitherResponse.response.statusCode ?? 404,
-              message: eitherResponse.response.statusMessage ?? '',
-            ),
-          );
-        }
-      } else {
-        return left(
-          NetworkError(
-            cause: Exception("Server Response Error"),
-            httpError: eitherResponse.response.statusCode ?? 404,
-            message: eitherResponse.response.statusMessage ?? '',
-          ),
-        );
-      }
-    }
+    return right(originalResponse);
   } on DioException catch (e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -72,25 +36,21 @@ Future<Either<NetworkError, T>> safeApiCall<T>(Future<T> apiCall) async {
         );
       case DioExceptionType.badCertificate:
       case DioExceptionType.badResponse:
+        final data = e.response?.data;
+
+        final details = data['Details'];
+        final code = details == 'OTP Mismatch' ? 1001 : 502;
+        return left(NetworkError(message: details, httpError: code, cause: e));
+
       case DioExceptionType.cancel:
       case DioExceptionType.connectionError:
       case DioExceptionType.unknown:
         return left(
-          NetworkError(
-            message: 'Unknown error',
-            httpError: 502,
-            cause: e,
-          ),
+          NetworkError(message: 'Unknown error', httpError: 502, cause: e),
         );
     }
   } on IOException catch (e) {
-    return left(
-      NetworkError(
-        message: e.toString(),
-        httpError: 502,
-        cause: e,
-      ),
-    );
+    return left(NetworkError(message: e.toString(), httpError: 502, cause: e));
   }
   // on HttpException catch (e) {
   //   return left(NetworkError(message: e.message, httpError: 502, cause: e));

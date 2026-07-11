@@ -93,6 +93,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "hingoli": MessageLookupByLibrary.simpleMessage("हिंगोली"),
     "homemaker": MessageLookupByLibrary.simpleMessage("गृहपालक"),
+    "invalid_otp": MessageLookupByLibrary.simpleMessage("तुम्ही टाकलेला OTP चुकीचा आहे. कृपया पुन्हा प्रयत्न करा."),
     "jalgaon": MessageLookupByLibrary.simpleMessage("जळगाव"),
     "jalgaon_jamod": MessageLookupByLibrary.simpleMessage("जळगाव (जामोद)"),
     "jalna": MessageLookupByLibrary.simpleMessage("जालना"),

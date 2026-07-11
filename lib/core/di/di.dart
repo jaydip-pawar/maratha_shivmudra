@@ -6,9 +6,10 @@ import 'package:maratha_shivmudra/core/di/di.config.dart';
 
 GetIt getIt = GetIt.instance;
 
-@InjectableInit(initializerName: 'init')
-Future<void> initDependencyInjection() async {
-  getIt.init();
-  await $initDataModule(getIt);
-  await $initDomainModule(getIt);
-}
+@InjectableInit(
+  externalPackageModulesBefore: [
+    ExternalModule(DomainPackageModule),
+    ExternalModule(DataPackageModule),
+  ],
+)
+Future<GetIt> initDependencyInjection() async => getIt.init();

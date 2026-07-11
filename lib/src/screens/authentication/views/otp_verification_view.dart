@@ -24,10 +24,10 @@ class OtpVerificationView extends StatelessWidget {
           if (state.hasError as bool) ...[
             16.h,
             Text(
-              context.l10n.something_went_wrong,
-              style: TextStyle(
-                color: AppColors.errorColor,
-              ),
+              state.invalidOtp as bool
+                  ? context.l10n.invalid_otp
+                  : context.l10n.something_went_wrong,
+              style: TextStyle(color: AppColors.errorColor),
             ),
           ] else ...[
             16.h,
@@ -94,7 +94,13 @@ class OtpVerificationView extends StatelessWidget {
                   style: TextStyle(fontSize: 14),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    final bloc = context.read<AuthBloc>();
+
+                    bloc.add(ApiStatusEvent(isLoading: true, hasError: false));
+
+                    await bloc.initiateOtp();
+                  },
                   child: Text(
                     context.l10n.send_again,
                     style: TextStyle(fontSize: 14, color: Colors.blue),
@@ -125,7 +131,7 @@ class OtpVerificationView extends StatelessWidget {
                   colors: [
                     Color(0xffedf1f7),
                     Color(0xffc9d7e8),
-                    Color(0xffe1e8f2)
+                    Color(0xffe1e8f2),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -134,14 +140,15 @@ class OtpVerificationView extends StatelessWidget {
               height: 370,
               width: 264,
               child: DotLottieLoader.fromAsset(
-                  "assets/lotties/otp_illustration.lottie",
-                  frameBuilder: (BuildContext ctx, DotLottie? dotlottie) {
-                if (dotlottie != null) {
-                  return Lottie.memory(dotlottie.animations.values.single);
-                } else {
-                  return Container();
-                }
-              }),
+                'assets/lotties/otp_illustration.lottie',
+                frameBuilder: (BuildContext ctx, DotLottie? dotlottie) {
+                  if (dotlottie != null) {
+                    return Lottie.memory(dotlottie.animations.values.single);
+                  } else {
+                    return Container();
+                  }
+                },
+              ),
             ),
           ),
         ],

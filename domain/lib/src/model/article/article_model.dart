@@ -1,18 +1,10 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:dart_mappable/dart_mappable.dart';
 
-part 'article_model.g.dart';
+part 'article_model.mapper.dart';
 
-@JsonSerializable()
-class ArticleModel {
-  final int id;
-  final String title;
-  final double price;
-  final String description;
-  final String category;
-  final String image;
-  final Rating rating;
-
-  ArticleModel({
+@MappableClass()
+class ArticleModel with ArticleModelMappable {
+  const ArticleModel({
     required this.id,
     required this.title,
     required this.price,
@@ -22,21 +14,22 @@ class ArticleModel {
     required this.rating,
   });
 
-  factory ArticleModel.fromJson(Map<String, dynamic> json) =>
-      _$ArticleModelFromJson(json);
-  Map<String, dynamic> toJson() => _$ArticleModelToJson(this);
+  final int id;
+  final String title;
+  final double price;
+  final String description;
+  final String category;
+  final String image;
+  final Rating rating;
+
+  static const fromJson = ArticleModelMapper.fromMap;
+
 }
 
-@JsonSerializable()
-class Rating {
+@MappableClass()
+class Rating with RatingMappable {
+  const Rating({required this.rate, required this.count});
+
   final double rate;
   final int count;
-
-  Rating({
-    required this.rate,
-    required this.count,
-  });
-
-  factory Rating.fromJson(Map<String, dynamic> json) => _$RatingFromJson(json);
-  Map<String, dynamic> toJson() => _$RatingToJson(this);
 }

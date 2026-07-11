@@ -190,6 +190,16 @@ class S {
     );
   }
 
+  /// `The OTP you entered is incorrect. Please try again.
+  String get invalid_otp {
+    return Intl.message(
+      'The OTP you entered is incorrect. Please try again.',
+      name: 'invalid_otp',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Waiting for verification`
   String get waiting_for_verification {
     return Intl.message(
