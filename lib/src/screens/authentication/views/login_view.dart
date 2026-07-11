@@ -59,7 +59,8 @@ class _LoginViewState extends State<LoginView> {
                             controller: bloc.phoneController,
                             validator: (_) {
                               if (state.hasError as bool) {
-                                return context.l10n.something_went_wrong;
+                                return (state.errorMessage as String?) ??
+                                    context.l10n.something_went_wrong;
                               }
                               return null;
                             },
