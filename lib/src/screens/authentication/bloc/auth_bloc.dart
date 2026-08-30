@@ -103,9 +103,9 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   Future<bool> initiateOtp() async {
     try {
       String phoneNumber = phoneController.text.replaceAll(' ', '');
-      phoneNumber = '+91$phoneNumber';
 
       setData<String>('mobileNumber', phoneNumber);
+      phoneNumber = '+91$phoneNumber';
 
       final response = await getIt<AuthRepository>().sendOTP(phoneNumber);
 

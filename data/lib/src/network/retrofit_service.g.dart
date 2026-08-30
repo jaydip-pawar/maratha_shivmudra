@@ -58,7 +58,7 @@ class _RetrofitService implements RetrofitService {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'https://2factor.in/API/V1/3957ddbf-681b-11f1-8f15-0200cd936042/SMS/${mobile}/AUTOGEN/OTP1',
+            'https://2factor.in/API/V1/3957ddbf-681b-11f1-8f15-0200cd936042/SMS/${mobile}/AUTOGEN',
             queryParameters: queryParameters,
             data: _data,
           )

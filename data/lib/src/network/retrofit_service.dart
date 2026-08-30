@@ -15,7 +15,7 @@ abstract class RetrofitService {
   @POST(NetworkConstant.products)
   Future<List<ArticleModel>> getArticles();
 
-  @GET('${NetworkConstant.twoFactorBaseUrl}{mobile}/AUTOGEN/OTP1')
+  @GET('${NetworkConstant.twoFactorBaseUrl}{mobile}/AUTOGEN')
   Future<TwoFactorModel> sendOTP(
     @Path('mobile') String mobile,
   );
