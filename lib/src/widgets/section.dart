@@ -31,11 +31,22 @@ class Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.sectionColor,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.cardDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.darkBorder,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       width: double.infinity,
-      constraints: BoxConstraints(maxWidth: 800),
+      constraints: const BoxConstraints(maxWidth: 800),
       padding: EdgeInsets.all(Responsive.isMobile(context) ? 16.0 : 24.0),
       child: child != null
           ? child!

@@ -5,6 +5,8 @@ import 'package:maratha_shivmudra/core/utils/responsive.dart';
 extension BuildContextExtensions on BuildContext {
   S get l10n => S.of(this);
 
+  bool get isMarathi => Localizations.localeOf(this).languageCode == 'mr';
+
   bool get isMobile => Responsive.isMobile(this);
 
   bool get isMobileLarge => Responsive.isMobileLarge(this);

@@ -84,6 +84,15 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
         'mobile_no': phoneNumber,
         'referral_id': referralId ?? 'NONE',
       }, SetOptions(merge: true));
+
+      try {
+        await db.collection('site_data').doc('social_impact').set({
+          'volunteers': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('Error updating volunteers count: $e');
+      }
+
       add(OtpVerifiedEvent(isFormFilled: false));
     } else {
       final docRef = db.collection(phoneNumber).doc('form_info');

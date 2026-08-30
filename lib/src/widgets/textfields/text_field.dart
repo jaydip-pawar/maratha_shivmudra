@@ -42,14 +42,18 @@ class _CustomTextFieldState extends State<CustomTextField> {
     if (widget.labelText != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 2,
         children: [
           compulsoryField(
             child: Text(
               widget.labelText!,
-              style: TextStyle(fontSize: 16, color: AppColors.fieldTextColor),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.goldLight,
+              ),
             ),
           ),
+          const SizedBox(height: 6),
           child,
         ],
       );
@@ -60,13 +64,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
   Widget compulsoryField({required Widget child}) {
     if (widget.isCompulsory) {
       return Row(
-        spacing: 2,
         mainAxisSize: MainAxisSize.min,
         children: [
           child,
-          Text(
+          const SizedBox(width: 4),
+          const Text(
             '*',
-            style: TextStyle(fontSize: 16, color: AppColors.errorColor),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.errorColor,
+            ),
           ),
         ],
       );
@@ -74,15 +82,18 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return child;
   }
 
-  OutlineInputBorder getOutlineInputBorder() {
+  OutlineInputBorder getOutlineInputBorder({
+    Color? color,
+    double width = 1.0,
+  }) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(4),
-      gapPadding: 0,
+      borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(
-        width: .8,
-        color: _errorMessage != null
-            ? AppColors.errorColor
-            : AppColors.borderColor,
+        width: width,
+        color: color ??
+            (_errorMessage != null
+                ? AppColors.errorColor
+                : AppColors.darkBorder),
       ),
     );
   }
@@ -99,31 +110,43 @@ class _CustomTextFieldState extends State<CustomTextField> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(
-              height: 40,
+              height: 44,
               child: TextFormField(
                 controller: _controller,
                 textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.fromLTRB(8, 20, 30, 10),
+                  filled: true,
+                  fillColor: AppColors.darkSurface,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: getOutlineInputBorder(),
-                  focusedBorder: getOutlineInputBorder(),
+                  focusedBorder: getOutlineInputBorder(
+                    color: AppColors.gold,
+                    width: 1.5,
+                  ),
                   enabledBorder: getOutlineInputBorder(),
-                  errorBorder: getOutlineInputBorder(),
-                  focusedErrorBorder: getOutlineInputBorder(),
+                  errorBorder: getOutlineInputBorder(
+                    color: AppColors.errorColor,
+                  ),
+                  focusedErrorBorder: getOutlineInputBorder(
+                    color: AppColors.errorColor,
+                    width: 1.5,
+                  ),
                   prefixIcon: widget.prefixIconData != null
                       ? Icon(
                           widget.prefixIconData,
                           size: 18,
+                          color: AppColors.goldLight,
                         )
                       : null,
                 ),
-                cursorHeight: 17,
-                cursorColor: AppColors.fieldTextColor,
-                cursorWidth: 1,
-                style: TextStyle(
-                  fontSize: 15,
+                cursorHeight: 18,
+                cursorColor: AppColors.gold,
+                cursorWidth: 1.5,
+                style: const TextStyle(
+                  fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.fieldTextColor,
+                  color: AppColors.textPrimary,
                 ),
                 validator: (value) {
                   if (widget.validator != null) {
@@ -136,13 +159,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 readOnly: widget.readOnly,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Text(
-                _errorMessage ?? '',
-                style: TextStyle(fontSize: 12, color: AppColors.errorColor),
+            if (_errorMessage != null && _errorMessage!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  _errorMessage ?? '',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.errorColor,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

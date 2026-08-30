@@ -49,7 +49,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "chandrapur": MessageLookupByLibrary.simpleMessage("Chandrapur"),
     "chandur_railway": MessageLookupByLibrary.simpleMessage("Chandur Railway"),
     "chandurbazar": MessageLookupByLibrary.simpleMessage("Chandurbazar"),
-    "change_number": MessageLookupByLibrary.simpleMessage("Change Mobile Number"),
+    "change_number": MessageLookupByLibrary.simpleMessage(
+      "Change Mobile Number",
+    ),
     "chhatrapati_sambhajinagar": MessageLookupByLibrary.simpleMessage(
       "Chhatrapati Sambhajinagar",
     ),
@@ -57,7 +59,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "chikhli": MessageLookupByLibrary.simpleMessage("Chikhli"),
     "chimur": MessageLookupByLibrary.simpleMessage("Chimur"),
     "city": MessageLookupByLibrary.simpleMessage("City/Village"),
+    "contact_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Reach out to us for membership, donation queries, volunteering, or social assistance",
+    ),
+    "contact_title": MessageLookupByLibrary.simpleMessage(
+      "Contact Information",
+    ),
     "continue_text": MessageLookupByLibrary.simpleMessage("Continue"),
+    "cta_btn_login": MessageLookupByLibrary.simpleMessage("Member Login"),
+    "cta_btn_register": MessageLookupByLibrary.simpleMessage(
+      "Register as Member",
+    ),
+    "cta_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Together, let us empower our children, protect our sacred history, and serve society with selfless devotion.",
+    ),
+    "cta_title": MessageLookupByLibrary.simpleMessage(
+      "Join the Maratha Shivmudra Movement",
+    ),
     "daryapur": MessageLookupByLibrary.simpleMessage("Daryapur"),
     "date_of_birth": MessageLookupByLibrary.simpleMessage("Date of Birth"),
     "deolgaon_raja": MessageLookupByLibrary.simpleMessage("Deolgaon Raja"),
@@ -70,6 +88,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "dhule": MessageLookupByLibrary.simpleMessage("Dhule"),
     "district": MessageLookupByLibrary.simpleMessage("District"),
     "email": MessageLookupByLibrary.simpleMessage("Email"),
+    "email_address": MessageLookupByLibrary.simpleMessage(
+      "marathashivmudra@gmail.com",
+    ),
+    "email_address_label": MessageLookupByLibrary.simpleMessage(
+      "Official Email",
+    ),
     "employed": MessageLookupByLibrary.simpleMessage("Employed"),
     "enter_the_verification_code_sent_to_your_phone":
         MessageLookupByLibrary.simpleMessage(
@@ -77,6 +101,43 @@ class MessageLookup extends MessageLookupByLibrary {
         ),
     "enter_your_mobile_number": MessageLookupByLibrary.simpleMessage(
       "Enter your mobile number.",
+    ),
+    "event_1_date": MessageLookupByLibrary.simpleMessage("Upcoming Weekend"),
+    "event_1_desc": MessageLookupByLibrary.simpleMessage(
+      "Join our volunteer team for heritage conservation, path maintenance, and historical lectures on the fort.",
+    ),
+    "event_1_loc": MessageLookupByLibrary.simpleMessage(
+      "Fort Raigad, Maharashtra",
+    ),
+    "event_1_title": MessageLookupByLibrary.simpleMessage(
+      "Raigad Fort Cleanliness & Shramdaan Drive",
+    ),
+    "event_2_date": MessageLookupByLibrary.simpleMessage("Next Month"),
+    "event_2_desc": MessageLookupByLibrary.simpleMessage(
+      "Distributing school bags, stationery kits, and tuition assistance to 200+ deserving students.",
+    ),
+    "event_2_loc": MessageLookupByLibrary.simpleMessage(
+      "Pune & Chhatrapati Sambhajinagar",
+    ),
+    "event_2_title": MessageLookupByLibrary.simpleMessage(
+      "Annual Educational Scholarship & Stationery Camp",
+    ),
+    "event_3_date": MessageLookupByLibrary.simpleMessage("Quarterly Conclave"),
+    "event_3_desc": MessageLookupByLibrary.simpleMessage(
+      "Interactive sessions with seasoned business mentors, startup guidance, and government subsidy awareness.",
+    ),
+    "event_3_loc": MessageLookupByLibrary.simpleMessage("Mumbai & Nashik"),
+    "event_3_title": MessageLookupByLibrary.simpleMessage(
+      "Youth Entrepreneurship & Business Guidance Workshop",
+    ),
+    "event_register_btn": MessageLookupByLibrary.simpleMessage(
+      "Participate / Register",
+    ),
+    "events_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Get involved in upcoming social service, fort treks, and student programs",
+    ),
+    "events_title": MessageLookupByLibrary.simpleMessage(
+      "Upcoming Initiatives & Drives",
     ),
     "farmer": MessageLookupByLibrary.simpleMessage("Farmer"),
     "fill_the_member_form": MessageLookupByLibrary.simpleMessage(
@@ -92,9 +153,34 @@ class MessageLookup extends MessageLookupByLibrary {
     "havent_received_the_code": MessageLookupByLibrary.simpleMessage(
       "Haven\'t received the code?",
     ),
+    "hero_badge": MessageLookupByLibrary.simpleMessage(
+      "॥ प्रतिपच्चंद्रलेखेव वर्धिष्णुर्विश्ववंदिता शाहसूनोः शिवस्यैषा मुद्रा भद्राय राजते ॥",
+    ),
+    "hero_btn_contact": MessageLookupByLibrary.simpleMessage("Contact Us"),
+    "hero_btn_explore": MessageLookupByLibrary.simpleMessage(
+      "Explore Initiatives",
+    ),
+    "hero_btn_join": MessageLookupByLibrary.simpleMessage("Join as Member"),
+    "hero_org_name": MessageLookupByLibrary.simpleMessage(
+      "Maratha Shivmudra Pratishthan",
+    ),
+    "hero_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Dedicated to child education & financial aid, healthcare assistance, fort conservation, spreading authentic history, fostering entrepreneurship, disaster relief, and cultural preservation.",
+    ),
+    "hero_title": MessageLookupByLibrary.simpleMessage(
+      "Preserving Heritage, Empowering Lives, Upholding Dharma",
+    ),
     "hingoli": MessageLookupByLibrary.simpleMessage("Hingoli"),
     "homemaker": MessageLookupByLibrary.simpleMessage("Homemaker"),
-    "invalid_otp": MessageLookupByLibrary.simpleMessage("The OTP you entered is incorrect. Please try again."),
+    "impact_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Committed to tangible grassroots transformation across Maharashtra",
+    ),
+    "impact_title": MessageLookupByLibrary.simpleMessage(
+      "Our Social Impact in Numbers",
+    ),
+    "invalid_otp": MessageLookupByLibrary.simpleMessage(
+      "The OTP you entered is incorrect. Please try again.",
+    ),
     "jalgaon": MessageLookupByLibrary.simpleMessage("Jalgaon"),
     "jalgaon_jamod": MessageLookupByLibrary.simpleMessage("Jalgaon (Jamod)"),
     "jalna": MessageLookupByLibrary.simpleMessage("Jalna"),
@@ -114,10 +200,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "korpana": MessageLookupByLibrary.simpleMessage("Korpana"),
     "lakhandur": MessageLookupByLibrary.simpleMessage("Lakhandur"),
     "lakhani": MessageLookupByLibrary.simpleMessage("Lakhani"),
+    "lang_toggle": MessageLookupByLibrary.simpleMessage("मराठी"),
     "last_name": MessageLookupByLibrary.simpleMessage("Last Name"),
     "latur": MessageLookupByLibrary.simpleMessage("Latur"),
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "lonar": MessageLookupByLibrary.simpleMessage("Lonar"),
+    "made_with_devotion": MessageLookupByLibrary.simpleMessage(
+      "Dedicated to Hindavi Swarajya values and the welfare of society.",
+    ),
     "maharashtra": MessageLookupByLibrary.simpleMessage("Maharashtra"),
     "majalgaon": MessageLookupByLibrary.simpleMessage("Majalgaon"),
     "malkapur": MessageLookupByLibrary.simpleMessage("Malkapur"),
@@ -145,7 +235,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "nandura": MessageLookupByLibrary.simpleMessage("Nandura"),
     "nandurbar": MessageLookupByLibrary.simpleMessage("Nandurbar"),
     "nashik": MessageLookupByLibrary.simpleMessage("Nashik"),
+    "nav_about": MessageLookupByLibrary.simpleMessage("About Us"),
+    "nav_contact": MessageLookupByLibrary.simpleMessage("Contact Us"),
+    "nav_events": MessageLookupByLibrary.simpleMessage("Events"),
+    "nav_home": MessageLookupByLibrary.simpleMessage("Home"),
+    "nav_impact": MessageLookupByLibrary.simpleMessage("Impact"),
+    "nav_join": MessageLookupByLibrary.simpleMessage("Become a Member"),
+    "nav_login": MessageLookupByLibrary.simpleMessage("Login"),
+    "nav_pillars": MessageLookupByLibrary.simpleMessage("Initiatives"),
+    "nav_pledge": MessageLookupByLibrary.simpleMessage("Sacred Pledge"),
     "nevasa": MessageLookupByLibrary.simpleMessage("Nevasa"),
+    "org_address_label": MessageLookupByLibrary.simpleMessage("Headquarters"),
+    "org_address_val": MessageLookupByLibrary.simpleMessage(
+      "Maharashtra, India",
+    ),
     "paithan": MessageLookupByLibrary.simpleMessage("Paithan"),
     "palghar": MessageLookupByLibrary.simpleMessage("Palghar"),
     "parbhani": MessageLookupByLibrary.simpleMessage("Parbhani"),
@@ -155,10 +258,62 @@ class MessageLookup extends MessageLookupByLibrary {
     "patoda": MessageLookupByLibrary.simpleMessage("Patoda"),
     "patur": MessageLookupByLibrary.simpleMessage("Patur"),
     "pauni": MessageLookupByLibrary.simpleMessage("Pauni"),
+    "phone_number": MessageLookupByLibrary.simpleMessage("+91 8233729696"),
+    "phone_number_label": MessageLookupByLibrary.simpleMessage(
+      "Official Helpline",
+    ),
     "phone_number_must_be_10_digits": MessageLookupByLibrary.simpleMessage(
       "Phone number must be 10 digits",
     ),
     "phulambri": MessageLookupByLibrary.simpleMessage("Phulambri"),
+    "pillar_dharma_desc": MessageLookupByLibrary.simpleMessage(
+      "Protecting, upholding, and celebrating our dharmic values, festivals, Shiv Jayanti celebrations, and nurturing moral character in the youth.",
+    ),
+    "pillar_dharma_title": MessageLookupByLibrary.simpleMessage(
+      "Dharma Rakshan & Culture",
+    ),
+    "pillar_education_desc": MessageLookupByLibrary.simpleMessage(
+      "Sponsoring school fees, distributing educational kits and books, and providing career guidance to help bright, underprivileged students succeed.",
+    ),
+    "pillar_education_title": MessageLookupByLibrary.simpleMessage(
+      "Child Education & Financial Support",
+    ),
+    "pillar_entrepreneurship_desc": MessageLookupByLibrary.simpleMessage(
+      "Mentoring aspiring youth to become self-reliant entrepreneurs through business workshops, networking support, and startup guidance.",
+    ),
+    "pillar_entrepreneurship_title": MessageLookupByLibrary.simpleMessage(
+      "Entrepreneurship Development",
+    ),
+    "pillar_forts_desc": MessageLookupByLibrary.simpleMessage(
+      "Conducting preservation drives, cleanliness shramdaan expeditions, and historical awareness camps across the majestic hill forts of Maharashtra.",
+    ),
+    "pillar_forts_title": MessageLookupByLibrary.simpleMessage(
+      "Gad-Kille Sanvardhan",
+    ),
+    "pillar_health_desc": MessageLookupByLibrary.simpleMessage(
+      "Providing emergency medical relief, organizing free medical & blood donation camps, and assisting underprivileged families in obtaining crucial treatments.",
+    ),
+    "pillar_health_title": MessageLookupByLibrary.simpleMessage(
+      "Health & Medical Aid",
+    ),
+    "pillar_history_desc": MessageLookupByLibrary.simpleMessage(
+      "Researching, safeguarding, and fearlessly presenting the true, authentic history of Chhatrapati Shivaji Maharaj and Chhatrapati Sambhaji Maharaj to the world.",
+    ),
+    "pillar_history_title": MessageLookupByLibrary.simpleMessage(
+      "Preserving Authentic History",
+    ),
+    "pillar_social_service_desc": MessageLookupByLibrary.simpleMessage(
+      "Delivering rapid on-ground humanitarian relief, food supplies, and rehabilitation during floods, droughts, earthquakes, and social emergencies.",
+    ),
+    "pillar_social_service_title": MessageLookupByLibrary.simpleMessage(
+      "Social Service & Disaster Relief",
+    ),
+    "pillars_subtitle": MessageLookupByLibrary.simpleMessage(
+      "Serving society through health, education, history preservation, fort conservation, dharmic values, entrepreneurship, and disaster relief.",
+    ),
+    "pillars_title": MessageLookupByLibrary.simpleMessage(
+      "Our 7 Core Pillars of Service",
+    ),
     "pincode": MessageLookupByLibrary.simpleMessage("Pincode"),
     "please_enter_a_phone_number": MessageLookupByLibrary.simpleMessage(
       "Please enter a phone number",
@@ -200,14 +355,39 @@ class MessageLookup extends MessageLookupByLibrary {
     "please_enter_your_sub_district": MessageLookupByLibrary.simpleMessage(
       "Please enter your sub-district.",
     ),
+    "pledge_heading": MessageLookupByLibrary.simpleMessage(
+      "Organization\'s Sacred Pledge",
+    ),
+    "pledge_p1": MessageLookupByLibrary.simpleMessage(
+      "I, remembering Almighty God, the revered deity of undivided Hindustan Shrimant Chhatrapati Shivaji Maharaj and our ancestors, pledge that,",
+    ),
+    "pledge_p2": MessageLookupByLibrary.simpleMessage(
+      "I shall make every effort to preserve the culture and civilization of the Dharma I was born into; and I shall consider it my foremost duty to work for the welfare of the society I grew up in.",
+    ),
+    "pledge_p3": MessageLookupByLibrary.simpleMessage(
+      "I pledge that I will imbibe the true, uncorrupted history of Chhatrapati Shivaji Maharaj & Chhatrapati Sambhaji Maharaj and always strive fearlessly to present it to the world.",
+    ),
+    "pledge_p4": MessageLookupByLibrary.simpleMessage(
+      "I swear that to accomplish the goals and objectives of the organization, I will strictly follow its rules, dedicate my body, mind, and wealth with honesty and selflessness throughout my life, and hold the organization\'s welfare supreme.",
+    ),
+    "pledge_slogans": MessageLookupByLibrary.simpleMessage(
+      "Jai Shri Ram ! Jai Shivray ! Jai Shambhuraje....Jayostu Maratha Shivmudra..",
+    ),
+    "pledge_subheading": MessageLookupByLibrary.simpleMessage(
+      "The solemn oath and guiding principles of Maratha Shivmudra Pratishthan",
+    ),
     "pombhurna": MessageLookupByLibrary.simpleMessage("Pombhurna"),
     "pune": MessageLookupByLibrary.simpleMessage("Pune"),
+    "quick_links": MessageLookupByLibrary.simpleMessage("Quick Links"),
     "rahta": MessageLookupByLibrary.simpleMessage("Rahta"),
     "rahuri": MessageLookupByLibrary.simpleMessage("Rahuri"),
     "raigad": MessageLookupByLibrary.simpleMessage("Raigad"),
     "rajura": MessageLookupByLibrary.simpleMessage("Rajura"),
     "ratnagiri": MessageLookupByLibrary.simpleMessage("Ratnagiri"),
     "retired": MessageLookupByLibrary.simpleMessage("Retired"),
+    "rights_reserved": MessageLookupByLibrary.simpleMessage(
+      "All rights reserved.",
+    ),
     "sakoli": MessageLookupByLibrary.simpleMessage("Sakoli"),
     "sangamner": MessageLookupByLibrary.simpleMessage("Sangamner"),
     "sangli": MessageLookupByLibrary.simpleMessage("Sangli"),
@@ -232,6 +412,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "solapur": MessageLookupByLibrary.simpleMessage("Solapur"),
     "something_went_wrong": MessageLookupByLibrary.simpleMessage(
       "Something went wrong. Please try again later!",
+    ),
+    "stat_districts": MessageLookupByLibrary.simpleMessage("Districts Reached"),
+    "stat_fort_drives": MessageLookupByLibrary.simpleMessage(
+      "Fort Cleanliness & Treks",
+    ),
+    "stat_relief_drives": MessageLookupByLibrary.simpleMessage(
+      "Disaster Relief Operations",
+    ),
+    "stat_students": MessageLookupByLibrary.simpleMessage(
+      "Children Aided in Education",
+    ),
+    "stat_volunteers": MessageLookupByLibrary.simpleMessage(
+      "Active Volunteers & Members",
     ),
     "state": MessageLookupByLibrary.simpleMessage("State"),
     "student": MessageLookupByLibrary.simpleMessage("Student"),

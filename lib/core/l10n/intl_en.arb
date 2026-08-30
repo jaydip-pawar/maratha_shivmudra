@@ -180,5 +180,97 @@
   "phulambri": "Phulambri",
   "sillod": "Sillod",
   "soegaon": "Soegaon",
-  "vaijapur": "Vaijapur"
+  "vaijapur": "Vaijapur",
+
+  "nav_home": "Home",
+  "nav_about": "About Us",
+  "nav_pillars": "Initiatives",
+  "nav_pledge": "Sacred Pledge",
+  "nav_impact": "Impact",
+  "nav_events": "Events",
+  "nav_contact": "Contact Us",
+  "nav_join": "Become a Member",
+  "nav_login": "Login",
+  "lang_toggle": "मराठी",
+
+  "hero_badge": "॥ प्रतिपच्चंद्रलेखेव वर्धिष्णुर्विश्ववंदिता शाहसूनोः शिवस्यैषा मुद्रा भद्राय राजते ॥",
+  "hero_title": "Preserving Heritage, Empowering Lives, Upholding Dharma",
+  "hero_org_name": "Maratha Shivmudra Pratishthan",
+  "hero_subtitle": "Dedicated to child education & financial aid, healthcare assistance, fort conservation, spreading authentic history, fostering entrepreneurship, disaster relief, and cultural preservation.",
+  "hero_btn_join": "Join as Member",
+  "hero_btn_explore": "Explore Initiatives",
+  "hero_btn_contact": "Contact Us",
+
+  "pledge_heading": "Organization's Sacred Pledge",
+  "pledge_subheading": "The solemn oath and guiding principles of Maratha Shivmudra Pratishthan",
+  "pledge_p1": "I, remembering Almighty God, the revered deity of undivided Hindustan Shrimant Chhatrapati Shivaji Maharaj and our ancestors, pledge that,",
+  "pledge_p2": "I shall make every effort to preserve the culture and civilization of the Dharma I was born into; and I shall consider it my foremost duty to work for the welfare of the society I grew up in.",
+  "pledge_p3": "I pledge that I will imbibe the true, uncorrupted history of Chhatrapati Shivaji Maharaj & Chhatrapati Sambhaji Maharaj and always strive fearlessly to present it to the world.",
+  "pledge_p4": "I swear that to accomplish the goals and objectives of the organization, I will strictly follow its rules, dedicate my body, mind, and wealth with honesty and selflessness throughout my life, and hold the organization's welfare supreme.",
+  "pledge_slogans": "Jai Shri Ram ! Jai Shivray ! Jai Shambhuraje....Jayostu Maratha Shivmudra..",
+
+  "pillars_title": "Our 7 Core Pillars of Service",
+  "pillars_subtitle": "Serving society through health, education, history preservation, fort conservation, dharmic values, entrepreneurship, and disaster relief.",
+
+  "pillar_health_title": "Health & Medical Aid",
+  "pillar_health_desc": "Providing emergency medical relief, organizing free medical & blood donation camps, and assisting underprivileged families in obtaining crucial treatments.",
+
+  "pillar_education_title": "Child Education & Financial Support",
+  "pillar_education_desc": "Sponsoring school fees, distributing educational kits and books, and providing career guidance to help bright, underprivileged students succeed.",
+
+  "pillar_forts_title": "Gad-Kille Sanvardhan",
+  "pillar_forts_desc": "Conducting preservation drives, cleanliness shramdaan expeditions, and historical awareness camps across the majestic hill forts of Maharashtra.",
+
+  "pillar_dharma_title": "Dharma Rakshan & Culture",
+  "pillar_dharma_desc": "Protecting, upholding, and celebrating our dharmic values, festivals, Shiv Jayanti celebrations, and nurturing moral character in the youth.",
+
+  "pillar_history_title": "Preserving Authentic History",
+  "pillar_history_desc": "Researching, safeguarding, and fearlessly presenting the true, authentic history of Chhatrapati Shivaji Maharaj and Chhatrapati Sambhaji Maharaj to the world.",
+
+  "pillar_entrepreneurship_title": "Entrepreneurship Development",
+  "pillar_entrepreneurship_desc": "Mentoring aspiring youth to become self-reliant entrepreneurs through business workshops, networking support, and startup guidance.",
+
+  "pillar_social_service_title": "Social Service & Disaster Relief",
+  "pillar_social_service_desc": "Delivering rapid on-ground humanitarian relief, food supplies, and rehabilitation during floods, droughts, earthquakes, and social emergencies.",
+
+  "impact_title": "Our Social Impact in Numbers",
+  "impact_subtitle": "Committed to tangible grassroots transformation across Maharashtra",
+  "stat_volunteers": "Active Volunteers & Members",
+  "stat_students": "Children Aided in Education",
+  "stat_fort_drives": "Fort Cleanliness & Treks",
+  "stat_relief_drives": "Disaster Relief Operations",
+  "stat_districts": "Districts Reached",
+
+  "events_title": "Upcoming Initiatives & Drives",
+  "events_subtitle": "Get involved in upcoming social service, fort treks, and student programs",
+  "event_1_title": "Raigad Fort Cleanliness & Shramdaan Drive",
+  "event_1_date": "Upcoming Weekend",
+  "event_1_loc": "Fort Raigad, Maharashtra",
+  "event_1_desc": "Join our volunteer team for heritage conservation, path maintenance, and historical lectures on the fort.",
+  "event_2_title": "Annual Educational Scholarship & Stationery Camp",
+  "event_2_date": "Next Month",
+  "event_2_loc": "Pune & Chhatrapati Sambhajinagar",
+  "event_2_desc": "Distributing school bags, stationery kits, and tuition assistance to 200+ deserving students.",
+  "event_3_title": "Youth Entrepreneurship & Business Guidance Workshop",
+  "event_3_date": "Quarterly Conclave",
+  "event_3_loc": "Mumbai & Nashik",
+  "event_3_desc": "Interactive sessions with seasoned business mentors, startup guidance, and government subsidy awareness.",
+  "event_register_btn": "Participate / Register",
+
+  "cta_title": "Join the Maratha Shivmudra Movement",
+  "cta_subtitle": "Together, let us empower our children, protect our sacred history, and serve society with selfless devotion.",
+  "cta_btn_register": "Register as Member",
+  "cta_btn_login": "Member Login",
+
+  "contact_title": "Contact Information",
+  "contact_subtitle": "Reach out to us for membership, donation queries, volunteering, or social assistance",
+  "phone_number": "+91 8233729696",
+  "phone_number_label": "Official Helpline",
+  "email_address": "marathashivmudra@gmail.com",
+  "email_address_label": "Official Email",
+  "org_address_val": "Maharashtra, India",
+  "org_address_label": "Headquarters",
+  "quick_links": "Quick Links",
+  "rights_reserved": "All rights reserved.",
+  "made_with_devotion": "Dedicated to Hindavi Swarajya values and the welfare of society."
 }

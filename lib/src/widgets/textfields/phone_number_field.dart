@@ -13,9 +13,9 @@ class PhoneNumberField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
 
-  InputBorder _inputBorder(Color color) {
+  InputBorder _inputBorder(Color color, {double width = 1}) {
     return UnderlineInputBorder(
-      borderSide: BorderSide(color: color, width: 0.8),
+      borderSide: BorderSide(color: color, width: width),
     );
   }
 
@@ -47,22 +47,36 @@ class PhoneNumberField extends StatelessWidget {
       },
       decoration: InputDecoration(
         hintText: '1234 5678 90',
-        hintStyle: TextStyle(color: Colors.grey.shade500),
-        prefixIcon: Padding(
+        hintStyle: const TextStyle(
+          color: AppColors.textMuted,
+          fontSize: 16,
+          letterSpacing: 1.2,
+        ),
+        prefixIcon: const Padding(
           padding: EdgeInsets.only(right: 8),
           child: Text(
             '+91 ',
-            style: TextStyle(color: AppColors.black, fontSize: 16),
+            style: TextStyle(
+              color: AppColors.goldLight,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
-        enabledBorder: _inputBorder(AppColors.borderColor),
-        focusedBorder: _inputBorder(AppColors.black),
+        prefixIconConstraints:
+            const BoxConstraints(minWidth: 0, minHeight: 0),
+        enabledBorder: _inputBorder(AppColors.darkBorder),
+        focusedBorder: _inputBorder(AppColors.gold, width: 1.5),
         errorBorder: _inputBorder(AppColors.errorColor),
-        focusedErrorBorder: _inputBorder(AppColors.errorColor),
+        focusedErrorBorder: _inputBorder(AppColors.errorColor, width: 1.5),
       ),
-      cursorColor: AppColors.black,
-      style: TextStyle(color: AppColors.black),
+      cursorColor: AppColors.gold,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
+      ),
     );
   }
 }

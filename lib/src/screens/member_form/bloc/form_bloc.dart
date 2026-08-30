@@ -43,9 +43,12 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
 
   Future<void> setMobileNumber() async {
     final ss = getIt<SecureStorage>();
-    mobileNoController.text =
+    final storedNumber =
         getData<String>('mobileNumber') ?? await ss.getMobileNumber();
-    mobileNumber = mobileNoController.text;
+    if (storedNumber != null && storedNumber.trim().isNotEmpty) {
+      mobileNoController.text = storedNumber.trim();
+      mobileNumber = storedNumber.trim();
+    }
   }
 
   @override
@@ -62,50 +65,56 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
   }
 
   bool validate() {
-    return firstNameController.text.isNotEmpty &&
-        lastNameController.text.isNotEmpty &&
-        dateOfBirthController.text.isNotEmpty &&
-        addressController.text.isNotEmpty &&
-        cityController.text.isNotEmpty &&
-        stateController.text.isNotEmpty &&
-        pincodeController.text.isNotEmpty &&
-        districtController.text.isNotEmpty &&
-        subDistrictController.text.isNotEmpty &&
-        living.isNotEmpty &&
-        mobileNoController.text.isNotEmpty;
+    return firstNameController.text.trim().isNotEmpty &&
+        lastNameController.text.trim().isNotEmpty &&
+        dateOfBirthController.text.trim().isNotEmpty &&
+        addressController.text.trim().isNotEmpty &&
+        cityController.text.trim().isNotEmpty &&
+        stateController.text.trim().isNotEmpty &&
+        pincodeController.text.trim().isNotEmpty &&
+        districtController.text.trim().isNotEmpty &&
+        subDistrictController.text.trim().isNotEmpty &&
+        living.trim().isNotEmpty &&
+        mobileNoController.text.trim().isNotEmpty;
   }
 
   Future<bool> setFormData() async {
+    final phone = mobileNoController.text.trim().isNotEmpty
+        ? mobileNoController.text.trim()
+        : mobileNumber.trim();
+
+    if (phone.isEmpty) {
+      debugPrint('Error: Mobile number is empty');
+      return false;
+    }
+
     final db = FirebaseFirestore.instance;
     final formData = {
-      'firstName': firstNameController.text,
-      'middleName': middleNameController.text,
-      'lastName': lastNameController.text,
-      'dateOfBirth': dateOfBirthController.text,
-      'address': addressController.text,
-      'city': cityController.text,
-      'state': stateController.text,
-      'pincode': pincodeController.text,
-      'district': districtController.text,
-      'subDistrict': subDistrictController.text,
-      'mobileNo': mobileNoController.text,
-      'email': emailController.text,
-      'living': living,
+      'firstName': firstNameController.text.trim(),
+      'middleName': middleNameController.text.trim(),
+      'lastName': lastNameController.text.trim(),
+      'dateOfBirth': dateOfBirthController.text.trim(),
+      'address': addressController.text.trim(),
+      'city': cityController.text.trim(),
+      'state': stateController.text.trim(),
+      'pincode': pincodeController.text.trim(),
+      'district': districtController.text.trim(),
+      'subDistrict': subDistrictController.text.trim(),
+      'mobileNo': phone,
+      'email': emailController.text.trim(),
+      'living': living.trim(),
     };
 
-    return await db
-        .collection(mobileNumber)
-        .doc('form_info')
-        .set(formData)
-        .then((_) {
-      print('IN THEN');
+    try {
+      await db.collection(phone).doc('form_info').set(formData);
       final ss = getIt<SecureStorage>();
-      ss.setLoginFlag(true);
+      await ss.setLoginFlag(true);
+      await ss.setMobileNumber(phone);
       return true;
-    }).catchError((_) {
-      print('IN catch');
+    } catch (e) {
+      debugPrint('Firestore setFormData error: $e');
       return false;
-    });
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class CustomRadioGroup extends StatefulWidget {
   final List<String> labels;
@@ -9,9 +10,10 @@ class CustomRadioGroup extends StatefulWidget {
   final MainAxisSize mainAxisSize;
   final MainAxisAlignment mainAxisAlignment;
   final CrossAxisAlignment crossAxisAlignment;
-  final void Function(String)? onChanged; // Updated callback type
+  final void Function(String)? onChanged;
 
-  CustomRadioGroup({
+  const CustomRadioGroup({
+    super.key,
     required this.labels,
     this.alignment = Axis.vertical,
     this.maxItems,
@@ -24,7 +26,7 @@ class CustomRadioGroup extends StatefulWidget {
   });
 
   @override
-  _CustomRadioGroupState createState() => _CustomRadioGroupState();
+  State<CustomRadioGroup> createState() => _CustomRadioGroupState();
 }
 
 class _CustomRadioGroupState extends State<CustomRadioGroup> {
@@ -75,7 +77,7 @@ class _CustomRadioGroupState extends State<CustomRadioGroup> {
     List<Widget> radioTiles = [];
     for (int i = 0; i < widget.labels.length; i++) {
       if (widget.maxItems != null && i != 0 && i % widget.maxItems! == 0) {
-        radioTiles.add(SizedBox(width: double.infinity)); // New line
+        radioTiles.add(const SizedBox(width: double.infinity));
       }
       radioTiles.add(
         RadioTile(
@@ -96,7 +98,8 @@ class RadioTile extends StatelessWidget {
   final String? groupValue;
   final ValueChanged<String?>? onChanged;
 
-  RadioTile({
+  const RadioTile({
+    super.key,
     required this.label,
     this.textStyle,
     this.groupValue,
@@ -123,6 +126,7 @@ class RadioTile extends StatelessWidget {
           Radio<String?>(
             value: label,
             groupValue: groupValue,
+            activeColor: AppColors.gold,
             onChanged: onChanged,
             visualDensity: const VisualDensity(
               horizontal: VisualDensity.minimumDensity,
@@ -135,7 +139,11 @@ class RadioTile extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.left,
-              style: textStyle,
+              style: textStyle ??
+                  const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
             ),
           ),
         ],

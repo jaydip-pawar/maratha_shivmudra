@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class OtpField extends StatefulWidget {
   const OtpField({super.key, required this.onDone});
@@ -11,7 +12,7 @@ class OtpField extends StatefulWidget {
 }
 
 class _OtpFieldState extends State<OtpField>
-    with SingleTickerProviderStateMixin {
+  with SingleTickerProviderStateMixin {
   final int _otpLength = 6;
   late List<TextEditingController> _controllers;
   late List<FocusNode> _focusNodes;
@@ -51,7 +52,7 @@ class _OtpFieldState extends State<OtpField>
         if (_focusNodes[i].hasFocus && _controllers[i].text.isNotEmpty) {
           _moveToNextBox(i);
         }
-        setState(() {}); // Update visual states dynamically
+        setState(() {});
       });
     }
   }
@@ -74,7 +75,6 @@ class _OtpFieldState extends State<OtpField>
 
     if (_currentOtp.length != _otpLength) return;
 
-    // Remove focus before making the fields read-only.
     FocusManager.instance.primaryFocus?.unfocus();
 
     setState(() {
@@ -98,37 +98,26 @@ class _OtpFieldState extends State<OtpField>
 
     if (!isSuccess) {
       await _animationController.forward();
-
-      if (!mounted) return;
-
-      await Future.delayed(const Duration(milliseconds: 300), () {});
-
-      if (!mounted) return;
-
-      _clearOtp();
+      _animationController.reset();
+      setState(() {
+        _isReadOnly = false;
+        for (var controller in _controllers) {
+          controller.clear();
+        }
+        FocusScope.of(context).requestFocus(_focusNodes[0]);
+      });
     }
-  }
-
-  void _clearOtp() {
-    for (var controller in _controllers) {
-      controller.clear();
-    }
-    setState(() {
-      _isReadOnly = false;
-      _isSuccess = false;
-      _hasError = false;
-    });
-    _animationController.reset();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      FocusScope.of(context).requestFocus(_focusNodes[0]);
-    });
   }
 
   void _moveToNextBox(int index) {
-    if (!mounted) return;
-    if (_controllers[index].text.isNotEmpty && index < _otpLength - 1) {
+    if (index < _otpLength - 1) {
       FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+    }
+  }
+
+  void _moveToPreviousBox(int index) {
+    if (index > 0) {
+      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
     }
   }
 
@@ -136,48 +125,33 @@ class _OtpFieldState extends State<OtpField>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        double fieldWidth = constraints.maxWidth / _otpLength - 6;
-        return KeyboardListener(
-          focusNode: _keyboardFocusNode,
-          autofocus: true,
-          onKeyEvent: (KeyEvent event) {
-            if (event is KeyDownEvent &&
-                event.logicalKey == LogicalKeyboardKey.backspace) {
-              for (int i = 0; i < _otpLength; i++) {
-                if (_focusNodes[i].hasFocus && _controllers[i].text.isEmpty) {
-                  if (i > 0) {
-                    _controllers[i - 1].clear();
-                    FocusScope.of(context).requestFocus(_focusNodes[i - 1]);
-                  }
-                  break;
-                }
-              }
-            }
+        return AnimatedBuilder(
+          animation: _shakeAnimation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(_shakeAnimation.value, 0),
+              child: child,
+            );
           },
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            spacing: 6,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(_otpLength, (index) {
-              return AnimatedBuilder(
-                animation: _shakeAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(_hasError ? _shakeAnimation.value : 0, 0),
-                    child: child,
-                  );
+              return Focus(
+                focusNode: index == 0 ? _keyboardFocusNode : null,
+                onKeyEvent: (node, event) {
+                  if (event is KeyDownEvent &&
+                      event.logicalKey == LogicalKeyboardKey.backspace) {
+                    if (_controllers[index].text.isEmpty) {
+                      _moveToPreviousBox(index);
+                    }
+                  }
+                  return KeyEventResult.ignored;
                 },
                 child: SizedBox(
-                  width: MediaQuery.sizeOf(context).width < 700
-                      ? fieldWidth <= 50
-                            ? fieldWidth
-                            : 50
-                      : 50,
-                  height: MediaQuery.sizeOf(context).width < 700
-                      ? fieldWidth <= 50
-                            ? fieldWidth
-                            : 50
-                      : 50,
+                  width: constraints.maxWidth < 400
+                      ? (constraints.maxWidth - 50) / 6
+                      : 48,
+                  height: 52,
                   child: TextField(
                     controller: _controllers[index],
                     focusNode: _focusNodes[index],
@@ -185,46 +159,48 @@ class _OtpFieldState extends State<OtpField>
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 1,
+                    cursorColor: AppColors.gold,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: TextStyle(
-                      fontSize: constraints.maxWidth < 400 ? 16 : 22,
+                      fontSize: constraints.maxWidth < 400 ? 16 : 20,
                       fontWeight: FontWeight.bold,
                       color: _isSuccess
-                          ? Colors.green.shade900
+                          ? AppColors.green
                           : _hasError
-                          ? Colors.red.shade900
-                          : Colors.black,
+                              ? AppColors.errorColor
+                              : AppColors.goldLight,
                     ),
                     decoration: InputDecoration(
                       counterText: "",
+                      contentPadding: EdgeInsets.zero,
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(10.0),
                         borderSide: BorderSide(
                           color: _isSuccess
-                              ? Colors.green
+                              ? AppColors.green
                               : _hasError
-                              ? Colors.red
-                              : Colors.grey,
-                          width: 1.5,
+                                  ? AppColors.errorColor
+                                  : AppColors.darkBorder,
+                          width: 1.2,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(10.0),
                         borderSide: BorderSide(
                           color: _isSuccess
-                              ? Colors.green
+                              ? AppColors.green
                               : _hasError
-                              ? Colors.red
-                              : Colors.black87,
+                                  ? AppColors.errorColor
+                                  : AppColors.gold,
                           width: 1.5,
                         ),
                       ),
                       filled: true,
                       fillColor: _isSuccess
-                          ? Colors.green.withValues(alpha: 0.2)
+                          ? AppColors.green.withValues(alpha: 0.15)
                           : _hasError
-                          ? Colors.red.withValues(alpha: 0.2)
-                          : Colors.white,
+                              ? AppColors.errorColor.withValues(alpha: 0.15)
+                              : AppColors.darkSurface,
                     ),
                     onChanged: (value) {
                       if (value.isNotEmpty) {

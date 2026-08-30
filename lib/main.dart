@@ -9,9 +9,13 @@ import 'package:maratha_shivmudra/core/l10n/generated/l10n.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.dart';
 import 'package:maratha_shivmudra/firebase_options.dart';
 
+import 'package:maratha_shivmudra/core/constants/assets.dart';
+import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
+
 void main() async {
   LicenseRegistry.addLicense(() async* {
-    final license = await rootBundle.loadString('assets/fonts/OFL.txt');
+    final license = await rootBundle.loadString(AppAssets.oflFontLicense);
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
   });
   setUrlStrategy(PathUrlStrategy());
@@ -24,40 +28,60 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+final ValueNotifier<Locale> appLocaleNotifier =
+    ValueNotifier<Locale>(const Locale('mr', ''));
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final appRouter = AppRouter();
+  State<MyApp> createState() => _MyAppState();
+}
 
-    return MaterialApp.router(
-      title: 'मराठा शिवमुद्रा प्रतिष्ठान',
-      theme: ThemeData(
-        fontFamily: 'NotoSerifDevanagari',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      routerConfig: appRouter.config(
-        includePrefixMatches: true,
-        // deepLinkBuilder: (PlatformDeepLink deepLink) {
-        //   // Handle the initial deep link
-        //   return DeepLink.path(deepLink.path + '?ref=rrr');
-        //   // Or if you want to force specific query params on startup:
-        //   // return DeepLink.path('/?tab=home&section=featured');
-        // },
-      ),
-      supportedLocales: const [
-        Locale('mr', ''),
-        Locale('en', ''),
-      ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        S.delegate,
-      ],
-      locale: const Locale('mr', ''),
+class _MyAppState extends State<MyApp> {
+  late final AppRouter _appRouter;
+
+  @override
+  void initState() {
+    super.initState();
+    _appRouter = AppRouter();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Locale>(
+      valueListenable: appLocaleNotifier,
+      builder: (context, locale, child) {
+        return MaterialApp.router(
+          title: 'मराठा शिवमुद्रा प्रतिष्ठान',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            fontFamily: AppTypography.fontFamily,
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: AppColors.darkBg,
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.saffron,
+              secondary: AppColors.gold,
+              surface: AppColors.darkSurface,
+            ),
+            useMaterial3: true,
+          ),
+          routerConfig: _appRouter.config(
+            includePrefixMatches: true,
+          ),
+          supportedLocales: const [
+            Locale('mr', ''),
+            Locale('en', ''),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            S.delegate,
+          ],
+          locale: locale,
+        );
+      },
     );
   }
 }

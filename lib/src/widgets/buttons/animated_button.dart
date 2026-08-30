@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/material_button.dart';
 
 class AnimatedButton extends StatefulWidget {
@@ -6,13 +7,13 @@ class AnimatedButton extends StatefulWidget {
   final String text;
 
   const AnimatedButton({
-    Key? key,
+    super.key,
     required this.onTap,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
-  _AnimatedButtonState createState() => _AnimatedButtonState();
+  State<AnimatedButton> createState() => _AnimatedButtonState();
 }
 
 class _AnimatedButtonState extends State<AnimatedButton> {
@@ -33,18 +34,23 @@ class _AnimatedButtonState extends State<AnimatedButton> {
           );
         },
         child: _isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 key: ValueKey('loading'),
-                width: 24,
-                height: 24,
+                width: 22,
+                height: 22,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+                  strokeWidth: 2.2,
+                  color: AppColors.white,
                 ),
               )
             : Text(
-                key: ValueKey('button_text'),
                 widget.text,
+                key: const ValueKey('button_text'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
               ),
       ),
       onTap: () async {
@@ -52,10 +58,17 @@ class _AnimatedButtonState extends State<AnimatedButton> {
         setState(() {
           _isLoading = true;
         });
-        await widget.onTap();
-        setState(() {
-          _isLoading = false;
-        });
+        try {
+          await widget.onTap();
+        } catch (e) {
+          debugPrint('Error in AnimatedButton onTap: $e');
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        }
       },
     );
   }

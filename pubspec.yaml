@@ -49,7 +49,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/bg.png
+    - assets/images/
     - assets/lotties/
 
   fonts:
@@ -74,5 +74,5 @@ flutter:
 
 flutter_intl:
   enabled: true
-  arb_dir: lib\core\l10n
-  output_dir: lib\core\l10n\generated
+  arb_dir: lib/core/l10n
+  output_dir: lib/core/l10n/generated

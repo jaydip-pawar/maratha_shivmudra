@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class CustomMaterialButton extends StatelessWidget {
   const CustomMaterialButton({
@@ -17,18 +19,42 @@ class CustomMaterialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialButton(
-      onPressed: onTap,
-      minWidth: double.infinity,
-      color: Theme.of(context).primaryColor,
-      textColor: Colors.white,
-      padding: EdgeInsets.only(top: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.saffron.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: child ?? Text(text!, style: style),
+      child: MaterialButton(
+        onPressed: onTap,
+        minWidth: double.infinity,
+        color: AppColors.saffron,
+        textColor: AppColors.white,
+        elevation: 4,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(
+            color: AppColors.goldLight,
+            width: 1,
+          ),
+        ),
+        child: child ??
+            Text(
+              text!,
+              style: style ??
+                  const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.white,
+                  ),
+            ),
       ),
     );
   }

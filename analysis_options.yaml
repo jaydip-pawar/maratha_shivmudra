@@ -9,7 +9,7 @@ linter:
     prefer_final_fields: false
     prefer_final_locals: false
     sort_pub_dependencies: false
-      - avoid_catches_without_on_clauses
+    avoid_catches_without_on_clauses: false
     prefer_single_quotes: true
     require_trailing_commas: true
 

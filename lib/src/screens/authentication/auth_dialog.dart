@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/views/login_view.dart';
@@ -11,11 +12,15 @@ class AuthDialog {
   static void show(BuildContext context) {
     showDialog<void>(
       barrierDismissible: false,
+      barrierColor: AppColors.black.withValues(alpha: 0.75),
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          insetPadding:
-              context.isMobile ? EdgeInsets.symmetric(horizontal: 16) : null,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: context.isMobile
+              ? const EdgeInsets.symmetric(horizontal: 16)
+              : const EdgeInsets.symmetric(horizontal: 32),
           child: BlocProvider(
             create: (context) => getIt<AuthBloc>(),
             child: BlocBuilder<AuthBloc, AuthState>(
@@ -24,7 +29,7 @@ class AuthDialog {
               },
               builder: (context, state) {
                 return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
+                  duration: const Duration(milliseconds: 500),
                   switchInCurve: Curves.easeInOut,
                   switchOutCurve: Curves.easeInOut,
                   transitionBuilder:
@@ -35,30 +40,41 @@ class AuthDialog {
                     );
                   },
                   child: AnimatedSize(
-                    duration: const Duration(milliseconds: 400),
+                    duration: const Duration(milliseconds: 350),
                     curve: Curves.easeInOut,
                     child: Container(
                       key: ValueKey(state.runtimeType),
-                      constraints:
-                          BoxConstraints(maxWidth: 700, maxHeight: 400),
+                      constraints: const BoxConstraints(
+                        maxWidth: 680,
+                        maxHeight: 520,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppColors.cardDark,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(0x80),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: AppColors.saffron.withValues(alpha: 0.15),
+                            blurRadius: 30,
+                            spreadRadius: 2,
+                          ),
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.8),
+                            blurRadius: 25,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
                       child: () {
                         if (state is AuthVerificationState) {
-                          return OtpVerificationView();
+                          return const OtpVerificationView();
                         } else if (state is AuthSuccessState) {
-                          return SuccessView();
+                          return const SuccessView();
                         } else {
-                          return LoginView();
+                          return const LoginView();
                         }
                       }(),
                     ),
