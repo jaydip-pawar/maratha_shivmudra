@@ -1,6 +1,9 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/main.dart';
@@ -25,6 +28,14 @@ class LandingNavBar extends StatelessWidget {
     this.onContactTap,
     this.onMenuTap,
   });
+
+  void _onJoinPressed(BuildContext context) {
+    if (UserSessionService.instance.isLoggedInNotifier.value) {
+      context.router.push(const MemberFormRoute());
+    } else {
+      AuthDialog.show(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +117,6 @@ class LandingNavBar extends StatelessWidget {
 
             // Desktop Navigation Links
             if (!isCompact) ...[
-              const SizedBox(width: 16),
               _NavLink(
                 title: context.l10n.nav_home,
                 onTap: onHomeTap,
@@ -137,42 +147,55 @@ class LandingNavBar extends StatelessWidget {
             // Language Switcher Button
             _LanguageToggleButton(),
 
-            // Desktop Join / Login Button
+            // Desktop Join / Login Button (Hidden when form is already submitted)
             if (!isCompact) ...[
-              const SizedBox(width: 14),
-              ElevatedButton.icon(
-                onPressed: () => AuthDialog.show(context),
-                icon: const Icon(
-                  Icons.login_rounded,
-                  size: 16,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  context.l10n.nav_join,
-                  style: const TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.saffron,
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor: AppColors.saffron.withValues(alpha: 0.6),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    side: const BorderSide(
-                      color: AppColors.goldLight,
-                      width: 1,
+              ValueListenableBuilder<bool>(
+                valueListenable:
+                    UserSessionService.instance.isFormSubmittedNotifier,
+                builder: (context, isSubmitted, _) {
+                  if (isSubmitted) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 14),
+                    child: ElevatedButton.icon(
+                      onPressed: () => _onJoinPressed(context),
+                      icon: const Icon(
+                        Icons.volunteer_activism,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        context.l10n.nav_join,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.saffron,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor:
+                            AppColors.saffron.withValues(alpha: 0.6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          side: const BorderSide(
+                            color: AppColors.goldLight,
+                            width: 1,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
 
@@ -290,8 +313,9 @@ class _LanguageToggleButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  isMarathi ? 'EN' : 'मराठी',
+                  isMarathi ? 'मराठी' : 'English',
                   style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: AppColors.goldLight,

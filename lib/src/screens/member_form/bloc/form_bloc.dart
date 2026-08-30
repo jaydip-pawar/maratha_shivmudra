@@ -7,6 +7,7 @@ import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 
 part 'form_event.dart';
 part 'form_state.dart';
@@ -106,10 +107,36 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     };
 
     try {
-      await db.collection(phone).doc('form_info').set(formData);
-      final ss = getIt<SecureStorage>();
-      await ss.setLoginFlag(true);
-      await ss.setMobileNumber(phone);
+      final formInfoRef = db.collection(phone).doc('form_info');
+      final formInfoSnap = await formInfoRef.get();
+      final isNewFormSubmission = !formInfoSnap.exists;
+
+      final personalInfoRef = db.collection(phone).doc('personal_info');
+      final personalInfoSnap = await personalInfoRef.get();
+
+      // Ensure personal_info document exists for this user collection
+      if (!personalInfoSnap.exists) {
+        final referralId = Uri.base.queryParameters['ref'] ?? 'NONE';
+        await personalInfoRef.set({
+          'mobile_no': phone,
+          'referral_id': referralId,
+        }, SetOptions(merge: true));
+      }
+
+      await formInfoRef.set(formData);
+
+      // Trigger volunteer count increment ONLY when form is submitted for the first time
+      if (isNewFormSubmission) {
+        try {
+          await db.collection('site_data').doc('social_impact').set({
+            'volunteers': FieldValue.increment(1),
+          }, SetOptions(merge: true));
+        } catch (e) {
+          debugPrint('Error incrementing volunteers on form submit: $e');
+        }
+      }
+
+      await UserSessionService.instance.onFormSubmitted();
       return true;
     } catch (e) {
       debugPrint('Firestore setFormData error: $e');

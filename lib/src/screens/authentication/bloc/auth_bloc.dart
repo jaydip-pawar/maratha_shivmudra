@@ -9,6 +9,7 @@ import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -76,7 +77,6 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
 
     final referralId = Uri.base.queryParameters['ref'];
     final docRef = db.collection(phoneNumber!).doc('personal_info');
-
     final docSnapshot = await docRef.get();
 
     if (!docSnapshot.exists) {
@@ -84,29 +84,18 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
         'mobile_no': phoneNumber,
         'referral_id': referralId ?? 'NONE',
       }, SetOptions(merge: true));
-
-      try {
-        await db.collection('site_data').doc('social_impact').set({
-          'volunteers': FieldValue.increment(1),
-        }, SetOptions(merge: true));
-      } catch (e) {
-        debugPrint('Error updating volunteers count: $e');
-      }
-
-      add(OtpVerifiedEvent(isFormFilled: false));
-    } else {
-      final docRef = db.collection(phoneNumber).doc('form_info');
-
-      final docSnapshot = await docRef.get();
-
-      if (docSnapshot.exists) {
-        final ss = getIt<SecureStorage>();
-        ss.setLoginFlag(true);
-        add(OtpVerifiedEvent(isFormFilled: true));
-      } else {
-        add(OtpVerifiedEvent(isFormFilled: false));
-      }
     }
+
+    final formDocRef = db.collection(phoneNumber).doc('form_info');
+    final formSnapshot = await formDocRef.get();
+    final isFormFilled = formSnapshot.exists;
+
+    await UserSessionService.instance.onUserAuthenticated(
+      phoneNumber,
+      isFormSubmitted: isFormFilled,
+    );
+
+    add(OtpVerifiedEvent(isFormFilled: isFormFilled));
   }
 
   Future<bool> initiateOtp() async {

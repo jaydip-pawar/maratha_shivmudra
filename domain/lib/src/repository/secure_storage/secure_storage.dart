@@ -13,5 +13,9 @@ abstract class SecureStorage {
 
   Future<void> setMobileNumber(String mobileNumber);
 
+  Future<void> setFormSubmitted(bool value);
+
+  Future<bool> isFormSubmitted();
+
   Future<void> clear();
 }

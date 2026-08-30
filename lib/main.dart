@@ -11,6 +11,7 @@ import 'package:maratha_shivmudra/firebase_options.dart';
 
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 void main() async {
@@ -25,6 +26,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initDependencyInjection();
+  await UserSessionService.instance.init();
   runApp(const MyApp());
 }
 

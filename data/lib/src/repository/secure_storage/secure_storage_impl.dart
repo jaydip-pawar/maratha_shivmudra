@@ -1,13 +1,11 @@
 import 'package:data/src/constants/secured_storage_constants.dart';
 import 'package:domain/domain.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 @Injectable(as: SecureStorage)
 class SecureStorageImpl implements SecureStorage {
-  final _flutterSecureStorage = FlutterSecureStorage(
+  final _flutterSecureStorage = const FlutterSecureStorage(
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
@@ -35,34 +33,40 @@ class SecureStorageImpl implements SecureStorage {
 
   @override
   Future<void> setLoginFlag(bool value) async {
-    if (kIsWeb) {
-      await write(key: SecuredStorageConstants.login, value: value.toString());
-    }
+    await write(key: SecuredStorageConstants.login, value: value.toString());
   }
 
   @override
   Future<bool> isUserLoggedIn() async {
-    return _getAndClear();
-  }
-
-  Future<bool> _getAndClear() async {
-    return await read(key: SecuredStorageConstants.login) == "true";
+    final mobile = await getMobileNumber();
+    return mobile.trim().isNotEmpty;
   }
 
   @override
   Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    _flutterSecureStorage.deleteAll();
-    prefs.clear();
+    await _flutterSecureStorage.deleteAll();
   }
 
   @override
   Future<String> getMobileNumber() async {
-    return await read(key: SecuredStorageConstants.mobileNumber);
+    return (await read(key: SecuredStorageConstants.mobileNumber)).trim();
   }
 
   @override
   Future<void> setMobileNumber(String mobileNumber) async {
-    await write(key: SecuredStorageConstants.mobileNumber, value: mobileNumber);
+    await write(
+      key: SecuredStorageConstants.mobileNumber,
+      value: mobileNumber.trim(),
+    );
+  }
+
+  @override
+  Future<void> setFormSubmitted(bool value) async {
+    await write(key: 'is_form_submitted', value: value.toString());
+  }
+
+  @override
+  Future<bool> isFormSubmitted() async {
+    return (await read(key: 'is_form_submitted')) == "true";
   }
 }

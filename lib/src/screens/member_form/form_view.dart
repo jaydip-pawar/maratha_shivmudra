@@ -433,6 +433,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                             formBloc.mobileNoController,
                                         isCompulsory: true,
                                         icon: Icons.phone_rounded,
+                                        readOnly: true,
+                                        absorbPointer: true,
                                         errorMessage: context.l10n
                                             .please_enter_your_mobile_number,
                                       ),
@@ -467,6 +469,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                   controller: formBloc.mobileNoController,
                                   isCompulsory: true,
                                   icon: Icons.phone_rounded,
+                                  readOnly: true,
+                                  absorbPointer: true,
                                   errorMessage: context
                                       .l10n.please_enter_your_mobile_number,
                                 ),

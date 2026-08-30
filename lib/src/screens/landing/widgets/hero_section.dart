@@ -1,10 +1,12 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/auth_dialog.dart';
 import 'package:maratha_shivmudra/src/screens/landing/widgets/shivmudra_emblem.dart';
-
-import 'package:maratha_shivmudra/core/constants/styles.dart';
 
 class HeroSection extends StatefulWidget {
   final VoidCallback? onExploreTap;
@@ -46,10 +48,19 @@ class _HeroSectionState extends State<HeroSection>
     super.dispose();
   }
 
+  void _onJoinPressed(BuildContext context) {
+    if (UserSessionService.instance.isLoggedInNotifier.value) {
+      context.router.push(const MemberFormRoute());
+    } else {
+      AuthDialog.show(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isMobile = context.isMobile;
-    final isTablet = context.isTablet;
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 700;
+    final isTablet = width >= 700 && width < 1024;
 
     return Container(
       width: double.infinity,
@@ -57,6 +68,7 @@ class _HeroSectionState extends State<HeroSection>
         gradient: AppGradients.heroBackground,
       ),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Background ambient glow circles
           Positioned(
@@ -138,64 +150,51 @@ class _HeroSectionState extends State<HeroSection>
           isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         // Royal Shloka Badge
-        GestureDetector(
-          onTap: widget.onPledgeTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              gradient: AppGradients.badgeGradient,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.6),
-                width: 1,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: AppColors.goldBorderMedium,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🚩 ', style: TextStyle(fontSize: 14)),
+              Flexible(
+                child: Text(
+                  context.l10n.hero_badge,
+                  style: AppTypography.shlokaBadge(isMobile),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.gold.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🚩', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    context.l10n.hero_badge,
-                    textAlign: isMobile ? TextAlign.center : TextAlign.left,
-                    style: AppTypography.shlokaBadge(isMobile),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
 
         const SizedBox(height: 20),
 
-        // Organization Name
+        // Hero Organization Name
         Text(
           context.l10n.hero_org_name,
           textAlign: isMobile ? TextAlign.center : TextAlign.left,
           style: AppTypography.orgName(isMobile),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        // Catchy Tagline
-        ShaderMask(
-          shaderCallback: (bounds) =>
-              AppGradients.heroTextGradient.createShader(bounds),
-          child: Text(
-            context.l10n.hero_title,
-            textAlign: isMobile ? TextAlign.center : TextAlign.left,
-            style: AppTypography.heroTagline(isMobile),
-          ),
+        // Hero Tagline
+        Text(
+          context.l10n.hero_title,
+          textAlign: isMobile ? TextAlign.center : TextAlign.left,
+          style: AppTypography.heroTagline(isMobile),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
         // Subtitle / Mission Statement
         Text(
@@ -212,35 +211,49 @@ class _HeroSectionState extends State<HeroSection>
           spacing: 14,
           runSpacing: 12,
           children: [
-            // Join as Member CTA
-            ElevatedButton.icon(
-              onPressed: () => AuthDialog.show(context),
-              icon: const Icon(Icons.volunteer_activism,
-                  size: 18, color: Colors.white),
-              label: Text(
-                context.l10n.hero_btn_join,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.saffron,
-                elevation: 6,
-                shadowColor: AppColors.saffron.withValues(alpha: 0.5),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(
-                    color: AppColors.goldLight,
-                    width: 1.2,
+            // Join as Member CTA (Hidden if form already submitted)
+            ValueListenableBuilder<bool>(
+              valueListenable:
+                  UserSessionService.instance.isFormSubmittedNotifier,
+              builder: (context, isSubmitted, _) {
+                if (isSubmitted) {
+                  return const SizedBox.shrink();
+                }
+
+                return ElevatedButton.icon(
+                  onPressed: () => _onJoinPressed(context),
+                  icon: const Icon(
+                    Icons.volunteer_activism,
+                    size: 18,
+                    color: Colors.white,
                   ),
-                ),
-              ),
+                  label: Text(
+                    context.l10n.hero_btn_join,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.saffron,
+                    elevation: 6,
+                    shadowColor:
+                        AppColors.saffron.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: AppColors.goldLight,
+                        width: 1.2,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
 
             // Explore Initiatives CTA

@@ -1,6 +1,9 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/main.dart';
@@ -23,6 +26,15 @@ class LandingSideDrawer extends StatelessWidget {
     this.onEventsTap,
     this.onContactTap,
   });
+
+  void _onJoinPressed(BuildContext context) {
+    Navigator.of(context).pop();
+    if (UserSessionService.instance.isLoggedInNotifier.value) {
+      context.router.push(const MemberFormRoute());
+    } else {
+      AuthDialog.show(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,16 +110,17 @@ class LandingSideDrawer extends StatelessWidget {
               ),
             ),
 
-            // Language Switch Tile
+            // Language Selector inside Drawer
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.darkSurface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.2),
+                    color: AppColors.gold.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -116,50 +129,35 @@ class LandingSideDrawer extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.language_rounded,
-                            size: 18, color: AppColors.gold),
+                        const Icon(
+                          Icons.language_rounded,
+                          size: 18,
+                          color: AppColors.gold,
+                        ),
                         const SizedBox(width: 8),
                         Text(
-                          isMarathi ? 'भाषा बदला' : 'Change Language',
+                          isMarathi ? 'भाषा (Language)' : 'Language',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
                     ),
                     ValueListenableBuilder<Locale>(
                       valueListenable: appLocaleNotifier,
-                      builder: (context, currentLocale, _) {
-                        final isMr = currentLocale.languageCode == 'mr';
-                        return InkWell(
-                          onTap: () {
-                            appLocaleNotifier.value = isMr
-                                ? const Locale('en', '')
-                                : const Locale('mr', '');
+                      builder: (context, locale, _) {
+                        return Switch(
+                          value: locale.languageCode == 'mr',
+                          onChanged: (val) {
+                            appLocaleNotifier.value = val
+                                ? const Locale('mr', '')
+                                : const Locale('en', '');
                           },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.saffron.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.saffronLight,
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              isMr ? 'English' : 'मराठी',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.goldLight,
-                              ),
-                            ),
-                          ),
+                          activeThumbColor: AppColors.goldLight,
+                          activeTrackColor: AppColors.saffron,
+                          inactiveThumbColor: AppColors.textSecondary,
+                          inactiveTrackColor: AppColors.darkBorder,
                         );
                       },
                     ),
@@ -168,10 +166,12 @@ class LandingSideDrawer extends StatelessWidget {
               ),
             ),
 
-            // Navigation Links List
+            const Divider(color: AppColors.darkBorder, height: 1),
+
+            // Navigation List Items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   _DrawerItem(
                     icon: Icons.home_rounded,
@@ -182,7 +182,7 @@ class LandingSideDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.shield_moon_rounded,
+                    icon: Icons.auto_stories_rounded,
                     title: context.l10n.nav_pledge,
                     onTap: () {
                       Navigator.of(context).pop();
@@ -190,7 +190,7 @@ class LandingSideDrawer extends StatelessWidget {
                     },
                   ),
                   _DrawerItem(
-                    icon: Icons.flag_rounded,
+                    icon: Icons.account_balance_rounded,
                     title: context.l10n.nav_pillars,
                     onTap: () {
                       Navigator.of(context).pop();
@@ -225,41 +225,49 @@ class LandingSideDrawer extends StatelessWidget {
               ),
             ),
 
-            // Bottom CTA & Auth Action
+            // Bottom CTA & Auth Action (Hidden if form submitted)
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        AuthDialog.show(context);
-                      },
-                      icon: const Icon(Icons.login_rounded,
-                          size: 18, color: AppColors.white),
-                      label: Text(
-                        context.l10n.nav_join,
-                        style: const TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.saffron,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: AppColors.goldLight,
-                            width: 1.2,
+                  ValueListenableBuilder<bool>(
+                    valueListenable:
+                        UserSessionService.instance.isFormSubmittedNotifier,
+                    builder: (context, isSubmitted, _) {
+                      if (isSubmitted) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _onJoinPressed(context),
+                          icon: const Icon(Icons.volunteer_activism,
+                              size: 18, color: AppColors.white),
+                          label: Text(
+                            context.l10n.nav_join,
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.saffron,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(
+                                color: AppColors.goldLight,
+                                width: 1.2,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   const Text(
@@ -301,17 +309,16 @@ class _DrawerItem extends StatelessWidget {
         style: const TextStyle(
           fontFamily: AppTypography.fontFamily,
           fontSize: 15,
-          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
         ),
       ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textMuted,
-        size: 18,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onTap: onTap,
+      hoverColor: AppColors.saffron.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
     );
   }
 }
