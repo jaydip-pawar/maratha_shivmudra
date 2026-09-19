@@ -29,3 +29,7 @@ analyzer:
     - '**/generated/**'  # Exclude all files in a generated directory, if applicable
     - 'test'  # Exclude all files in a test directory
     - '**/*.g.dart'  # Exclude generated files to prevent dynamic errors
+    - build/**
+    - android/**
+    - ios/**
+    - web/**

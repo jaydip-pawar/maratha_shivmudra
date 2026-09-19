@@ -97,7 +97,7 @@ class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
       key: _scaffoldKey,
       backgroundColor: AppColors.darkBg,
       endDrawer: LandingSideDrawer(
-        onHomeTap: () => _scrollToSection(_homeKey),
+        onHomeTap: _scrollToTop,
         onPledgeTap: () => _scrollToSection(_pledgeKey),
         onPillarsTap: () => _scrollToSection(_pillarsKey),
         onImpactTap: () => _scrollToSection(_impactKey),
@@ -190,7 +190,7 @@ class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
             left: 0,
             right: 0,
             child: LandingNavBar(
-              onHomeTap: () => _scrollToSection(_homeKey),
+              onHomeTap: _scrollToTop,
               onPledgeTap: () => _scrollToSection(_pledgeKey),
               onPillarsTap: () => _scrollToSection(_pillarsKey),
               onImpactTap: () => _scrollToSection(_impactKey),
