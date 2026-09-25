@@ -14,6 +14,8 @@ extension BuildContextExtensions on BuildContext {
   bool get isTablet => Responsive.isTablet(this);
 
   bool get isDesktop => Responsive.isDesktop(this);
+
+  bool get hasSoftKeyboard => Responsive.hasSoftKeyboard(this);
 }
 
 extension SizeBoxExtension on num {

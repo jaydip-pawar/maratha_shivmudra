@@ -8,6 +8,7 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/auth_dialog.dart';
+import 'package:maratha_shivmudra/src/screens/profile/profile_dialog.dart';
 
 class LandingNavBar extends StatelessWidget {
   final VoidCallback? onHomeTap;
@@ -147,14 +148,19 @@ class LandingNavBar extends StatelessWidget {
             // Language Switcher Button
             _LanguageToggleButton(),
 
-            // Desktop Join / Login Button (Hidden when form is already submitted)
+            // Desktop Join / Profile Chip
             if (!isCompact) ...[
               ValueListenableBuilder<bool>(
                 valueListenable:
                     UserSessionService.instance.isFormSubmittedNotifier,
                 builder: (context, isSubmitted, _) {
                   if (isSubmitted) {
-                    return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 16),
+                      child: _MemberProfileChip(
+                        onTap: () => ProfileModalDialog.showAdaptive(context),
+                      ),
+                    );
                   }
 
                   return Padding(
@@ -216,6 +222,131 @@ class LandingNavBar extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberProfileChip extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _MemberProfileChip({required this.onTap});
+
+  @override
+  State<_MemberProfileChip> createState() => _MemberProfileChipState();
+}
+
+class _MemberProfileChipState extends State<_MemberProfileChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(30),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? AppColors.saffron.withValues(alpha: 0.18)
+                : AppColors.darkSurface,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: _isHovered ? AppColors.goldLight : AppColors.gold.withValues(alpha: 0.6),
+              width: 1.4,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.gold.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : [],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Glowing Avatar Icon
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [AppColors.saffron, AppColors.gold],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.saffron.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Member Info Label
+              ValueListenableBuilder<Locale>(
+                valueListenable: appLocaleNotifier,
+                builder: (context, locale, _) {
+                  final isMarathi = locale.languageCode == 'mr';
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.greenAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isMarathi ? 'अधिकृत सभासद' : 'Active Member',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.goldLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        isMarathi ? 'माझे प्रोफाइल' : 'My Profile',
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 16,
+                color: AppColors.goldLight,
+              ),
+            ],
+          ),
         ),
       ),
     );

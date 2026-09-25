@@ -1,6 +1,8 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 
@@ -62,9 +64,27 @@ class FooterSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      '© ${DateTime.now().year} ${context.l10n.maratha_shivmudra}. ${context.l10n.rights_reserved}',
-                      style: AppTypography.footerCopyright,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '© ${DateTime.now().year} ${context.l10n.maratha_shivmudra}. ${context.l10n.rights_reserved}',
+                            style: AppTypography.footerCopyright,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        InkWell(
+                          onTap: () => context.router.push(const AdminLoginRoute()),
+                          child: const Text(
+                            '• ॲडमिन (Admin)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textMuted,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const Text(

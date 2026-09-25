@@ -138,9 +138,11 @@ class _HeroSectionState extends State<HeroSection>
   }
 
   Widget _buildEmblem({required double size}) {
-    return ScaleTransition(
-      scale: _pulseAnimation,
-      child: ShivmudraEmblem(size: size),
+    return RepaintBoundary(
+      child: ScaleTransition(
+        scale: _pulseAnimation,
+        child: ShivmudraEmblem(size: size),
+      ),
     );
   }
 
@@ -211,7 +213,7 @@ class _HeroSectionState extends State<HeroSection>
           spacing: 14,
           runSpacing: 12,
           children: [
-            // Join as Member CTA (Hidden if form already submitted)
+            // Join CTA (Hidden if already submitted)
             ValueListenableBuilder<bool>(
               valueListenable:
                   UserSessionService.instance.isFormSubmittedNotifier,

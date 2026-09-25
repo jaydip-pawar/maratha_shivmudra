@@ -76,19 +76,23 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     final phoneNumber = getData<String>('mobileNumber');
 
     final referralId = Uri.base.queryParameters['ref'];
-    final docRef = db.collection(phoneNumber!).doc('personal_info');
-    final docSnapshot = await docRef.get();
+    final memberRef = db.collection('members').doc(phoneNumber!);
+    final memberSnap = await memberRef.get();
+    final isFormFilled =
+        memberSnap.exists && (memberSnap.data()?['is_registered'] == true);
 
-    if (!docSnapshot.exists) {
-      await docRef.set({
-        'mobile_no': phoneNumber,
+    if (!memberSnap.exists) {
+      await memberRef.set({
+        'phone': phoneNumber,
         'referral_id': referralId ?? 'NONE',
+        'is_registered': false,
+        'is_profile_complete': false,
+        'is_card_issued': false,
+        'is_valid': true,
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
-
-    final formDocRef = db.collection(phoneNumber).doc('form_info');
-    final formSnapshot = await formDocRef.get();
-    final isFormFilled = formSnapshot.exists;
 
     await UserSessionService.instance.onUserAuthenticated(
       phoneNumber,
@@ -98,11 +102,22 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     add(OtpVerifiedEvent(isFormFilled: isFormFilled));
   }
 
+  /// Set to true to skip real 2Factor SMS OTP gateway calls during testing/development to avoid incurring charges.
+  static const bool skipOtpForTesting = true;
+
   Future<bool> initiateOtp() async {
     try {
       String phoneNumber = phoneController.text.replaceAll(' ', '');
 
       setData<String>('mobileNumber', phoneNumber);
+
+      if (skipOtpForTesting) {
+        // Skip 2Factor SMS API to prevent charges during testing.
+        await setUserData();
+        add(ApiStatusEvent(isLoading: false, hasError: false));
+        return true;
+      }
+
       phoneNumber = '+91$phoneNumber';
 
       final response = await getIt<AuthRepository>().sendOTP(phoneNumber);
@@ -118,7 +133,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
       add(ApiStatusEvent(isLoading: false, hasError: false));
 
       return true;
-    } catch (e, s) {
+    } catch (e) {
       add(ApiStatusEvent(isLoading: false, hasError: true));
 
       return false;
@@ -127,6 +142,13 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
 
   Future<bool> verifyOtp(String otp) async {
     try {
+      if (skipOtpForTesting) {
+        // Skip 2Factor verification call during testing.
+        await setUserData();
+        add(ApiStatusEvent(isLoading: false, hasError: false));
+        return true;
+      }
+
       if (_sessionId == null) return false;
 
       final response = await getIt<AuthRepository>().verifyOTP(

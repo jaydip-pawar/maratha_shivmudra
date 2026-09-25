@@ -10,23 +10,27 @@ class UserSessionService {
   final ValueNotifier<bool> isFormSubmittedNotifier =
       ValueNotifier<bool>(false);
   final ValueNotifier<bool> isLoggedInNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<String?> currentPhoneNotifier =
+      ValueNotifier<String?>(null);
 
   Future<void> init() async {
     try {
       final ss = getIt<SecureStorage>();
       final mobile = await ss.getMobileNumber();
+
       final isSubmitted = await ss.isFormSubmitted();
 
       isLoggedInNotifier.value = mobile.isNotEmpty;
+      currentPhoneNotifier.value = mobile.isNotEmpty ? mobile : null;
       isFormSubmittedNotifier.value = isSubmitted;
 
-      // If user is logged in, double-check Firestore for form_info existence
-      if (mobile.isNotEmpty && !isSubmitted) {
+      // Check Firestore for members record existence
+      if (mobile.isNotEmpty) {
         final doc = await FirebaseFirestore.instance
-            .collection(mobile)
-            .doc('form_info')
+            .collection('members')
+            .doc(mobile)
             .get();
-        if (doc.exists) {
+        if (doc.exists && doc.data()?['is_registered'] == true) {
           await ss.setFormSubmitted(true);
           isFormSubmittedNotifier.value = true;
         }
@@ -45,6 +49,7 @@ class UserSessionService {
     await ss.setLoginFlag(true);
     await ss.setFormSubmitted(isFormSubmitted);
     isLoggedInNotifier.value = true;
+    currentPhoneNotifier.value = mobile;
     isFormSubmittedNotifier.value = isFormSubmitted;
   }
 
@@ -52,5 +57,13 @@ class UserSessionService {
     final ss = getIt<SecureStorage>();
     await ss.setFormSubmitted(true);
     isFormSubmittedNotifier.value = true;
+  }
+
+  Future<void> signOut() async {
+    final ss = getIt<SecureStorage>();
+    await ss.clear();
+    isLoggedInNotifier.value = false;
+    currentPhoneNotifier.value = null;
+    isFormSubmittedNotifier.value = false;
   }
 }

@@ -23,22 +23,26 @@ class SocialImpactModel {
     return str;
   }
 
-  factory SocialImpactModel.fromFirestore(Map<String, dynamic>? data) {
+  factory SocialImpactModel.fromFirestore(
+    Map<String, dynamic>? data, {
+    String? liveVolunteers,
+  }) {
     if (data == null) return const SocialImpactModel();
     return SocialImpactModel(
-      volunteers: _parseVal(
-        data['volunteers'] ??
-            data['members'] ??
-            data['active_members'] ??
-            data['member_count'],
-        '10,000',
-      ),
-      students: _parseVal(data['students'], '500'),
+      volunteers: liveVolunteers ??
+          _parseVal(
+            data['volunteers'] ??
+                data['members'] ??
+                data['active_members'] ??
+                data['member_count'],
+            '101',
+          ),
+      students: _parseVal(data['students'], '360+'),
       fortDrives:
-          _parseVal(data['fort_drives'] ?? data['fortDrives'], '50'),
+          _parseVal(data['fort_drives'] ?? data['fortDrives'], '50+'),
       reliefDrives:
-          _parseVal(data['relief_drives'] ?? data['reliefDrives'], '100'),
-      districts: _parseVal(data['districts'], '25'),
+          _parseVal(data['relief_drives'] ?? data['reliefDrives'], '7'),
+      districts: _parseVal(data['districts'], '36'),
     );
   }
 }
@@ -120,18 +124,29 @@ class LandingFirebaseService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Stream of Social Impact numbers from `site_data/social_impact`
+  /// Stream of Social Impact numbers with live query-based volunteer count
   Stream<SocialImpactModel> getSocialImpactStream() {
     return _firestore
         .collection('site_data')
         .doc('social_impact')
         .snapshots()
-        .map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) {
-        return const SocialImpactModel();
-      }
-      return SocialImpactModel.fromFirestore(snapshot.data());
-    }).handleError((e) {
+        .asyncMap((snapshot) async {
+      int liveVolunteers = 101;
+      try {
+        final countSnap = await _firestore
+            .collection('members')
+            .where('is_registered', isEqualTo: true)
+            .count()
+            .get();
+        liveVolunteers = countSnap.count ?? 101;
+      } catch (_) {}
+
+      final data = snapshot.data();
+      return SocialImpactModel.fromFirestore(
+        data,
+        liveVolunteers: liveVolunteers.toString(),
+      );
+    }).handleError((Object e) {
       debugPrint('Error loading social impact stats: $e');
       return const SocialImpactModel();
     });
@@ -153,7 +168,7 @@ class LandingFirebaseService {
 
       events.sort((a, b) => a.order.compareTo(b.order));
       return events;
-    }).handleError((e) {
+    }).handleError((Object e) {
       debugPrint('Error loading upcoming events: $e');
       return <EventItemModel>[];
     });

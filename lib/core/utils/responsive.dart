@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class Responsive extends StatelessWidget {
@@ -27,6 +28,20 @@ class Responsive extends StatelessWidget {
 
   static bool isDesktop(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= 1024;
+
+  @visibleForTesting
+  static bool? debugOverrideHasSoftKeyboard;
+
+  /// Returns whether the device supports or uses an on-screen/software keyboard (mobile or tablet).
+  static bool hasSoftKeyboard(BuildContext context) {
+    if (debugOverrideHasSoftKeyboard != null) {
+      return debugOverrideHasSoftKeyboard!;
+    }
+    final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final isMobileOrTablet = isMobile(context) || isTablet(context);
+    return isMobilePlatform || isMobileOrTablet;
+  }
 
   @override
   Widget build(BuildContext context) {
