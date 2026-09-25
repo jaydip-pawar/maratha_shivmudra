@@ -103,7 +103,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   }
 
   /// Set to true to skip real 2Factor SMS OTP gateway calls during testing/development to avoid incurring charges.
-  static const bool skipOtpForTesting = true;
+  static const bool skipOtpForTesting = false;
 
   Future<bool> initiateOtp() async {
     try {
