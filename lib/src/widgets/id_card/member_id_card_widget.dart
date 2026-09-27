@@ -18,8 +18,11 @@ class MemberIdCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final memberId = profile.memberId ?? 'MSM-${profile.districtCode}-00000';
-    final qrData = 'https://marathashivmudra.web.app/verify?id=$memberId';
+    final rawId = profile.memberId;
+    final memberId = (rawId != null && rawId.isNotEmpty && rawId != 'PENDING')
+        ? rawId
+        : 'MSP-${profile.districtCode.isNotEmpty ? profile.districtCode : "PUN"}-A0001';
+    final qrData = 'https://marathashivmudra.in/verify?id=$memberId';
 
     return LayoutBuilder(
       builder: (context, constraints) {

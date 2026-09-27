@@ -1262,7 +1262,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final c = campaigns[index];
-                    final link = 'https://marathashivmudra.web.app/?ref=${c.code}';
+                    final link = 'https://marathashivmudra.in/?ref=${c.code}';
 
                     return Container(
                       padding: const EdgeInsets.all(16),

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maratha_shivmudra/core/constants/district_constants.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
+import 'package:maratha_shivmudra/core/services/member_id_service.dart';
 
 void main() {
   group('MemberProfile 100% Criteria & Dynamic Occupation Tests', () {
@@ -354,6 +355,51 @@ void main() {
       expect(parsed.isAssociatedWithNgo, isFalse);
       expect(parsed.ngoName, equals(''));
       expect(parsed.ngoRole, equals(''));
+    });
+
+    test('MemberIdService.formatSeriesCode generates correct 4-digit number and series letter with 9999 batch overflow', () {
+      // 1st member starts at 0001 with 'A'
+      expect(MemberIdService.formatSeriesCode(1), equals('A0001'));
+      expect(MemberIdService.formatSeriesCode(2), equals('A0002'));
+      expect(MemberIdService.formatSeriesCode(500), equals('A0500'));
+      expect(MemberIdService.formatSeriesCode(9998), equals('A9998'));
+      
+      // 9999th member is the last in 'A' series
+      expect(MemberIdService.formatSeriesCode(9999), equals('A9999'));
+
+      // 10000th member rolls over to 'B' series starting at 0001
+      expect(MemberIdService.formatSeriesCode(10000), equals('B0001'));
+      expect(MemberIdService.formatSeriesCode(10001), equals('B0002'));
+      expect(MemberIdService.formatSeriesCode(19998), equals('B9999'));
+
+      // 19999th member rolls over to 'C' series starting at 0001
+      expect(MemberIdService.formatSeriesCode(19999), equals('C0001'));
+      expect(MemberIdService.formatSeriesCode(29997), equals('C9999'));
+
+      // 29998th member rolls over to 'D' series starting at 0001
+      expect(MemberIdService.formatSeriesCode(29998), equals('D0001'));
+
+      // Edge case: 0 or negative defaults safely to 1 (A0001)
+      expect(MemberIdService.formatSeriesCode(0), equals('A0001'));
+      expect(MemberIdService.formatSeriesCode(-5), equals('A0001'));
+    });
+
+    test('District Member ID format conforms to MSP-{Jilha Code}-A0001', () {
+      const jilhaCodePune = 'PUN';
+      const jilhaCodeSatara = 'SAT';
+      const jilhaCodeThane = 'THA';
+
+      final puneFirst = 'MSP-$jilhaCodePune-${MemberIdService.formatSeriesCode(1)}';
+      final puneLastA = 'MSP-$jilhaCodePune-${MemberIdService.formatSeriesCode(9999)}';
+      final puneFirstB = 'MSP-$jilhaCodePune-${MemberIdService.formatSeriesCode(10000)}';
+      final sataraFirst = 'MSP-$jilhaCodeSatara-${MemberIdService.formatSeriesCode(1)}';
+      final thaneFirst = 'MSP-$jilhaCodeThane-${MemberIdService.formatSeriesCode(1)}';
+
+      expect(puneFirst, equals('MSP-PUN-A0001'));
+      expect(puneLastA, equals('MSP-PUN-A9999'));
+      expect(puneFirstB, equals('MSP-PUN-B0001'));
+      expect(sataraFirst, equals('MSP-SAT-A0001'));
+      expect(thaneFirst, equals('MSP-THA-A0001'));
     });
   });
 }

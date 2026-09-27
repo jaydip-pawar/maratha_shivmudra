@@ -33,7 +33,31 @@ class MemberProfileService {
       final cleanPhone = phone.trim();
       final snap = await _db.collection('members').doc(cleanPhone).get();
       if (!snap.exists || snap.data() == null) return null;
-      return MemberProfile.fromFirestore(cleanPhone, snap.data()!);
+      var profile = MemberProfile.fromFirestore(cleanPhone, snap.data()!);
+
+      // Self-heal: If profile is 100% complete and ID is missing or PENDING, auto-issue and persist
+      if (profile.isProfileComplete &&
+          (profile.memberId == null ||
+              profile.memberId!.trim().isEmpty ||
+              profile.memberId == 'PENDING')) {
+        final newId = await MemberIdService.instance.generateOrGetMemberId(
+          phoneNumber: cleanPhone,
+          rawDistrict: profile.district,
+          fullName: profile.fullNameEn.isNotEmpty
+              ? profile.fullNameEn
+              : profile.fullNameMr,
+        );
+        if (newId != null && newId.isNotEmpty && newId != 'PENDING') {
+          final updatedSnap =
+              await _db.collection('members').doc(cleanPhone).get();
+          if (updatedSnap.exists && updatedSnap.data() != null) {
+            profile =
+                MemberProfile.fromFirestore(cleanPhone, updatedSnap.data()!);
+          }
+        }
+      }
+
+      return profile;
     } catch (e) {
       debugPrint('Error getting member profile: $e');
       return null;
@@ -50,11 +74,15 @@ class MemberProfileService {
 
       // Gate: If profile is 100% complete and memberId not yet issued, generate it!
       if (profile.isProfileComplete &&
-          (issuedMemberId == null || issuedMemberId.isEmpty || issuedMemberId == 'PENDING')) {
+          (issuedMemberId == null ||
+              issuedMemberId.isEmpty ||
+              issuedMemberId == 'PENDING')) {
         issuedMemberId = await MemberIdService.instance.generateOrGetMemberId(
           phoneNumber: phone,
           rawDistrict: profile.district,
-          fullName: profile.fullNameEn.isNotEmpty ? profile.fullNameEn : profile.fullNameMr,
+          fullName: profile.fullNameEn.isNotEmpty
+              ? profile.fullNameEn
+              : profile.fullNameMr,
         );
       }
 
@@ -71,9 +99,11 @@ class MemberProfileService {
       final dataToSave = profile.toFirestore();
       dataToSave['search_tokens'] = searchTokens;
       if (issuedMemberId != null && issuedMemberId != 'PENDING') {
-        final membership = dataToSave['membership'] as Map<String, dynamic>? ?? {};
+        final membership =
+            dataToSave['membership'] as Map<String, dynamic>? ?? {};
         membership['member_id'] = issuedMemberId;
         membership['is_card_issued'] = true;
+        membership['is_profile_complete'] = true;
         dataToSave['membership'] = membership;
       }
 
@@ -116,6 +146,12 @@ class MemberProfileService {
         },
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // Auto-issue Member ID if profile is now 100% complete!
+      final latest = await getProfile(cleanPhone);
+      if (latest != null && latest.isProfileComplete) {
+        await updateProfile(latest);
+      }
       return true;
     } catch (e) {
       debugPrint('Error saving photo: $e');

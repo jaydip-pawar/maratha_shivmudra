@@ -53,8 +53,9 @@ class MemberIdService {
         return nextCount;
       });
 
-      final memberId =
-          'MSM-$districtCode-${newSerial.toString().padLeft(5, '0')}';
+      final cleanDistrictCode = districtCode.isNotEmpty ? districtCode : 'GEN';
+      final seriesCode = formatSeriesCode(newSerial);
+      final memberId = 'MSP-$cleanDistrictCode-$seriesCode';
       final now = FieldValue.serverTimestamp();
 
       // Save to member document
@@ -69,6 +70,7 @@ class MemberIdService {
           'serial_number': newSerial,
           'card_issued_date': now,
           'is_card_issued': true,
+          'is_profile_complete': true,
         },
         'updated_at': now,
       }, SetOptions(merge: true));
@@ -80,7 +82,32 @@ class MemberIdService {
     }
   }
 
-  /// Assign or generate a Special / Managerial ID (e.g. MSM-HQ-0001 or MSM-PUN-OFF-001)
+  /// Formats a 1-based sequential number into the batch series format:
+  /// Serial 1 -> A0001
+  /// Serial 9999 -> A9999
+  /// Serial 10000 -> B0001
+  /// Serial 19998 -> B9999
+  /// Serial 19999 -> C0001
+  static String formatSeriesCode(int serial) {
+    if (serial <= 0) serial = 1;
+    final batchIndex = (serial - 1) ~/ 9999;
+    final numberInBatch = ((serial - 1) % 9999) + 1;
+
+    String seriesLetter;
+    if (batchIndex < 26) {
+      seriesLetter = String.fromCharCode(65 + batchIndex); // A-Z
+    } else {
+      // Extended series for ultra-high counts (e.g. AA, AB...)
+      final firstLetter = String.fromCharCode(65 + ((batchIndex ~/ 26) - 1));
+      final secondLetter = String.fromCharCode(65 + (batchIndex % 26));
+      seriesLetter = '$firstLetter$secondLetter';
+    }
+
+    final formattedNumber = numberInBatch.toString().padLeft(4, '0');
+    return '$seriesLetter$formattedNumber';
+  }
+
+  /// Assign or generate a Special / Managerial ID (e.g. MSP-HQ-A0001 or MSP-PUN-OFF-A0001)
   Future<String?> assignManagerialOrSpecialId({
     required String phone,
     required String rawDistrict,
@@ -92,7 +119,7 @@ class MemberIdService {
     try {
       final cleanPhone = phone.trim();
       final district = DistrictConstants.getByCode(DistrictConstants.getCode(rawDistrict));
-      final districtCode = district.code;
+      final districtCode = district.code.isNotEmpty ? district.code : 'GEN';
       String specialId = customSpecialId?.trim().toUpperCase() ?? '';
 
       if (specialId.isEmpty) {
@@ -118,12 +145,13 @@ class MemberIdService {
           return next;
         });
 
+        final seriesCode = formatSeriesCode(newSerial);
         if (roleType == 'core_committee') {
-          specialId = 'MSM-HQ-${newSerial.toString().padLeft(4, '0')}';
+          specialId = 'MSP-HQ-$seriesCode';
         } else if (roleType == 'manager') {
-          specialId = 'MSM-MGR-${newSerial.toString().padLeft(4, '0')}';
+          specialId = 'MSP-MGR-$seriesCode';
         } else {
-          specialId = 'MSM-$districtCode-OFF-${newSerial.toString().padLeft(3, '0')}';
+          specialId = 'MSP-$districtCode-OFF-$seriesCode';
         }
       }
 

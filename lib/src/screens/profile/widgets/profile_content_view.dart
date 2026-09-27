@@ -11,6 +11,7 @@ import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
+import 'package:maratha_shivmudra/core/utils/camera_helper.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/widgets/dropdown/app_searchable_dropdown.dart';
@@ -477,22 +478,32 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     if (source == null) return;
 
     try {
-      final XFile? file = await _picker.pickImage(
-        source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 85,
-      );
-      if (file == null) return;
+      Uint8List? bytes;
 
-      final bytes = await file.readAsBytes();
+      if (source == ImageSource.camera && kIsWeb) {
+        bytes = await BrowserCameraHelper.capturePhoto(context);
+        if (bytes == null) return;
+      } else {
+        final XFile? file = await _picker.pickImage(
+          source: source,
+          maxWidth: 600,
+          maxHeight: 600,
+          imageQuality: 85,
+        );
+        if (file == null) return;
+        bytes = await file.readAsBytes();
+      }
+
       setState(() => _isSaving = true);
       final success = await MemberProfileService.instance.uploadProfilePhoto(_profile.phone, bytes);
 
       final updated = await MemberProfileService.instance.getProfile(_profile.phone);
       if (mounted) {
         setState(() {
-          if (updated != null) _profile = updated;
+          if (updated != null) {
+            _profile = updated;
+            _populateControllers(_profile);
+          }
           _isSaving = false;
         });
         widget.onProfileUpdated?.call();

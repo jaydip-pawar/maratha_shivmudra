@@ -545,7 +545,10 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
 
   /// Compact Mini ID Card suited specifically for side menu width (Shown ONLY when profile is 100%)
   Widget _buildMiniIdCard(BuildContext context, MemberProfile p, bool isMarathi) {
-    final memberId = p.memberId ?? 'MSM-${p.districtCode}-00000';
+    final rawId = p.memberId;
+    final memberId = (rawId != null && rawId.isNotEmpty && rawId != 'PENDING')
+        ? rawId
+        : 'MSP-${p.districtCode.isNotEmpty ? p.districtCode : "PUN"}-A0001';
     final districtName = isMarathi
         ? DistrictConstants.getNameMr(p.district)
         : DistrictConstants.getNameEn(p.district);
@@ -687,7 +690,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: QrImageView(
-                      data: 'https://marathashivmudra.web.app/verify?id=$memberId',
+                      data: 'https://marathashivmudra.in/verify?id=$memberId',
                       version: QrVersions.auto,
                       size: 34,
                     ),

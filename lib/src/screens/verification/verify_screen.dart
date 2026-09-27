@@ -127,7 +127,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                                 letterSpacing: 1,
                               ),
                               decoration: InputDecoration(
-                                hintText: 'उदा. MSM-PUN-00001',
+                                hintText: 'उदा. MSP-PUN-A0001',
                                 hintStyle: const TextStyle(color: AppColors.textMuted),
                                 filled: true,
                                 fillColor: AppColors.darkBgHeroTop,
