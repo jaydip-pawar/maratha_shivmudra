@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/responsive.dart';
@@ -256,7 +257,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     widget.onTap?.call();
   }
 
-  Widget labelOrNot({required Widget child}) {
+  Widget labelOrNot({required Widget child, required bool isDark}) {
     final label = widget.labelText;
     if (label != null) {
       return Column(
@@ -265,10 +266,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Text.rich(
             TextSpan(
               text: label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.goldLight,
+                color: isDark ? AppColors.goldLight : AppColors.textDarkPrimary,
               ),
               children: [
                 if (widget.isCompulsory)
@@ -291,7 +292,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return child;
   }
 
-  OutlineInputBorder getOutlineInputBorder({Color? color, double width = 1.0}) {
+  OutlineInputBorder getOutlineInputBorder({
+    Color? color,
+    double width = 1.0,
+    required bool isDark,
+  }) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(
@@ -300,13 +305,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color ??
             (_errorMessage != null
                 ? AppColors.errorColor
-                : AppColors.darkBorder),
+                : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = ThemeService.instance.isDarkMode(context);
     final bool isSoftDevice = Responsive.hasSoftKeyboard(context);
     final isVirtualActive = isSoftDevice &&
         (_suppressDeviceKeyboard || MarathiVirtualKeyboard.isOpen);
@@ -321,6 +327,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     ];
 
     Widget textField = labelOrNot(
+      isDark: isDark,
       child: MouseRegion(
         cursor: widget.readOnly
             ? SystemMouseCursors.click
@@ -350,35 +357,38 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
                   hintText: widget.hintText,
-                  hintStyle: const TextStyle(
-                    color: AppColors.textMuted,
+                  hintStyle: TextStyle(
+                    color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                   ),
                   filled: true,
-                  fillColor: AppColors.darkSurface,
+                  fillColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
-                  border: getOutlineInputBorder(),
+                  border: getOutlineInputBorder(isDark: isDark),
                   focusedBorder: getOutlineInputBorder(
-                    color: AppColors.gold,
+                    color: isDark ? AppColors.gold : AppColors.saffronDark,
                     width: 1.5,
+                    isDark: isDark,
                   ),
-                  enabledBorder: getOutlineInputBorder(),
+                  enabledBorder: getOutlineInputBorder(isDark: isDark),
                   errorBorder: getOutlineInputBorder(
                     color: AppColors.errorColor,
+                    isDark: isDark,
                   ),
                   focusedErrorBorder: getOutlineInputBorder(
                     color: AppColors.errorColor,
                     width: 1.5,
+                    isDark: isDark,
                   ),
                   prefixIcon: widget.prefixIconData != null
                       ? Icon(
                           widget.prefixIconData,
                           size: 18,
-                          color: AppColors.goldLight,
+                          color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                         )
                       : null,
                   suffixIcon: widget.suffixIconData != null
@@ -390,27 +400,25 @@ class _CustomTextFieldState extends State<CustomTextField> {
                                 child: Icon(
                                   widget.suffixIconData,
                                   size: 20,
-                                  color: AppColors.goldLight.withValues(
-                                    alpha: 0.9,
-                                  ),
+                                  color: (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                                      .withValues(alpha: 0.9),
                                 ),
                               )
                             : Icon(
                                 widget.suffixIconData,
                                 size: 20,
-                                color: AppColors.goldLight.withValues(
-                                  alpha: 0.7,
-                                ),
+                                color: (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                                      .withValues(alpha: 0.7),
                               ))
                       : null,
                 ),
                 cursorHeight: 18,
-                cursorColor: AppColors.gold,
+                cursorColor: isDark ? AppColors.gold : AppColors.saffron,
                 cursorWidth: 1.5,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textPrimary,
+                  color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
                 ),
                 validator: (value) {
                   final effectiveValidator = widget.validator ??

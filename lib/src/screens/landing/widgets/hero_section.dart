@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/auth_dialog.dart';
@@ -12,12 +13,14 @@ class HeroSection extends StatefulWidget {
   final VoidCallback? onExploreTap;
   final VoidCallback? onContactTap;
   final VoidCallback? onPledgeTap;
+  final bool? isDark;
 
   const HeroSection({
     super.key,
     this.onExploreTap,
     this.onContactTap,
     this.onPledgeTap,
+    this.isDark,
   });
 
   @override
@@ -61,11 +64,12 @@ class _HeroSectionState extends State<HeroSection>
     final width = MediaQuery.sizeOf(context).width;
     final isMobile = width < 700;
     final isTablet = width >= 700 && width < 1024;
+    final isDark = widget.isDark ?? ThemeService.instance.isDarkMode(context);
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppGradients.heroBackground,
+      decoration: BoxDecoration(
+        gradient: AppGradients.heroBackgroundAdaptive(isDark),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -147,6 +151,8 @@ class _HeroSectionState extends State<HeroSection>
   }
 
   Widget _buildTextContent(BuildContext context, {required bool isMobile}) {
+    final isDark = widget.isDark ?? ThemeService.instance.isDarkMode(context);
+
     return Column(
       crossAxisAlignment:
           isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
@@ -155,10 +161,14 @@ class _HeroSectionState extends State<HeroSection>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.gold.withValues(alpha: 0.12),
+            color: isDark
+                ? AppColors.gold.withValues(alpha: 0.12)
+                : AppColors.saffronLight.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: AppColors.goldBorderMedium,
+              color: isDark
+                  ? AppColors.goldBorderMedium
+                  : AppColors.saffron.withValues(alpha: 0.4),
               width: 1,
             ),
           ),
@@ -169,7 +179,7 @@ class _HeroSectionState extends State<HeroSection>
               Flexible(
                 child: Text(
                   context.l10n.hero_badge,
-                  style: AppTypography.shlokaBadge(isMobile),
+                  style: AppTypography.shlokaBadge(isMobile, isDark: isDark),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -184,7 +194,7 @@ class _HeroSectionState extends State<HeroSection>
         Text(
           context.l10n.hero_org_name,
           textAlign: isMobile ? TextAlign.center : TextAlign.left,
-          style: AppTypography.orgName(isMobile),
+          style: AppTypography.orgName(isMobile, isDark: isDark),
         ),
 
         const SizedBox(height: 8),
@@ -193,7 +203,7 @@ class _HeroSectionState extends State<HeroSection>
         Text(
           context.l10n.hero_title,
           textAlign: isMobile ? TextAlign.center : TextAlign.left,
-          style: AppTypography.heroTagline(isMobile),
+          style: AppTypography.heroTagline(isMobile, isDark: isDark),
         ),
 
         const SizedBox(height: 18),
@@ -202,7 +212,7 @@ class _HeroSectionState extends State<HeroSection>
         Text(
           context.l10n.hero_subtitle,
           textAlign: isMobile ? TextAlign.center : TextAlign.left,
-          style: AppTypography.heroSubtitle(isMobile),
+          style: AppTypography.heroSubtitle(isMobile, isDark: isDark),
         ),
 
         const SizedBox(height: 32),
@@ -227,14 +237,14 @@ class _HeroSectionState extends State<HeroSection>
                   icon: const Icon(
                     Icons.volunteer_activism,
                     size: 18,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                   label: Text(
                     context.l10n.hero_btn_join,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -261,20 +271,28 @@ class _HeroSectionState extends State<HeroSection>
             // Explore Initiatives CTA
             OutlinedButton.icon(
               onPressed: widget.onExploreTap,
-              icon: const Icon(Icons.explore_outlined,
-                  size: 18, color: AppColors.goldLight),
+              icon: Icon(
+                Icons.explore_outlined,
+                size: 18,
+                color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+              ),
               label: Text(
                 context.l10n.hero_btn_explore,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.goldLight,
+                  color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                 ),
               ),
               style: OutlinedButton.styleFrom(
+                backgroundColor: isDark
+                    ? AppColors.transparent
+                    : AppColors.lightSurface,
                 side: BorderSide(
-                  color: AppColors.gold.withValues(alpha: 0.6),
+                  color: isDark
+                      ? AppColors.gold.withValues(alpha: 0.6)
+                      : AppColors.saffron.withValues(alpha: 0.7),
                   width: 1.5,
                 ),
                 padding: const EdgeInsets.symmetric(

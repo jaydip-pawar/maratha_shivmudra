@@ -4,11 +4,16 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/landing/services/landing_firebase_service.dart';
 
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
+
 class UpcomingEventsSection extends StatelessWidget {
-  const UpcomingEventsSection({super.key});
+  final bool? isDark;
+
+  const UpcomingEventsSection({super.key, this.isDark});
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = isDark ?? ThemeService.instance.isDarkMode(context);
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width >= 1024;
     final isMobile = width < 700;
@@ -63,7 +68,7 @@ class UpcomingEventsSection extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          color: AppColors.darkBg,
+          color: isDarkMode ? AppColors.darkBg : AppColors.lightBg,
           padding: EdgeInsets.symmetric(
             horizontal: isMobile ? 16 : 48,
             vertical: isMobile ? 40 : 64,
@@ -77,7 +82,7 @@ class UpcomingEventsSection extends StatelessWidget {
                   Text(
                     context.l10n.events_title,
                     textAlign: TextAlign.center,
-                    style: AppTypography.sectionTitle(isMobile),
+                    style: AppTypography.sectionTitle(isMobile, isDark: isDarkMode),
                   ),
 
                   const SizedBox(height: 8),
@@ -86,7 +91,7 @@ class UpcomingEventsSection extends StatelessWidget {
                   Text(
                     context.l10n.events_subtitle,
                     textAlign: TextAlign.center,
-                    style: AppTypography.sectionSubtitle(isMobile),
+                    style: AppTypography.sectionSubtitle(isMobile, isDark: isDarkMode),
                   ),
 
                   const SizedBox(height: 40),
@@ -104,6 +109,7 @@ class UpcomingEventsSection extends StatelessWidget {
                                   child: _EventCard(
                                     event: e,
                                     isDesktopRow: true,
+                                    isDark: isDarkMode,
                                   ),
                                 ),
                               );
@@ -119,6 +125,7 @@ class UpcomingEventsSection extends StatelessWidget {
                                   child: _EventCard(
                                     event: e,
                                     isDesktopRow: false,
+                                    isDark: isDarkMode,
                                   ),
                                 ),
                               )
@@ -155,10 +162,12 @@ class _EventData {
 class _EventCard extends StatefulWidget {
   final _EventData event;
   final bool isDesktopRow;
+  final bool isDark;
 
   const _EventCard({
     required this.event,
     required this.isDesktopRow,
+    this.isDark = true,
   });
 
   @override
@@ -171,6 +180,7 @@ class _EventCardState extends State<_EventCard> {
   @override
   Widget build(BuildContext context) {
     final e = widget.event;
+    final isDark = widget.isDark;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -181,19 +191,23 @@ class _EventCardState extends State<_EventCard> {
         transform: Matrix4.translationValues(0, _isHovered ? -6 : 0, 0),
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: _isHovered ? AppColors.cardDarkElevated : AppColors.cardDark,
+          color: isDark
+              ? (_isHovered ? AppColors.cardDarkElevated : AppColors.cardDark)
+              : (_isHovered ? AppColors.lightSurfaceElevated : AppColors.lightSurface),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
                 ? e.color.withValues(alpha: 0.8)
-                : AppColors.darkBorder,
+                : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
             width: _isHovered ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? e.color.withValues(alpha: 0.2)
-                  : AppColors.black.withValues(alpha: 0.3),
+                  ? e.color.withValues(alpha: isDark ? 0.2 : 0.15)
+                  : (isDark
+                      ? AppColors.black.withValues(alpha: 0.3)
+                      : AppColors.goldShadow.withValues(alpha: 0.08)),
               blurRadius: _isHovered ? 20 : 10,
               offset: Offset(0, _isHovered ? 8 : 4),
             ),
@@ -208,10 +222,10 @@ class _EventCardState extends State<_EventCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: e.color.withValues(alpha: 0.15),
+                color: e.color.withValues(alpha: isDark ? 0.15 : 0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: e.color.withValues(alpha: 0.4),
+                  color: e.color.withValues(alpha: isDark ? 0.4 : 0.3),
                   width: 1,
                 ),
               ),
@@ -230,7 +244,7 @@ class _EventCardState extends State<_EventCard> {
             // Event Title
             Text(
               e.title,
-              style: AppTypography.eventTitle,
+              style: AppTypography.eventTitle(isDark: isDark),
             ),
 
             const SizedBox(height: 12),
@@ -238,16 +252,16 @@ class _EventCardState extends State<_EventCard> {
             // Date Row
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_month_outlined,
                   size: 15,
-                  color: AppColors.gold,
+                  color: isDark ? AppColors.gold : AppColors.saffronDark,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     e.date,
-                    style: AppTypography.eventDate,
+                    style: AppTypography.eventDate(isDark: isDark),
                   ),
                 ),
               ],
@@ -258,16 +272,16 @@ class _EventCardState extends State<_EventCard> {
             // Location Row
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_outlined,
                   size: 15,
-                  color: AppColors.saffronLight,
+                  color: isDark ? AppColors.saffronLight : AppColors.saffron,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     e.location,
-                    style: AppTypography.eventLocation,
+                    style: AppTypography.eventLocation(isDark: isDark),
                   ),
                 ),
               ],
@@ -278,7 +292,7 @@ class _EventCardState extends State<_EventCard> {
             // Description
             Text(
               e.description,
-              style: AppTypography.eventBody,
+              style: AppTypography.eventBody(isDark: isDark),
             ),
 
             if (widget.isDesktopRow) ...[

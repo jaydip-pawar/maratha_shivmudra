@@ -4,20 +4,25 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/landing/services/landing_firebase_service.dart';
 
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
+
 class ImpactStatsSection extends StatelessWidget {
-  const ImpactStatsSection({super.key});
+  final bool? isDark;
+
+  const ImpactStatsSection({super.key, this.isDark});
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = isDark ?? ThemeService.instance.isDarkMode(context);
     final isMobile = context.isMobile;
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppGradients.impactBackground,
+      decoration: BoxDecoration(
+        gradient: AppGradients.impactBackgroundAdaptive(isDarkMode),
         border: Border.symmetric(
           horizontal: BorderSide(
-            color: AppColors.goldBorderSubtle,
+            color: isDarkMode ? AppColors.goldBorderSubtle : AppColors.goldBorderLight,
             width: 1,
           ),
         ),
@@ -34,13 +39,13 @@ class ImpactStatsSection extends StatelessWidget {
               Text(
                 context.l10n.impact_title,
                 textAlign: TextAlign.center,
-                style: AppTypography.sectionTitle(isMobile),
+                style: AppTypography.sectionTitle(isMobile, isDark: isDarkMode),
               ),
               const SizedBox(height: 8),
               Text(
                 context.l10n.impact_subtitle,
                 textAlign: TextAlign.center,
-                style: AppTypography.sectionSubtitle(isMobile),
+                style: AppTypography.sectionSubtitle(isMobile, isDark: isDarkMode),
               ),
               const SizedBox(height: 36),
 
@@ -91,7 +96,7 @@ class ImpactStatsSection extends StatelessWidget {
                     children: stats
                         .map(
                           (stat) =>
-                              _StatCard(stat: stat, isMobile: isMobile),
+                              _StatCard(stat: stat, isMobile: isMobile, isDark: isDarkMode),
                         )
                         .toList(),
                   );
@@ -122,8 +127,13 @@ class _StatItem {
 class _StatCard extends StatelessWidget {
   final _StatItem stat;
   final bool isMobile;
+  final bool isDark;
 
-  const _StatCard({required this.stat, required this.isMobile});
+  const _StatCard({
+    required this.stat,
+    required this.isMobile,
+    this.isDark = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -131,15 +141,15 @@ class _StatCard extends StatelessWidget {
       width: isMobile ? (MediaQuery.of(context).size.width - 48) / 2 : 200,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark,
+        color: isDark ? AppColors.cardDark : AppColors.lightCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: stat.color.withValues(alpha: 0.3),
+          color: stat.color.withValues(alpha: isDark ? 0.3 : 0.4),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: stat.color.withValues(alpha: 0.08),
+            color: stat.color.withValues(alpha: isDark ? 0.08 : 0.06),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -151,7 +161,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: stat.color.withValues(alpha: 0.12),
+              color: stat.color.withValues(alpha: isDark ? 0.12 : 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -169,7 +179,7 @@ class _StatCard extends StatelessWidget {
           Text(
             stat.label,
             textAlign: TextAlign.center,
-            style: AppTypography.statLabel,
+            style: AppTypography.statLabel(isDark: isDark),
           ),
         ],
       ),

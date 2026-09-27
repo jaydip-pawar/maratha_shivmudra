@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
@@ -20,6 +21,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     final bloc = context.read<AuthBloc>();
     final isMobile = context.isMobile;
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return BlocBuilder<AuthBloc, AuthState>(
       bloc: bloc,
@@ -36,9 +38,9 @@ class _LoginViewState extends State<LoginView> {
               right: 16,
               top: 16,
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.close_rounded,
-                  color: AppColors.goldLight,
+                  color: isDark ? AppColors.goldLight : AppColors.textDarkSecondary,
                   size: 22,
                 ),
                 onPressed: () => Navigator.pop(context),
@@ -70,11 +72,11 @@ class _LoginViewState extends State<LoginView> {
                       Flexible(
                         child: Text(
                           context.l10n.maratha_shivmudra,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.goldLight,
+                            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -89,7 +91,7 @@ class _LoginViewState extends State<LoginView> {
                       fontFamily: AppTypography.fontFamily,
                       fontWeight: FontWeight.bold,
                       fontSize: isMobile ? 20 : 22,
-                      color: AppColors.textPrimary,
+                      color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -97,18 +99,20 @@ class _LoginViewState extends State<LoginView> {
                     context
                         .l10n
                         .we_will_sign_you_in_or_create_an_account_automatically,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                     ),
                   ),
                   const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.25),
+                        color: isDark
+                            ? AppColors.gold.withValues(alpha: 0.25)
+                            : AppColors.goldBorderMedium,
                         width: 1,
                       ),
                     ),

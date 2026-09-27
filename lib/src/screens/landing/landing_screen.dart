@@ -16,6 +16,9 @@ import 'package:maratha_shivmudra/src/screens/landing/widgets/side_drawer.dart';
 import 'package:maratha_shivmudra/src/screens/landing/widgets/upcoming_events_section.dart';
 import 'package:maratha_shivmudra/src/screens/landing/widgets/scroll_reveal.dart';
 
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
+import 'package:maratha_shivmudra/main.dart';
+
 @RoutePage()
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -93,124 +96,132 @@ class _LandingScreenState extends State<LandingScreen> with GetItHelperMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.darkBg,
-      endDrawer: LandingSideDrawer(
-        onHomeTap: _scrollToTop,
-        onPledgeTap: () => _scrollToSection(_pledgeKey),
-        onPillarsTap: () => _scrollToSection(_pillarsKey),
-        onImpactTap: () => _scrollToSection(_impactKey),
-        onEventsTap: () => _scrollToSection(_eventsKey),
-        onContactTap: () => _scrollToSection(_contactKey),
-      ),
-      body: Stack(
-        children: [
-          // Main Scrollable Content
-          SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
-              children: [
-                // Top Padding for fixed Navbar height
-                const SizedBox(height: 72),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        final isDark = ThemeService.instance.isDarkMode(context);
 
-                // Hero Section with smooth entrance
-                Container(
-                  key: _homeKey,
-                  child: ScrollReveal(
-                    duration: const Duration(milliseconds: 800),
-                    slideOffset: const Offset(0, 0.05),
-                    child: HeroSection(
-                      onExploreTap: () => _scrollToSection(_pillarsKey),
-                      onContactTap: () => _scrollToSection(_contactKey),
-                      onPledgeTap: () => _scrollToSection(_pledgeKey),
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+          endDrawer: LandingSideDrawer(
+            onHomeTap: _scrollToTop,
+            onPledgeTap: () => _scrollToSection(_pledgeKey),
+            onPillarsTap: () => _scrollToSection(_pillarsKey),
+            onImpactTap: () => _scrollToSection(_impactKey),
+            onEventsTap: () => _scrollToSection(_eventsKey),
+            onContactTap: () => _scrollToSection(_contactKey),
+          ),
+          body: Stack(
+            children: [
+              // Main Scrollable Content
+              SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    // Top Padding for fixed Navbar height
+                    const SizedBox(height: 72),
+
+                    // Hero Section with smooth entrance
+                    Container(
+                      key: _homeKey,
+                      child: ScrollReveal(
+                        duration: const Duration(milliseconds: 800),
+                        slideOffset: const Offset(0, 0.05),
+                        child: HeroSection(
+                          isDark: isDark,
+                          onExploreTap: () => _scrollToSection(_pillarsKey),
+                          onContactTap: () => _scrollToSection(_contactKey),
+                          onPledgeTap: () => _scrollToSection(_pledgeKey),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                // Sacred Pledge Section (संघटनेची प्रतिज्ञा)
-                Container(
-                  key: _pledgeKey,
-                  child: const ScrollReveal(
-                    duration: Duration(milliseconds: 750),
-                    slideOffset: Offset(0, 0.08),
-                    child: PratidnyaSection(),
-                  ),
-                ),
+                    // Sacred Pledge Section (संघटनेची प्रतिज्ञा)
+                    Container(
+                      key: _pledgeKey,
+                      child: ScrollReveal(
+                        duration: const Duration(milliseconds: 750),
+                        slideOffset: const Offset(0, 0.08),
+                        child: PratidnyaSection(isDark: isDark),
+                      ),
+                    ),
 
-                // 7 Core Pillars (Health, Education, Forts, Dharma, History, Entrepreneurship, Disaster Relief)
-                Container(
-                  key: _pillarsKey,
-                  child: const ScrollReveal(
-                    duration: Duration(milliseconds: 750),
-                    slideOffset: Offset(0, 0.08),
-                    child: PillarsSection(),
-                  ),
-                ),
+                    // 7 Core Pillars (Health, Education, Forts, Dharma, History, Entrepreneurship, Disaster Relief)
+                    Container(
+                      key: _pillarsKey,
+                      child: ScrollReveal(
+                        duration: const Duration(milliseconds: 750),
+                        slideOffset: const Offset(0, 0.08),
+                        child: PillarsSection(isDark: isDark),
+                      ),
+                    ),
 
-                // Impact Metrics Section
-                Container(
-                  key: _impactKey,
-                  child: const ScrollReveal(
-                    duration: Duration(milliseconds: 700),
-                    slideOffset: Offset(0, 0.06),
-                    child: ImpactStatsSection(),
-                  ),
-                ),
+                    // Impact Metrics Section
+                    Container(
+                      key: _impactKey,
+                      child: ScrollReveal(
+                        duration: const Duration(milliseconds: 700),
+                        slideOffset: const Offset(0, 0.06),
+                        child: ImpactStatsSection(isDark: isDark),
+                      ),
+                    ),
 
-                // Upcoming Events & Campaigns
-                Container(
-                  key: _eventsKey,
-                  child: const ScrollReveal(
-                    duration: Duration(milliseconds: 700),
-                    slideOffset: Offset(0, 0.06),
-                    child: UpcomingEventsSection(),
-                  ),
-                ),
+                    // Upcoming Events & Campaigns
+                    Container(
+                      key: _eventsKey,
+                      child: ScrollReveal(
+                        duration: const Duration(milliseconds: 700),
+                        slideOffset: const Offset(0, 0.06),
+                        child: UpcomingEventsSection(isDark: isDark),
+                      ),
+                    ),
 
-                // Call to Action Banner
-                const ScrollReveal(
-                  duration: Duration(milliseconds: 700),
-                  slideOffset: Offset(0, 0.06),
-                  child: CtaBannerSection(),
-                ),
+                    // Call to Action Banner
+                    ScrollReveal(
+                      duration: const Duration(milliseconds: 700),
+                      slideOffset: const Offset(0, 0.06),
+                      child: CtaBannerSection(isDark: isDark),
+                    ),
 
-                // Footer Section with Official Contact Details
-                Container(
-                  key: _contactKey,
-                  child: const FooterSection(),
+                    // Footer Section with Official Contact Details
+                    Container(
+                      key: _contactKey,
+                      child: FooterSection(isDark: isDark),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+
+              // Fixed / Sticky Top Royal Navbar
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LandingNavBar(
+                  onHomeTap: _scrollToTop,
+                  onPledgeTap: () => _scrollToSection(_pledgeKey),
+                  onPillarsTap: () => _scrollToSection(_pillarsKey),
+                  onImpactTap: () => _scrollToSection(_impactKey),
+                  onEventsTap: () => _scrollToSection(_eventsKey),
+                  onContactTap: () => _scrollToSection(_contactKey),
+                  onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+                ),
+              ),
+            ],
           ),
-
-          // Fixed / Sticky Top Royal Navbar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LandingNavBar(
-              onHomeTap: _scrollToTop,
-              onPledgeTap: () => _scrollToSection(_pledgeKey),
-              onPillarsTap: () => _scrollToSection(_pillarsKey),
-              onImpactTap: () => _scrollToSection(_impactKey),
-              onEventsTap: () => _scrollToSection(_eventsKey),
-              onContactTap: () => _scrollToSection(_contactKey),
-              onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-            ),
-          ),
-        ],
-      ),
-      // Floating Back to Top Button
-      floatingActionButton: _showBackToTop
-          ? FloatingActionButton.small(
-              onPressed: _scrollToTop,
-              backgroundColor: AppColors.saffron,
-              foregroundColor: AppColors.white,
-              tooltip: 'Back to Top',
-              child: const Icon(Icons.arrow_upward_rounded),
-            )
-          : null,
+          // Floating Back to Top Button
+          floatingActionButton: _showBackToTop
+              ? FloatingActionButton.small(
+                  onPressed: _scrollToTop,
+                  backgroundColor: AppColors.saffron,
+                  foregroundColor: AppColors.white,
+                  tooltip: 'Back to Top',
+                  child: const Icon(Icons.arrow_upward_rounded),
+                )
+              : null,
+        );
+      },
     );
   }
 }

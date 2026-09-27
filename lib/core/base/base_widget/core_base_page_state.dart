@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 abstract class CoreBasePageState<VM, T extends StatefulWidget> extends State<T>
     with WidgetsBindingObserver {
@@ -62,7 +63,7 @@ abstract class CoreBasePageState<VM, T extends StatefulWidget> extends State<T>
 
   /// Building a appbar of screen
   Color scaffoldBackgroundColor() {
-    return Colors.grey;
+    return AppColors.grey;
   }
 
   /// Building a drawer of screen

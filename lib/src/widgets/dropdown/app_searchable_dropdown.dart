@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 /// Item definition for [AppSearchableDropdown].
@@ -235,6 +236,8 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
         ? math.min(widget.maxMenuHeight, math.max(140.0, availableAbove - 12))
         : math.min(widget.maxMenuHeight, math.max(140.0, availableBelow - 12));
 
+    final bool isDark = ThemeService.instance.isDarkMode(context);
+
     return OverlayEntry(
       builder: (overlayContext) {
         return Stack(
@@ -260,23 +263,23 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                 offset: Offset(0, openUpward ? -4 : 4),
                 child: Material(
                   elevation: 8,
-                  shadowColor: Colors.black87,
+                  shadowColor: isDark ? AppColors.black87 : AppColors.goldShadow.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
-                  color: AppColors.darkSurface,
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   child: Container(
                     constraints: BoxConstraints(
                       maxHeight: maxAllowed,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.45),
+                        color: isDark ? AppColors.gold.withValues(alpha: 0.45) : AppColors.lightCardBorder,
                         width: 1.2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: isDark ? AppColors.black.withValues(alpha: 0.5) : AppColors.goldShadow.withValues(alpha: 0.1),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -297,23 +300,33 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                 child: TextField(
                                   controller: _searchController,
                                   autofocus: true,
-                                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  style: TextStyle(
+                                    color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                                    fontSize: 13,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: widget.searchHint ??
                                         (Localizations.maybeLocaleOf(context)?.languageCode == 'mr'
                                             ? 'शोधा...'
                                             : 'Search...'),
-                                    hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                    hintStyle: TextStyle(
+                                      color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+                                      fontSize: 12,
+                                    ),
                                     isDense: true,
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    prefixIcon: const Icon(
+                                    prefixIcon: Icon(
                                       Icons.search_rounded,
-                                      color: AppColors.gold,
+                                      color: isDark ? AppColors.gold : AppColors.saffronDark,
                                       size: 18,
                                     ),
                                     suffixIcon: _searchQuery.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.clear_rounded, size: 16, color: AppColors.textMuted),
+                                            icon: Icon(
+                                              Icons.clear_rounded,
+                                              size: 16,
+                                              color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+                                            ),
                                             onPressed: () {
                                               _searchController.clear();
                                               setState(() => _searchQuery = '');
@@ -322,18 +335,25 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                           )
                                         : null,
                                     filled: true,
-                                    fillColor: AppColors.darkBgHeroTop,
+                                    fillColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(color: AppColors.darkBorder),
+                                      borderSide: BorderSide(
+                                        color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(color: AppColors.darkBorder),
+                                      borderSide: BorderSide(
+                                        color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(color: AppColors.gold, width: 1.2),
+                                      borderSide: BorderSide(
+                                        color: isDark ? AppColors.gold : AppColors.saffronDark,
+                                        width: 1.2,
+                                      ),
                                     ),
                                   ),
                                   onChanged: (val) {
@@ -342,7 +362,10 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                   },
                                 ),
                               ),
-                              const Divider(color: AppColors.darkBorder, height: 1),
+                              Divider(
+                                color: isDark ? AppColors.darkBorder : AppColors.lightDivider,
+                                height: 1,
+                              ),
                             ],
 
                             // Scrollable Options List
@@ -354,12 +377,19 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.search_off_rounded, color: AppColors.textMuted, size: 28),
+                                          Icon(
+                                            Icons.search_off_rounded,
+                                            color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+                                            size: 28,
+                                          ),
                                           const SizedBox(height: 6),
                                           Text(
                                             'कोणतेही निकाल आढळले नाहीत\n"$_searchQuery"',
                                             textAlign: TextAlign.center,
-                                            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                            style: TextStyle(
+                                              color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -368,8 +398,8 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                       shrinkWrap: true,
                                       padding: const EdgeInsets.symmetric(vertical: 4),
                                       itemCount: filteredItems.length,
-                                      separatorBuilder: (_, __) => const Divider(
-                                        color: AppColors.darkBorder,
+                                      separatorBuilder: (_, __) => Divider(
+                                        color: isDark ? AppColors.darkBorder : AppColors.lightDivider,
                                         height: 1,
                                         indent: 12,
                                         endIndent: 12,
@@ -380,13 +410,13 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                         if (item.isHeader) {
                                           return Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                            color: AppColors.darkBgHeroTop,
+                                            color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
                                             child: Text(
                                               item.label,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,
-                                                color: AppColors.goldLight,
+                                                color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                                 letterSpacing: 0.5,
                                               ),
                                             ),
@@ -397,8 +427,10 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
 
                                         return Material(
                                           color: isSelected
-                                              ? AppColors.gold.withValues(alpha: 0.12)
-                                              : Colors.transparent,
+                                              ? (isDark
+                                                  ? AppColors.gold.withValues(alpha: 0.12)
+                                                  : AppColors.saffron.withValues(alpha: 0.12))
+                                              : AppColors.transparent,
                                           child: InkWell(
                                             onTap: () {
                                               _currentVal = item.value;
@@ -426,7 +458,9 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                                           style: TextStyle(
                                                             fontSize: 13,
                                                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                                            color: isSelected ? AppColors.goldLight : Colors.white,
+                                                            color: isSelected
+                                                                ? (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                                                                : (isDark ? AppColors.white : AppColors.textDarkPrimary),
                                                           ),
                                                         ),
                                                         if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
@@ -436,8 +470,12 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                                             style: TextStyle(
                                                               fontSize: 11,
                                                               color: isSelected
-                                                                  ? AppColors.gold.withValues(alpha: 0.8)
-                                                                  : AppColors.textSecondary,
+                                                                  ? (isDark
+                                                                      ? AppColors.gold.withValues(alpha: 0.8)
+                                                                      : AppColors.saffronDark)
+                                                                  : (isDark
+                                                                      ? AppColors.textSecondary
+                                                                      : AppColors.textDarkSecondary),
                                                             ),
                                                           ),
                                                         ],
@@ -447,9 +485,9 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                                                   if (item.trailing != null)
                                                     item.trailing!
                                                   else if (isSelected)
-                                                    const Icon(
+                                                    Icon(
                                                       Icons.check_rounded,
-                                                      color: AppColors.goldLight,
+                                                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                                       size: 18,
                                                     ),
                                                 ],
@@ -476,6 +514,8 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return FormField<T>(
       key: _fieldKey,
       initialValue: widget.value ?? _currentVal,
@@ -520,7 +560,7 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                 decoration: InputDecoration(
                   isDense: true,
                   filled: true,
-                  fillColor: AppColors.darkSurface,
+                  fillColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
@@ -529,15 +569,15 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                       (Localizations.maybeLocaleOf(context)?.languageCode == 'mr'
                           ? 'निवडा...'
                           : 'Select...'),
-                  hintStyle: const TextStyle(
-                    color: AppColors.textMuted,
+                  hintStyle: TextStyle(
+                    color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                   ),
                   prefixIcon: widget.prefixIcon != null
                       ? IconTheme(
-                          data: const IconThemeData(
-                            color: AppColors.goldLight,
+                          data: IconThemeData(
+                            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                             size: 18,
                           ),
                           child: widget.prefixIcon!,
@@ -551,7 +591,11 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                     turns: _arrowRotation,
                     child: Icon(
                       Icons.arrow_drop_down_rounded,
-                      color: _isOpen ? AppColors.gold : (hasError ? AppColors.errorColor : AppColors.goldLight),
+                      color: _isOpen
+                          ? (isDark ? AppColors.gold : AppColors.saffron)
+                          : (hasError
+                              ? AppColors.errorColor
+                              : (isDark ? AppColors.goldLight : AppColors.saffronDark)),
                       size: 24,
                     ),
                   ),
@@ -562,7 +606,9 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
-                      color: hasError ? AppColors.errorColor : AppColors.darkBorder,
+                      color: hasError
+                          ? AppColors.errorColor
+                          : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -570,14 +616,18 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                     borderSide: BorderSide(
                       color: hasError
                           ? AppColors.errorColor
-                          : (_isOpen ? AppColors.gold : AppColors.darkBorder),
+                          : (_isOpen
+                              ? (isDark ? AppColors.gold : AppColors.saffron)
+                              : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
                       width: (_isOpen || hasError) ? 1.5 : 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
-                      color: hasError ? AppColors.errorColor : AppColors.gold,
+                      color: hasError
+                          ? AppColors.errorColor
+                          : (isDark ? AppColors.gold : AppColors.saffron),
                       width: 1.5,
                     ),
                   ),
@@ -605,10 +655,10 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
                           Expanded(
                             child: Text(
                               selected.selectedLabel ?? selected.label,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
-                                color: AppColors.textPrimary,
+                                color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -634,10 +684,10 @@ class _AppSearchableDropdownState<T> extends State<AppSearchableDropdown<T>>
               Text.rich(
                 TextSpan(
                   text: widget.labelText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.textDarkPrimary,
                   ),
                   children: [
                     if (widget.isRequired)

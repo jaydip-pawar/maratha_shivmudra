@@ -489,7 +489,7 @@ class _WebCameraCaptureDialogState extends State<_WebCameraCaptureDialog> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.saffron, width: 3.5),
-              color: Colors.transparent,
+              color: AppColors.transparent,
             ),
             padding: const EdgeInsets.all(4),
             child: Container(

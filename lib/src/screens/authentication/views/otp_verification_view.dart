@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/core/utils/responsive.dart';
@@ -50,6 +51,7 @@ class OtpVerificationView extends StatelessWidget {
   Widget _buildOtpFieldSection(BuildContext context) {
     final isMobile = context.isMobile || context.isMobileLarge;
     final bloc = context.read<AuthBloc>();
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Container(
       constraints: isMobile ? const BoxConstraints(maxWidth: 450) : null,
@@ -68,24 +70,24 @@ class OtpVerificationView extends StatelessWidget {
                 fontFamily: AppTypography.fontFamily,
                 fontWeight: FontWeight.bold,
                 fontSize: isMobile ? 20 : 22,
-                color: AppColors.goldLight,
+                color: isDark ? AppColors.goldLight : AppColors.textDarkPrimary,
               ),
               softWrap: true,
             ),
             const SizedBox(height: 6),
             Text(
               context.l10n.enter_the_verification_code_sent_to_your_phone,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
               ),
             ),
             const SizedBox(height: 6),
             RichText(
               text: TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textPrimary,
+                  color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
                 ),
                 children: [
                   TextSpan(text: () {
@@ -95,11 +97,11 @@ class OtpVerificationView extends StatelessWidget {
                   }()),
                   TextSpan(
                     text: context.l10n.change_number,
-                    style: const TextStyle(
-                      color: AppColors.goldLight,
+                    style: TextStyle(
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
-                      decorationColor: AppColors.goldLight,
+                      decorationColor: isDark ? AppColors.goldLight : AppColors.saffronDark,
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () => bloc.add(BackEvent()),
@@ -134,9 +136,9 @@ class OtpVerificationView extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.havent_received_the_code,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textMuted,
+                    color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
                   ),
                 ),
                 InkWell(
@@ -149,12 +151,12 @@ class OtpVerificationView extends StatelessWidget {
                   },
                   child: Text(
                     context.l10n.send_again,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.saffronLight,
+                      color: isDark ? AppColors.saffronLight : AppColors.saffronDark,
                       decoration: TextDecoration.underline,
-                      decorationColor: AppColors.saffronLight,
+                      decorationColor: isDark ? AppColors.saffronLight : AppColors.saffronDark,
                     ),
                   ),
                 ),
@@ -167,6 +169,8 @@ class OtpVerificationView extends StatelessWidget {
   }
 
   Widget _buildTabletView(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -179,16 +183,23 @@ class OtpVerificationView extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [
-                    AppColors.maroonDeep,
-                    AppColors.darkSurface,
-                  ],
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? const [
+                          AppColors.maroonDeep,
+                          AppColors.darkSurface,
+                        ]
+                      : const [
+                          AppColors.lightSurfaceElevated,
+                          AppColors.lightSurface,
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 border: Border.all(
-                  color: AppColors.gold.withValues(alpha: 0.25),
+                  color: isDark
+                      ? AppColors.gold.withValues(alpha: 0.25)
+                      : AppColors.goldBorderMedium,
                   width: 1,
                 ),
               ),

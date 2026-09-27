@@ -216,7 +216,7 @@ class MarathiVirtualKeyboard extends StatefulWidget {
                   groupId: MarathiVirtualKeyboard,
                   onTapOutside: (_) => dismiss(),
                   child: Material(
-                    color: Colors.transparent,
+                    color: AppColors.transparent,
                     child: MarathiVirtualKeyboard(
                       controller: controller,
                       focusNode: focusNode,
@@ -243,7 +243,7 @@ class MarathiVirtualKeyboard extends StatefulWidget {
                           groupId: MarathiVirtualKeyboard,
                           onTapOutside: (_) => dismiss(),
                           child: Material(
-                            color: Colors.transparent,
+                            color: AppColors.transparent,
                             child: MarathiVirtualKeyboard(
                               controller: controller,
                               focusNode: focusNode,
@@ -1021,7 +1021,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
           isMobile ? 4 : 8,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF180C0C),
+          color: AppColors.keyboardKeyDark,
           borderRadius: isMobile
               ? const BorderRadius.vertical(top: Radius.circular(20))
               : BorderRadius.circular(16),
@@ -1031,7 +1031,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.85),
+              color: AppColors.black.withValues(alpha: 0.85),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -1078,7 +1078,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
       margin: EdgeInsets.only(bottom: isMobile ? 3 : 6),
       padding: EdgeInsets.symmetric(horizontal: 1, vertical: isMobile ? 2 : 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF261414),
+        color: AppColors.keyboardKeyDark2,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: cluster != null
@@ -1130,7 +1130,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     bool isSelected = false,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         canRequestFocus: false,
         onTap: () => _applyMatra(matra.sign),
@@ -1144,7 +1144,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                   ? AppColors.gold.withValues(alpha: 0.38)
                   : (isActive
                       ? AppColors.gold.withValues(alpha: 0.16)
-                      : const Color(0xFF1E1111)),
+                      : AppColors.keyboardKeyDark3),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
                 color: isSelected
@@ -1163,7 +1163,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
                   color: isSelected
-                      ? Colors.white
+                      ? AppColors.white
                       : (isActive ? AppColors.goldLight : AppColors.textMuted),
                 ),
                 maxLines: 1,
@@ -1328,7 +1328,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
             : (isMobile ? 14.0 : 15.0));
 
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         canRequestFocus: false,
         onTap: onTap ?? () => _insertChar(char),
@@ -1338,7 +1338,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
           decoration: BoxDecoration(
             color:
                 color ??
-                (isSwar ? const Color(0xFF281813) : AppColors.darkSurface),
+                (isSwar ? AppColors.keyboardKeySwar : AppColors.darkSurface),
             borderRadius: BorderRadius.circular(5),
             border: Border.all(
               color: borderColor ??
@@ -1355,7 +1355,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                 fontSize: effectiveFontSize,
                 fontWeight: FontWeight.bold,
                 color: textColor ??
-                    (isSwar ? AppColors.saffronLight : Colors.white),
+                    (isSwar ? AppColors.saffronLight : AppColors.white),
               ),
             ),
           ),
@@ -1367,7 +1367,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
   Widget _buildInlineBackspaceKey({bool isMobile = false, double? height}) {
     final effectiveHeight = height ?? (isMobile ? 32.0 : 38.0);
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         canRequestFocus: false,
         onTap: _backspace,
@@ -1375,15 +1375,15 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         child: Container(
           height: effectiveHeight,
           decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.22),
+            color: AppColors.error.withValues(alpha: 0.22),
             borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.errorAccent.withValues(alpha: 0.5)),
           ),
           child: Center(
             child: Icon(
               Icons.backspace_outlined,
               size: isMobile ? 15 : 16,
-              color: Colors.white,
+              color: AppColors.white,
             ),
           ),
         ),
@@ -1463,7 +1463,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                 isMobile: isMobile,
                 height: rowHeight,
                 fontSize: isMobile ? 17 : 19,
-                color: const Color(0xFF351A14),
+                color: AppColors.keyboardKeyAction,
                 textColor: AppColors.goldLight,
                 borderColor: AppColors.gold.withValues(alpha: 0.65),
                 onTap: () => _applyMatra('\u0902'),
@@ -1498,7 +1498,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         Expanded(
           flex: 2,
           child: Material(
-            color: Colors.transparent,
+            color: AppColors.transparent,
             child: InkWell(
               canRequestFocus: false,
               onTap: () {
@@ -1511,17 +1511,17 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
               child: Container(
                 height: rowHeight,
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.25),
+                  color: AppColors.success.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(5),
                   border: Border.all(
-                    color: Colors.greenAccent.withValues(alpha: 0.6),
+                    color: AppColors.successLight.withValues(alpha: 0.6),
                   ),
                 ),
                 child: Center(
                   child: Icon(
                     Icons.check_rounded,
                     size: isMobile ? 18 : 20,
-                    color: Colors.greenAccent,
+                    color: AppColors.successLight,
                   ),
                 ),
               ),
@@ -1542,7 +1542,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     Color? textColor,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         canRequestFocus: false,
         onTap: () {
@@ -1563,7 +1563,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 14, color: textColor ?? Colors.white),
+                  Icon(icon, size: 14, color: textColor ?? AppColors.white),
                   const SizedBox(width: 2),
                 ],
                 Flexible(
@@ -1573,7 +1573,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: textColor ?? Colors.white,
+                      color: textColor ?? AppColors.white,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

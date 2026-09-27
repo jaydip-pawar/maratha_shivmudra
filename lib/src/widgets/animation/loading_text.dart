@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class AnimatedLoadingText extends StatefulWidget {
   const AnimatedLoadingText({super.key, required this.text});
@@ -35,7 +36,7 @@ class _AnimatedLoadingTextState extends State<AnimatedLoadingText>
       builder: (context, child) {
         return Text(
           '${widget.text}${'.' * (DateTime.now().second % 3 + 1)}',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          style: const TextStyle(fontSize: 14, color: AppColors.grey600),
         );
       },
     );

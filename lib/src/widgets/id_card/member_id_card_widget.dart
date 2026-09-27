@@ -35,15 +35,7 @@ class MemberIdCardWidget extends StatelessWidget {
             height: cardHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF200A0A),
-                Color(0xFF140808),
-                Color(0xFF0F0505),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppGradients.idCardBackground,
             border: Border.all(
               color: AppColors.gold,
               width: 2,
@@ -137,7 +129,7 @@ class MemberIdCardWidget extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: profile.isOfficial || profile.isOfficialManager
-                                  ? const Color(0xFFB8860B)
+                                  ? AppColors.goldMetallic
                                   : AppColors.saffron,
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -152,7 +144,7 @@ class MemberIdCardWidget extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ),
@@ -212,7 +204,7 @@ class MemberIdCardWidget extends StatelessWidget {
                                       fontFamily: AppTypography.fontFamily,
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -239,10 +231,10 @@ class MemberIdCardWidget extends StatelessWidget {
                                             vertical: 1,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.redAccent.withValues(alpha: 0.2),
+                                            color: AppColors.errorAccent.withValues(alpha: 0.2),
                                             borderRadius: BorderRadius.circular(4),
                                             border: Border.all(
-                                              color: Colors.redAccent.withValues(alpha: 0.6),
+                                              color: AppColors.errorAccent.withValues(alpha: 0.6),
                                               width: 0.6,
                                             ),
                                           ),
@@ -251,7 +243,7 @@ class MemberIdCardWidget extends StatelessWidget {
                                             style: const TextStyle(
                                               fontSize: 9,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: AppColors.white,
                                             ),
                                           ),
                                         ),
@@ -281,7 +273,7 @@ class MemberIdCardWidget extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: AppColors.gold,
@@ -292,7 +284,7 @@ class MemberIdCardWidget extends StatelessWidget {
                                     data: qrData,
                                     version: QrVersions.auto,
                                     size: cardHeight * 0.38,
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: AppColors.white,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -317,9 +309,9 @@ class MemberIdCardWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [
-                                Color(0xFF6B1200),
-                                Color(0xFFB8860B),
-                                Color(0xFF6B1200),
+                                AppColors.maroonCard,
+                                AppColors.goldMetallic,
+                                AppColors.maroonCard,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(4),
@@ -332,7 +324,7 @@ class MemberIdCardWidget extends StatelessWidget {
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.white,
                               letterSpacing: 0.3,
                             ),
                             maxLines: 1,

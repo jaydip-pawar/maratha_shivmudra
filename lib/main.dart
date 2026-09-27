@@ -12,6 +12,8 @@ import 'package:maratha_shivmudra/firebase_options.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/theme/app_theme.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 void main() async {
@@ -51,37 +53,34 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable: appLocaleNotifier,
-      builder: (context, locale, child) {
-        return MaterialApp.router(
-          title: 'मराठा शिवमुद्रा प्रतिष्ठान',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            fontFamily: AppTypography.fontFamily,
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: AppColors.darkBg,
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.saffron,
-              secondary: AppColors.gold,
-              surface: AppColors.darkSurface,
-            ),
-            useMaterial3: true,
-          ),
-          routerConfig: _appRouter.config(
-            includePrefixMatches: true,
-          ),
-          supportedLocales: const [
-            Locale('mr', ''),
-            Locale('en', ''),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            S.delegate,
-          ],
-          locale: locale,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, themeMode, _) {
+        return ValueListenableBuilder<Locale>(
+          valueListenable: appLocaleNotifier,
+          builder: (context, locale, child) {
+            return MaterialApp.router(
+              title: 'मराठा शिवमुद्रा प्रतिष्ठान',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeMode,
+              routerConfig: _appRouter.config(
+                includePrefixMatches: true,
+              ),
+              supportedLocales: const [
+                Locale('mr', ''),
+                Locale('en', ''),
+              ],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+                S.delegate,
+              ],
+              locale: locale,
+            );
+          },
         );
       },
     );

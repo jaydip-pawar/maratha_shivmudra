@@ -116,8 +116,8 @@ class RadioTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: _handleTap,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
+      splashColor: AppColors.transparent,
+      highlightColor: AppColors.transparent,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,

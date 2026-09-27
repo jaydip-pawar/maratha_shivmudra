@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class PlainInkWell extends StatelessWidget {
   const PlainInkWell({super.key, this.child, this.onTap});
@@ -9,8 +10,8 @@ class PlainInkWell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      highlightColor: Colors.transparent,
-      splashColor: Colors.transparent,
+      highlightColor: AppColors.transparent,
+      splashColor: AppColors.transparent,
       onTap: onTap,
       child: child,
     );

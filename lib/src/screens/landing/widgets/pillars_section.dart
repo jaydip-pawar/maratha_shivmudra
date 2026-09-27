@@ -3,11 +3,16 @@ import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
+
 class PillarsSection extends StatelessWidget {
-  const PillarsSection({super.key});
+  final bool? isDark;
+
+  const PillarsSection({super.key, this.isDark});
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = isDark ?? ThemeService.instance.isDarkMode(context);
     final isMobile = context.isMobile;
     final isTablet = context.isTablet;
     final isMarathi = context.isMarathi;
@@ -66,7 +71,7 @@ class PillarsSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: AppColors.darkBg,
+      color: isDarkMode ? AppColors.darkBg : AppColors.lightBg,
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 16 : 48,
         vertical: isMobile ? 40 : 64,
@@ -80,7 +85,7 @@ class PillarsSection extends StatelessWidget {
               Text(
                 context.l10n.pillars_title,
                 textAlign: TextAlign.center,
-                style: AppTypography.sectionTitle(isMobile),
+                style: AppTypography.sectionTitle(isMobile, isDark: isDarkMode),
               ),
 
               const SizedBox(height: 8),
@@ -91,7 +96,7 @@ class PillarsSection extends StatelessWidget {
                 child: Text(
                   context.l10n.pillars_subtitle,
                   textAlign: TextAlign.center,
-                  style: AppTypography.sectionSubtitle(isMobile),
+                  style: AppTypography.sectionSubtitle(isMobile, isDark: isDarkMode),
                 ),
               ),
 
@@ -116,7 +121,7 @@ class PillarsSection extends StatelessWidget {
 
                       return SizedBox(
                         width: itemWidth,
-                        child: _PillarCard(pillar: pillar),
+                        child: _PillarCard(pillar: pillar, isDark: isDarkMode),
                       );
                     }).toList(),
                   );
@@ -148,8 +153,9 @@ class _PillarData {
 
 class _PillarCard extends StatefulWidget {
   final _PillarData pillar;
+  final bool isDark;
 
-  const _PillarCard({required this.pillar});
+  const _PillarCard({required this.pillar, this.isDark = true});
 
   @override
   State<_PillarCard> createState() => _PillarCardState();
@@ -161,6 +167,7 @@ class _PillarCardState extends State<_PillarCard> {
   @override
   Widget build(BuildContext context) {
     final p = widget.pillar;
+    final isDark = widget.isDark;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -175,19 +182,23 @@ class _PillarCardState extends State<_PillarCard> {
           constraints: const BoxConstraints(minHeight: 210),
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: _isHovered ? AppColors.cardDarkElevated : AppColors.cardDark,
+            color: isDark
+                ? (_isHovered ? AppColors.cardDarkElevated : AppColors.cardDark)
+                : (_isHovered ? AppColors.lightSurfaceElevated : AppColors.lightSurface),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: _isHovered
                   ? p.accentColor.withValues(alpha: 0.8)
-                  : AppColors.darkBorder,
+                  : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
               width: _isHovered ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
                 color: _isHovered
-                    ? p.accentColor.withValues(alpha: 0.2)
-                    : AppColors.black.withValues(alpha: 0.3),
+                    ? p.accentColor.withValues(alpha: isDark ? 0.2 : 0.15)
+                    : (isDark
+                        ? AppColors.black.withValues(alpha: 0.3)
+                        : AppColors.goldShadow.withValues(alpha: 0.08)),
                 blurRadius: _isHovered ? 20 : 10,
                 offset: Offset(0, _isHovered ? 8 : 4),
               ),
@@ -204,10 +215,10 @@ class _PillarCardState extends State<_PillarCard> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: p.accentColor.withValues(alpha: 0.15),
+                      color: p.accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: p.accentColor.withValues(alpha: 0.4),
+                        color: p.accentColor.withValues(alpha: isDark ? 0.4 : 0.3),
                         width: 1,
                       ),
                     ),
@@ -221,16 +232,20 @@ class _PillarCardState extends State<_PillarCard> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.05),
+                      color: isDark
+                          ? AppColors.white.withValues(alpha: 0.05)
+                          : p.accentColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.white.withValues(alpha: 0.1),
+                        color: isDark
+                            ? AppColors.white.withValues(alpha: 0.1)
+                            : p.accentColor.withValues(alpha: 0.25),
                         width: 1,
                       ),
                     ),
                     child: Text(
                       p.tag,
-                      style: AppTypography.cardTag,
+                      style: AppTypography.cardTag(isDark: isDark),
                     ),
                   ),
                 ],
@@ -241,7 +256,7 @@ class _PillarCardState extends State<_PillarCard> {
               // Pillar Title
               Text(
                 p.title,
-                style: AppTypography.cardTitle,
+                style: AppTypography.cardTitle(isDark: isDark),
               ),
 
               const SizedBox(height: 10),
@@ -249,7 +264,7 @@ class _PillarCardState extends State<_PillarCard> {
               // Description
               Text(
                 p.description,
-                style: AppTypography.cardBody,
+                style: AppTypography.cardBody(isDark: isDark),
               ),
             ],
           ),

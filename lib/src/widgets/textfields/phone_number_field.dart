@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 
@@ -21,6 +22,8 @@ class PhoneNumberField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
@@ -47,17 +50,17 @@ class PhoneNumberField extends StatelessWidget {
       },
       decoration: InputDecoration(
         hintText: '1234 5678 90',
-        hintStyle: const TextStyle(
-          color: AppColors.textMuted,
+        hintStyle: TextStyle(
+          color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
           fontSize: 16,
           letterSpacing: 1.2,
         ),
-        prefixIcon: const Padding(
-          padding: EdgeInsets.only(right: 8),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(right: 8),
           child: Text(
             '+91 ',
             style: TextStyle(
-              color: AppColors.goldLight,
+              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -65,14 +68,14 @@ class PhoneNumberField extends StatelessWidget {
         ),
         prefixIconConstraints:
             const BoxConstraints(minWidth: 0, minHeight: 0),
-        enabledBorder: _inputBorder(AppColors.darkBorder),
-        focusedBorder: _inputBorder(AppColors.gold, width: 1.5),
+        enabledBorder: _inputBorder(isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+        focusedBorder: _inputBorder(isDark ? AppColors.gold : AppColors.saffronDark, width: 1.5),
         errorBorder: _inputBorder(AppColors.errorColor),
         focusedErrorBorder: _inputBorder(AppColors.errorColor, width: 1.5),
       ),
-      cursorColor: AppColors.gold,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
+      cursorColor: isDark ? AppColors.gold : AppColors.saffron,
+      style: TextStyle(
+        color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
         fontSize: 16,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.2,

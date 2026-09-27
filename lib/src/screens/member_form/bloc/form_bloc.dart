@@ -518,17 +518,6 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     final fullNameMr =
         [fNameMr, mNameMr, lNameMr].where((s) => s.isNotEmpty).join(' ');
 
-    final referralId = Uri.base.queryParameters['ref'] ?? 'NONE';
-
-    // Verify referral quota if a referral link is active
-    if (referralId.isNotEmpty && referralId.toUpperCase() != 'NONE') {
-      final validation =
-          await ReferralService.instance.validateReferral(referralId);
-      if (validation == ReferralValidationResult.limitExhausted ||
-          validation == ReferralValidationResult.inactive) {
-        debugPrint('Referral link invalid or quota exhausted: $referralId');
-      }
-    }
 
     final normalizedPin = _normalizeDigits(pincodeController.text);
     final village = villageController.text.trim();
@@ -553,6 +542,28 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     final db = FirebaseFirestore.instance;
     final memberRef = db.collection('members').doc(phone);
     final memberSnap = await memberRef.get();
+
+    // Check if user is already registered (to avoid duplicate counts on profile re-edits)
+    final existingMem = memberSnap.data()?['membership'] as Map<String, dynamic>?;
+    final bool wasAlreadyRegistered = memberSnap.exists &&
+        (existingMem?['is_registered'] == true || memberSnap.data()?['is_registered'] == true);
+
+    // Resolve referral code: check URL parameter first, fallback to pending code in Firestore
+    String candidateRef = Uri.base.queryParameters['ref']?.trim() ?? '';
+    if (candidateRef.isEmpty || candidateRef.toUpperCase() == 'NONE') {
+      if (memberSnap.exists) {
+        candidateRef = (existingMem?['referral_id'] as String?)?.trim() ?? '';
+      }
+    }
+
+    // Cross-verify referral code with Firestore to ensure it is valid and active
+    String effectiveReferralId = 'NONE';
+    if (candidateRef.isNotEmpty && candidateRef.toUpperCase() != 'NONE') {
+      final validation = await ReferralService.instance.validateReferral(candidateRef);
+      if (validation == ReferralValidationResult.valid) {
+        effectiveReferralId = candidateRef.toUpperCase();
+      }
+    }
 
     final occRaw = living.trim();
     final occLower = occRaw.toLowerCase();
@@ -694,7 +705,7 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
       'membership': {
         'phone': phone,
         'member_id': 'PENDING',
-        'referral_id': referralId,
+        'referral_id': effectiveReferralId,
         'role_type': 'member',
         'designation': '',
         'is_registered': true,
@@ -710,11 +721,16 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
     try {
       await memberRef.set(memberData, SetOptions(merge: true));
 
-      // Atomically track referral campaign usage
-      if (referralId.isNotEmpty && referralId.toUpperCase() != 'NONE') {
+      // Increase referral count only if:
+      // 1. Initial member form is filled for the first time (!wasAlreadyRegistered)
+      // 2. Profile consists of a valid, verified referral code (effectiveReferralId != 'NONE')
+      if (!wasAlreadyRegistered &&
+          effectiveReferralId.isNotEmpty &&
+          effectiveReferralId != 'NONE') {
         await ReferralService.instance.recordReferralUse(
-          rawCode: referralId,
+          rawCode: effectiveReferralId,
           userPhone: phone,
+          userName: fullName,
         );
       }
 

@@ -7,8 +7,12 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/auth_dialog.dart';
 
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
+
 class CtaBannerSection extends StatelessWidget {
-  const CtaBannerSection({super.key});
+  final bool? isDark;
+
+  const CtaBannerSection({super.key, this.isDark});
 
   void _onActionPressed(BuildContext context) {
     if (UserSessionService.instance.isLoggedInNotifier.value) {
@@ -20,6 +24,7 @@ class CtaBannerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = isDark ?? ThemeService.instance.isDarkMode(context);
     final isMobile = context.isMobile;
 
     return ValueListenableBuilder<bool>(
@@ -31,11 +36,11 @@ class CtaBannerSection extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: AppGradients.ctaBackground,
+          decoration: BoxDecoration(
+            gradient: AppGradients.ctaBackgroundAdaptive(isDarkMode),
             border: Border.symmetric(
               horizontal: BorderSide(
-                color: AppColors.goldBorderMedium,
+                color: isDarkMode ? AppColors.goldBorderMedium : AppColors.goldBorderLight,
                 width: 1.5,
               ),
             ),
@@ -54,10 +59,10 @@ class CtaBannerSection extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.gold.withValues(alpha: 0.15),
+                      color: AppColors.gold.withValues(alpha: isDarkMode ? 0.15 : 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.5),
+                        color: AppColors.gold.withValues(alpha: isDarkMode ? 0.5 : 0.6),
                         width: 1,
                       ),
                     ),

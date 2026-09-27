@@ -258,13 +258,13 @@ class _FloatingToastWidgetState extends State<_FloatingToastWidget>
   Color get _accentColor {
     switch (widget.type) {
       case ToastType.success:
-        return const Color(0xFF10B981); // Emerald
+        return AppColors.success;
       case ToastType.error:
-        return const Color(0xFFEF4444); // Crimson
+        return AppColors.error;
       case ToastType.warning:
-        return const Color(0xFFF59E0B); // Amber
+        return AppColors.warning;
       case ToastType.info:
-        return AppColors.saffron; // Saffron Gold
+        return AppColors.saffron;
     }
   }
 
@@ -284,13 +284,13 @@ class _FloatingToastWidgetState extends State<_FloatingToastWidget>
   List<Color> get _bgGradient {
     switch (widget.type) {
       case ToastType.success:
-        return const [Color(0xF012281D), Color(0xF00C1B13)];
+        return const [AppColors.toastSuccessGradStart, AppColors.toastSuccessGradEnd];
       case ToastType.error:
-        return const [Color(0xF02E1015), Color(0xF01C080C)];
+        return const [AppColors.toastErrorGradStart, AppColors.toastErrorGradEnd];
       case ToastType.warning:
-        return const [Color(0xF02A1C0A), Color(0xF01A1005)];
+        return const [AppColors.toastWarningGradStart, AppColors.toastWarningGradEnd];
       case ToastType.info:
-        return const [Color(0xF029140C), Color(0xF0180B07)];
+        return const [AppColors.toastInfoGradStart, AppColors.toastInfoGradEnd];
     }
   }
 
@@ -339,7 +339,7 @@ class _FloatingToastWidgetState extends State<_FloatingToastWidget>
                               offset: Offset(0, isBottom ? -4 : 10),
                             ),
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.75),
+                              color: AppColors.black.withValues(alpha: 0.75),
                               blurRadius: 20,
                               offset: Offset(0, isBottom ? -2 : 6),
                             ),
@@ -439,7 +439,7 @@ class _FloatingToastWidgetState extends State<_FloatingToastWidget>
 
                                         // Close Button
                                         Material(
-                                          color: Colors.transparent,
+                                          color: AppColors.transparent,
                                           child: InkWell(
                                             onTap: dismissWithAnimation,
                                             borderRadius: BorderRadius.circular(
@@ -450,7 +450,7 @@ class _FloatingToastWidgetState extends State<_FloatingToastWidget>
                                               child: Icon(
                                                 Icons.close_rounded,
                                                 size: 18,
-                                                color: Colors.white.withValues(
+                                                color: AppColors.white.withValues(
                                                   alpha: 0.65,
                                                 ),
                                               ),

@@ -19,17 +19,29 @@ class ReferralCampaign {
   final DateTime? createdAt;
   final DateTime? expiresAt;
   final String? createdBy;
+  final String? memberId;
+  final String? memberPhone;
+  final String? memberNameMr;
+  final String? memberNameEn;
+  final String? memberPhoto;
+  final String? memberTaluka;
 
   const ReferralCampaign({
     required this.code,
     required this.title,
-    required this.maxLimit,
-    required this.usedCount,
+    this.maxLimit = 0,
+    this.usedCount = 0,
     this.isActive = true,
     this.district,
     this.createdAt,
     this.expiresAt,
     this.createdBy,
+    this.memberId,
+    this.memberPhone,
+    this.memberNameMr,
+    this.memberNameEn,
+    this.memberPhoto,
+    this.memberTaluka,
   });
 
   bool get isUnlimited => maxLimit <= 0;
@@ -48,6 +60,12 @@ class ReferralCampaign {
       createdAt: _parseDateTime(data['created_at']),
       expiresAt: _parseDateTime(data['expires_at']),
       createdBy: data['created_by'] as String?,
+      memberId: data['member_id'] as String?,
+      memberPhone: data['member_phone'] as String?,
+      memberNameMr: data['member_name_mr'] as String?,
+      memberNameEn: data['member_name_en'] as String?,
+      memberPhoto: data['member_photo'] as String?,
+      memberTaluka: data['member_taluka'] as String?,
     );
   }
 
@@ -75,6 +93,12 @@ class ReferralCampaign {
       'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'expires_at': expiresAt != null ? Timestamp.fromDate(expiresAt!) : null,
       'created_by': createdBy,
+      'member_id': memberId,
+      'member_phone': memberPhone,
+      'member_name_mr': memberNameMr,
+      'member_name_en': memberNameEn,
+      'member_photo': memberPhoto,
+      'member_taluka': memberTaluka,
     };
   }
 }
@@ -121,6 +145,7 @@ class ReferralService {
   Future<bool> recordReferralUse({
     required String rawCode,
     required String userPhone,
+    String? userName,
   }) async {
     final code = rawCode.trim().toUpperCase();
     if (code.isEmpty || code == 'NONE') return true;
@@ -142,22 +167,28 @@ class ReferralService {
           return false;
         }
 
-        // Increment count
-        transaction.set(
-          docRef,
-          {
-            'used_count': currentCount + 1,
-            'last_used_at': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
-
         // Record member under sub-collection for admin tracking
         final referredMemberRef = docRef.collection('members').doc(userPhone);
-        transaction.set(referredMemberRef, {
-          'phone': userPhone,
-          'joined_at': FieldValue.serverTimestamp(),
-        });
+        final referredSnap = await transaction.get(referredMemberRef);
+
+        // Only increment counter if not already counted for this campaign
+        if (!referredSnap.exists) {
+          transaction.set(
+            docRef,
+            {
+              'used_count': currentCount + 1,
+              'last_used_at': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+
+          transaction.set(referredMemberRef, {
+            'phone': userPhone,
+            if (userName != null && userName.trim().isNotEmpty)
+              'name': userName.trim(),
+            'joined_at': FieldValue.serverTimestamp(),
+          });
+        }
 
         return true;
       });
@@ -187,6 +218,18 @@ class ReferralService {
       return true;
     } catch (e) {
       debugPrint('Error toggling referral status: $e');
+      return false;
+    }
+  }
+
+  /// Admin: Delete a referral campaign
+  Future<bool> deleteCampaign(String rawCode) async {
+    try {
+      final code = rawCode.trim().toUpperCase();
+      await _refCol.doc(code).delete();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting referral campaign: $e');
       return false;
     }
   }

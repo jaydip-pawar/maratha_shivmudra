@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/constants/assets.dart';
+import 'package:maratha_shivmudra/core/constants/styles.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 
-import 'package:maratha_shivmudra/core/constants/assets.dart';
-import 'package:maratha_shivmudra/core/constants/styles.dart';
-
 class PratidnyaSection extends StatelessWidget {
-  const PratidnyaSection({super.key});
+  final bool? isDark;
+
+  const PratidnyaSection({super.key, this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
+    final darkMode = isDark ?? ThemeService.instance.isDarkMode(context);
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.deepMaroonBg,
+      decoration: BoxDecoration(
+        color: darkMode ? AppColors.deepMaroonBg : AppColors.lightSurfaceElevated,
       ),
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 16 : 48,
@@ -29,21 +32,24 @@ class PratidnyaSection extends StatelessWidget {
               // Regal Parchment Oath Card
               Container(
                 decoration: BoxDecoration(
-                  gradient: AppGradients.pledgeCardGradient,
+                  gradient: AppGradients.pledgeCardGradientAdaptive(darkMode),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.5),
+                    color: darkMode
+                        ? AppColors.gold.withValues(alpha: 0.5)
+                        : AppColors.goldMetallic.withValues(alpha: 0.55),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.saffron.withValues(alpha: 0.15),
-                      blurRadius: 30,
-                      spreadRadius: 2,
+                      color: AppColors.saffron.withValues(alpha: darkMode ? 0.15 : 0.12),
+                      blurRadius: darkMode ? 30 : 24,
+                      spreadRadius: darkMode ? 2 : 1,
+                      offset: Offset(0, darkMode ? 0 : 8),
                     ),
                     BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.7),
-                      blurRadius: 20,
+                      color: AppColors.black.withValues(alpha: darkMode ? 0.7 : 0.07),
+                      blurRadius: darkMode ? 20 : 16,
                       offset: const Offset(0, 10),
                     ),
                   ],
@@ -73,13 +79,13 @@ class PratidnyaSection extends StatelessWidget {
                           Text(
                             context.l10n.pledge_heading,
                             textAlign: TextAlign.center,
-                            style: AppTypography.pledgeHeading(isMobile),
+                            style: AppTypography.pledgeHeading(isMobile, isDark: darkMode),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             context.l10n.pledge_subheading,
                             textAlign: TextAlign.center,
-                            style: AppTypography.pledgeSubheading(isMobile),
+                            style: AppTypography.pledgeSubheading(isMobile, isDark: darkMode),
                           ),
                           const SizedBox(height: 14),
                           Container(
@@ -101,6 +107,7 @@ class PratidnyaSection extends StatelessWidget {
                       text: context.l10n.pledge_p1,
                       isInvocation: true,
                       isMobile: isMobile,
+                      isDark: darkMode,
                     ),
 
                     const SizedBox(height: 20),
@@ -111,6 +118,7 @@ class PratidnyaSection extends StatelessWidget {
                       text: context.l10n.pledge_p2,
                       number: '१',
                       isMobile: isMobile,
+                      isDark: darkMode,
                     ),
 
                     const SizedBox(height: 20),
@@ -121,6 +129,7 @@ class PratidnyaSection extends StatelessWidget {
                       text: context.l10n.pledge_p3,
                       number: '२',
                       isMobile: isMobile,
+                      isDark: darkMode,
                     ),
 
                     const SizedBox(height: 20),
@@ -131,6 +140,7 @@ class PratidnyaSection extends StatelessWidget {
                       text: context.l10n.pledge_p4,
                       number: '३',
                       isMobile: isMobile,
+                      isDark: darkMode,
                     ),
 
                     const SizedBox(height: 32),
@@ -143,14 +153,21 @@ class PratidnyaSection extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            AppColors.saffronDark.withValues(alpha: 0.4),
-                            AppColors.goldDark.withValues(alpha: 0.2),
-                          ],
+                          colors: darkMode
+                              ? [
+                                  AppColors.saffronDark.withValues(alpha: 0.4),
+                                  AppColors.goldDark.withValues(alpha: 0.2),
+                                ]
+                              : [
+                                  AppColors.saffron.withValues(alpha: 0.15),
+                                  AppColors.goldLight.withValues(alpha: 0.2),
+                                ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColors.gold.withValues(alpha: 0.4),
+                          color: darkMode
+                              ? AppColors.gold.withValues(alpha: 0.4)
+                              : AppColors.goldMetallic.withValues(alpha: 0.4),
                           width: 1,
                         ),
                       ),
@@ -158,7 +175,7 @@ class PratidnyaSection extends StatelessWidget {
                         child: Text(
                           context.l10n.pledge_slogans,
                           textAlign: TextAlign.center,
-                          style: AppTypography.pledgeSlogans(isMobile),
+                          style: AppTypography.pledgeSlogans(isMobile, isDark: darkMode),
                         ),
                       ),
                     ),
@@ -178,18 +195,27 @@ class PratidnyaSection extends StatelessWidget {
     String? number,
     bool isInvocation = false,
     required bool isMobile,
+    required bool isDark,
   }) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
-        color: isInvocation
-            ? AppColors.gold.withValues(alpha: 0.06)
-            : AppColors.white.withValues(alpha: 0.03),
+        color: isDark
+            ? (isInvocation
+                ? AppColors.gold.withValues(alpha: 0.06)
+                : AppColors.white.withValues(alpha: 0.03))
+            : (isInvocation
+                ? AppColors.saffron.withValues(alpha: 0.08)
+                : AppColors.lightSurface),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isInvocation
-              ? AppColors.gold.withValues(alpha: 0.3)
-              : AppColors.white.withValues(alpha: 0.08),
+          color: isDark
+              ? (isInvocation
+                  ? AppColors.gold.withValues(alpha: 0.3)
+                  : AppColors.white.withValues(alpha: 0.08))
+              : (isInvocation
+                  ? AppColors.goldMetallic.withValues(alpha: 0.4)
+                  : AppColors.lightCardBorder),
           width: 1,
         ),
       ),
@@ -202,28 +228,30 @@ class PratidnyaSection extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.saffron.withValues(alpha: 0.25),
+                color: isDark
+                    ? AppColors.saffron.withValues(alpha: 0.25)
+                    : AppColors.saffron.withValues(alpha: 0.18),
                 border: Border.all(
-                  color: AppColors.saffronLight,
+                  color: isDark ? AppColors.saffronLight : AppColors.saffronDark,
                   width: 1,
                 ),
               ),
               child: Center(
                 child: Text(
                   number,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
           ] else if (isInvocation) ...[
-            const Icon(
+            Icon(
               Icons.stars_rounded,
-              color: AppColors.gold,
+              color: isDark ? AppColors.gold : AppColors.saffronDark,
               size: 22,
             ),
             const SizedBox(width: 12),
@@ -232,8 +260,8 @@ class PratidnyaSection extends StatelessWidget {
             child: Text(
               text,
               style: isInvocation
-                  ? AppTypography.pledgeInvocation(isMobile)
-                  : AppTypography.pledgeBody(isMobile),
+                  ? AppTypography.pledgeInvocation(isMobile, isDark: isDark)
+                  : AppTypography.pledgeBody(isMobile, isDark: isDark),
             ),
           ),
         ],

@@ -1,15 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
-import 'package:maratha_shivmudra/core/constants/assets.dart';
-import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
-import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/profile/widgets/profile_content_view.dart';
 
 /// Modal dialog and desktop floating popover for Profile.
@@ -47,8 +45,8 @@ class ProfileModalDialog extends StatefulWidget {
       barrierDismissible: true,
       barrierColor: AppColors.black.withValues(alpha: 0.75),
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
+        surfaceTintColor: AppColors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: ProfileModalDialog(
           isCompact: dialogWidth < 600,
@@ -65,14 +63,14 @@ class ProfileModalDialog extends StatefulWidget {
     showDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      barrierColor: AppColors.black.withValues(alpha: 0.5),
       builder: (context) {
         return Align(
           alignment: Alignment.topRight,
           child: Padding(
             padding: const EdgeInsets.only(top: 65, right: 24, bottom: 20),
             child: Material(
-              color: Colors.transparent,
+              color: AppColors.transparent,
               child: ProfileModalDialog(
                 isCompact: dialogWidth < 600,
                 maxWidth: dialogWidth,
@@ -142,49 +140,62 @@ class _ProfileModalDialogState extends State<ProfileModalDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveMaxWidth = widget.maxWidth ?? (widget.isCompact ? 480.0 : 700.0);
+    final effectiveMaxWidth =
+        widget.maxWidth ?? (widget.isCompact ? 480.0 : 700.0);
     final maxHeight = MediaQuery.sizeOf(context).height * 0.88;
 
-    return Container(
-      width: effectiveMaxWidth,
-      height: maxHeight,
-      constraints: BoxConstraints(
-        maxWidth: effectiveMaxWidth,
-        maxHeight: maxHeight,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF160B0B),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.saffron.withValues(alpha: 0.2),
-            blurRadius: 30,
-            spreadRadius: 2,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        final isDark = ThemeService.instance.isDarkMode(context);
+
+        return Container(
+          width: effectiveMaxWidth,
+          height: maxHeight,
+          constraints: BoxConstraints(
+            maxWidth: effectiveMaxWidth,
+            maxHeight: maxHeight,
           ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.9),
-            blurRadius: 25,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: (_isLoading || _profile == null)
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.saffron),
-            )
-          : ProfileContentView(
-              initialProfile: _profile!,
-              isCompact: widget.isCompact,
-              isFixedHeader: true,
-              showCloseButton: true,
-              onClose: () => Navigator.of(context).pop(),
-              onProfileUpdated: _loadProfile,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.dialogBgDark : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.gold.withValues(alpha: 0.5)
+                  : AppColors.goldDark.withValues(alpha: 0.35),
+              width: 1.5,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? AppColors.saffron.withValues(alpha: 0.2)
+                    : AppColors.goldShadow.withValues(alpha: 0.15),
+                blurRadius: 30,
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: isDark ? 0.9 : 0.1),
+                blurRadius: 25,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: (_isLoading || _profile == null)
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.saffron),
+                )
+              : ProfileContentView(
+                  initialProfile: _profile!,
+                  isCompact: widget.isCompact,
+                  isFixedHeader: true,
+                  showCloseButton: true,
+                  onClose: () => Navigator.of(context).pop(),
+                  onProfileUpdated: _loadProfile,
+                ),
+        );
+      },
     );
   }
 }
+

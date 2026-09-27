@@ -5,118 +5,120 @@ abstract class AppTypography {
   static const String fontFamily = 'NotoSerifDevanagari';
 
   // Hero Section
-  static TextStyle orgName(bool isMobile) => TextStyle(
+  static TextStyle orgName(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 26 : 42,
         fontWeight: FontWeight.w900,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
         letterSpacing: 0.5,
         height: 1.2,
       );
 
-  static TextStyle heroTagline(bool isMobile) => TextStyle(
+  static TextStyle heroTagline(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 18 : 26,
         fontWeight: FontWeight.w800,
-        color: AppColors.white,
+        color: isDark ? AppColors.white : AppColors.textDarkPrimary,
         height: 1.3,
       );
 
-  static TextStyle heroSubtitle(bool isMobile) => TextStyle(
+  static TextStyle heroSubtitle(bool isMobile, {bool isDark = true}) => TextStyle(
         fontSize: isMobile ? 14 : 16,
-        color: AppColors.textSecondary,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
         height: 1.6,
       );
 
-  static TextStyle shlokaBadge(bool isMobile) => TextStyle(
+  static TextStyle shlokaBadge(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 11 : 13,
         fontWeight: FontWeight.w600,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
       );
 
   // Section Headers
-  static TextStyle sectionTitle(bool isMobile) => TextStyle(
+  static TextStyle sectionTitle(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 22 : 32,
         fontWeight: FontWeight.bold,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
       );
 
-  static TextStyle sectionSubtitle(bool isMobile) => TextStyle(
+  static TextStyle sectionSubtitle(bool isMobile, {bool isDark = true}) => TextStyle(
         fontSize: isMobile ? 13 : 15,
-        color: AppColors.textSecondary,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
         height: 1.5,
       );
 
   // Sacred Pledge (संघटनेची प्रतिज्ञा)
-  static TextStyle pledgeHeading(bool isMobile) => TextStyle(
+  static TextStyle pledgeHeading(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 22 : 28,
         fontWeight: FontWeight.bold,
-        color: AppColors.textCrimson,
+        color: isDark ? AppColors.textCrimson : AppColors.saffronDark,
         letterSpacing: 0.5,
-        shadows: const [
-          Shadow(
-            color: AppColors.black,
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
+        shadows: isDark
+            ? const [
+                Shadow(
+                  color: AppColors.black,
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            : null,
       );
 
-  static TextStyle pledgeSubheading(bool isMobile) => TextStyle(
+  static TextStyle pledgeSubheading(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 13 : 15,
-        color: AppColors.textSecondary,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
       );
 
-  static TextStyle pledgeInvocation(bool isMobile) => TextStyle(
+  static TextStyle pledgeInvocation(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 14 : 16,
         fontWeight: FontWeight.w600,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
         height: 1.65,
         letterSpacing: 0.2,
       );
 
-  static TextStyle pledgeBody(bool isMobile) => TextStyle(
+  static TextStyle pledgeBody(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 14 : 16,
         fontWeight: FontWeight.w500,
-        color: AppColors.textLight,
+        color: isDark ? AppColors.textLight : AppColors.textDarkPrimary,
         height: 1.65,
         letterSpacing: 0.2,
       );
 
-  static TextStyle pledgeSlogans(bool isMobile) => TextStyle(
+  static TextStyle pledgeSlogans(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 14 : 17,
         fontWeight: FontWeight.bold,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
         letterSpacing: 0.5,
       );
 
   // Cards & Pillars
-  static const TextStyle cardTitle = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 17,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-    height: 1.3,
-  );
+  static TextStyle cardTitle({bool isDark = true}) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 17,
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
+        height: 1.3,
+      );
 
-  static const TextStyle cardBody = TextStyle(
-    fontSize: 13,
-    color: AppColors.textSecondary,
-    height: 1.6,
-  );
+  static TextStyle cardBody({bool isDark = true}) => TextStyle(
+        fontSize: 13,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+        height: 1.6,
+      );
 
-  static const TextStyle cardTag = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-  );
+  static TextStyle cardTag({bool isDark = true}) => TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkMuted,
+      );
 
   // Statistics
   static TextStyle statValue(bool isMobile, Color color) => TextStyle(
@@ -126,38 +128,38 @@ abstract class AppTypography {
         letterSpacing: 0.5,
       );
 
-  static const TextStyle statLabel = TextStyle(
-    fontSize: 12,
-    color: AppColors.textSecondary,
-    fontWeight: FontWeight.w500,
-    height: 1.3,
-  );
+  static TextStyle statLabel({bool isDark = true}) => TextStyle(
+        fontSize: 12,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+        fontWeight: FontWeight.w500,
+        height: 1.3,
+      );
 
   // Events
-  static const TextStyle eventTitle = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-    height: 1.35,
-  );
+  static TextStyle eventTitle({bool isDark = true}) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
+        height: 1.35,
+      );
 
-  static const TextStyle eventDate = TextStyle(
-    fontSize: 12,
-    color: AppColors.goldLight,
-    fontWeight: FontWeight.w600,
-  );
+  static TextStyle eventDate({bool isDark = true}) => TextStyle(
+        fontSize: 12,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+        fontWeight: FontWeight.w600,
+      );
 
-  static const TextStyle eventLocation = TextStyle(
-    fontSize: 12,
-    color: AppColors.textSecondary,
-  );
+  static TextStyle eventLocation({bool isDark = true}) => TextStyle(
+        fontSize: 12,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+      );
 
-  static const TextStyle eventBody = TextStyle(
-    fontSize: 13,
-    color: AppColors.textSecondary,
-    height: 1.55,
-  );
+  static TextStyle eventBody({bool isDark = true}) => TextStyle(
+        fontSize: 13,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+        height: 1.55,
+      );
 
   // Call to Action
   static TextStyle ctaTitle(bool isMobile) => TextStyle(
@@ -174,56 +176,61 @@ abstract class AppTypography {
         height: 1.6,
       );
 
-  // Navigation & Footer
-  static TextStyle navBrand(bool isMobile) => TextStyle(
+  static TextStyle navBrand(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 15 : 18,
         fontWeight: FontWeight.bold,
-        color: AppColors.goldLight,
+        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
         letterSpacing: 0.5,
       );
 
-  static TextStyle navTagline(bool isMobile) => TextStyle(
+  static TextStyle navTagline(bool isMobile, {bool isDark = true}) => TextStyle(
         fontFamily: fontFamily,
         fontSize: isMobile ? 10 : 11,
-        color: AppColors.textSecondary,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkMuted,
         fontWeight: FontWeight.w500,
       );
 
-  static TextStyle navLink({required bool isHovered, bool isHighlight = false}) =>
+  static TextStyle navLink({
+    required bool isHovered,
+    bool isHighlight = false,
+    bool isDark = true,
+  }) =>
       TextStyle(
         fontFamily: fontFamily,
         fontSize: 14,
         fontWeight: isHighlight || isHovered ? FontWeight.w600 : FontWeight.w500,
         color: isHighlight
             ? AppColors.saffronLight
-            : (isHovered ? AppColors.goldLight : AppColors.textPrimary),
+            : (isHovered
+                ? (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                : (isDark ? AppColors.textPrimary : AppColors.textDarkPrimary)),
       );
 
-  static const TextStyle footerHeading = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle footerHeading({bool isDark = true}) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.textPrimary : AppColors.saffronDark,
+      );
 
-  static const TextStyle footerBody = TextStyle(
-    fontSize: 13,
-    color: AppColors.textSecondary,
-    height: 1.6,
-  );
+  static TextStyle footerBody({bool isDark = true}) => TextStyle(
+        fontSize: 13,
+        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+        height: 1.6,
+      );
 
-  static const TextStyle footerTribute = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 12,
-    fontStyle: FontStyle.italic,
-    color: AppColors.gold,
-  );
+  static TextStyle footerTribute({bool isDark = true}) => TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 12,
+        fontStyle: FontStyle.italic,
+        color: isDark ? AppColors.gold : AppColors.goldDark,
+      );
 
-  static const TextStyle footerCopyright = TextStyle(
-    fontSize: 12,
-    color: AppColors.textMuted,
-  );
+  static TextStyle footerCopyright({bool isDark = true}) => TextStyle(
+        fontSize: 12,
+        color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+      );
 
   static const TextStyle buttonLabel = TextStyle(
     fontFamily: fontFamily,
@@ -234,6 +241,16 @@ abstract class AppTypography {
 }
 
 abstract class AppGradients {
+  static const LinearGradient idCardBackground = LinearGradient(
+    colors: [
+      AppColors.cardDarkGradientStart,
+      AppColors.cardDarkGradientMid,
+      AppColors.cardDarkGradientEnd,
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const LinearGradient heroBackground = LinearGradient(
     colors: [
       AppColors.darkBgHeroTop,
@@ -244,11 +261,24 @@ abstract class AppGradients {
     end: Alignment.bottomCenter,
   );
 
+  static const LinearGradient heroBackgroundLight = LinearGradient(
+    colors: [
+      AppColors.lightSurfaceElevated,
+      AppColors.lightBg,
+      AppColors.lightSurface,
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static LinearGradient heroBackgroundAdaptive(bool isDark) =>
+      isDark ? heroBackground : heroBackgroundLight;
+
   static const LinearGradient heroTextGradient = LinearGradient(
     colors: [
-      Color(0xFFFFB74D),
-      Color(0xFFFF7043),
-      Color(0xFFFFD54F),
+      AppColors.orangeLight,
+      AppColors.orangeCoral,
+      AppColors.goldAccentLight,
     ],
   );
 
@@ -262,6 +292,19 @@ abstract class AppGradients {
     end: Alignment.bottomRight,
   );
 
+  static const LinearGradient pledgeCardGradientLight = LinearGradient(
+    colors: [
+      AppColors.lightParchment1,
+      AppColors.lightParchment2,
+      AppColors.lightParchment3,
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static LinearGradient pledgeCardGradientAdaptive(bool isDark) =>
+      isDark ? pledgeCardGradient : pledgeCardGradientLight;
+
   static const LinearGradient ctaBackground = LinearGradient(
     colors: [
       AppColors.ctaMaroonDark,
@@ -271,6 +314,19 @@ abstract class AppGradients {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  static const LinearGradient ctaBackgroundLight = LinearGradient(
+    colors: [
+      AppColors.maroonDeep,
+      AppColors.saffronDark,
+      AppColors.maroonDeep,
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static LinearGradient ctaBackgroundAdaptive(bool isDark) =>
+      isDark ? ctaBackground : ctaBackgroundLight;
 
   static const LinearGradient impactBackground = LinearGradient(
     colors: [
@@ -282,11 +338,24 @@ abstract class AppGradients {
     end: Alignment.centerRight,
   );
 
+  static const LinearGradient impactBackgroundLight = LinearGradient(
+    colors: [
+      AppColors.lightSurfaceElevated,
+      AppColors.lightBg,
+      AppColors.lightSurfaceElevated,
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  static LinearGradient impactBackgroundAdaptive(bool isDark) =>
+      isDark ? impactBackground : impactBackgroundLight;
+
   static const LinearGradient goldDivider = LinearGradient(
     colors: [
-      Colors.transparent,
+      AppColors.transparent,
       AppColors.gold,
-      Colors.transparent,
+      AppColors.transparent,
     ],
   );
 

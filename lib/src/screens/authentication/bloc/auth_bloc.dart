@@ -10,6 +10,7 @@ import 'package:maratha_shivmudra/core/base/bloc/event/base_event.dart';
 import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
+import 'package:maratha_shivmudra/core/services/referral_service.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
 
@@ -77,7 +78,15 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     final db = FirebaseFirestore.instance;
     final phoneNumber = getData<String>('mobileNumber');
 
-    final referralId = Uri.base.queryParameters['ref'];
+    final rawRef = Uri.base.queryParameters['ref'];
+    String validReferralCode = 'NONE';
+    if (rawRef != null && rawRef.trim().isNotEmpty && rawRef.trim().toUpperCase() != 'NONE') {
+      final validation = await ReferralService.instance.validateReferral(rawRef);
+      if (validation == ReferralValidationResult.valid) {
+        validReferralCode = rawRef.trim().toUpperCase();
+      }
+    }
+
     final memberRef = db.collection('members').doc(phoneNumber!);
     final memberSnap = await memberRef.get();
     final data = memberSnap.data();
@@ -95,7 +104,7 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
       await memberRef.set({
         'membership': {
           'phone': phoneNumber,
-          'referral_id': referralId ?? 'NONE',
+          'referral_id': validReferralCode,
           'role_type': 'member',
           'designation': '',
           'member_id': 'PENDING',
@@ -109,6 +118,17 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+    } else if (!isFormFilled && validReferralCode != 'NONE') {
+      // If user had logged in previously but not filled member form yet, associate valid referral
+      final existingRef = (mem?['referral_id'] as String?) ?? 'NONE';
+      if (existingRef == 'NONE' || existingRef.isEmpty) {
+        await memberRef.set({
+          'membership': {
+            'referral_id': validReferralCode,
+          },
+          'updated_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
     }
 
     await UserSessionService.instance.onUserAuthenticated(

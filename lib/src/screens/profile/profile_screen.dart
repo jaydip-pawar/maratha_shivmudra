@@ -8,6 +8,7 @@ import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/profile/widgets/profile_content_view.dart';
@@ -74,69 +75,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable: appLocaleNotifier,
-      builder: (context, locale, _) {
-        final isMarathi = locale.languageCode == 'mr';
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        final isDark = ThemeService.instance.isDarkMode(context);
 
-        if (_isLoading || _profile == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.darkBg,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.saffron),
-            ),
-          );
-        }
+        return ValueListenableBuilder<Locale>(
+          valueListenable: appLocaleNotifier,
+          builder: (context, locale, _) {
+            final isMarathi = locale.languageCode == 'mr';
 
-        final p = _profile!;
+            if (_isLoading || _profile == null) {
+              return Scaffold(
+                backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+                body: const Center(
+                  child: CircularProgressIndicator(color: AppColors.saffron),
+                ),
+              );
+            }
 
-        return Scaffold(
-          backgroundColor: AppColors.darkBg,
-          appBar: AppBar(
-            backgroundColor: AppColors.darkSurface,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.goldLight),
-              onPressed: () {
-                if (context.router.canPop()) {
-                  context.router.maybePop();
-                } else {
-                  context.router.replaceAll([const LandingRoute()]);
-                }
-              },
-            ),
-            title: Row(
-              children: [
-                Image.asset(AppAssets.logo, width: 28, height: 28),
-                const SizedBox(width: 10),
-                const Text(
-                  'मराठा शिवमुद्रा',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+            final p = _profile!;
+
+            return Scaffold(
+              backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+              appBar: AppBar(
+                backgroundColor:
+                    isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                elevation: isDark ? 0 : 1,
+                shadowColor: AppColors.goldShadow.withValues(alpha: 0.1),
+                leading: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_rounded,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                  ),
+                  onPressed: () {
+                    if (context.router.canPop()) {
+                      context.router.maybePop();
+                    } else {
+                      context.router.replaceAll([const LandingRoute()]);
+                    }
+                  },
+                ),
+                title: Row(
+                  children: [
+                    Image.asset(AppAssets.logo, width: 28, height: 28),
+                    const SizedBox(width: 10),
+                    Text(
+                      'मराठा शिवमुद्रा',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.goldLight
+                            : AppColors.saffronDark,
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      isDark
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
+                      color:
+                          isDark ? AppColors.goldLight : AppColors.saffronDark,
+                    ),
+                    onPressed: () => ThemeService.instance.cycleThemeMode(),
+                    tooltip:
+                        isDark ? 'लाइट मोड चालू करा' : 'डार्क मोड चालू करा',
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.home_rounded,
+                      color:
+                          isDark ? AppColors.goldLight : AppColors.saffronDark,
+                    ),
+                    onPressed: () =>
+                        context.router.replaceAll([const LandingRoute()]),
+                    tooltip: isMarathi ? 'मुख्यपृष्ठ' : 'Home',
+                  ),
+                ],
+              ),
+              body: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: ProfileContentView(
+                    initialProfile: p,
+                    onProfileUpdated: _loadUserProfile,
+                    isFixedHeader: true,
                   ),
                 ),
-              ],
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.home_rounded, color: AppColors.goldLight),
-                onPressed: () => context.router.replaceAll([const LandingRoute()]),
-                tooltip: isMarathi ? 'मुख्यपृष्ठ' : 'Home',
               ),
-            ],
-          ),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: ProfileContentView(
-                initialProfile: p,
-                onProfileUpdated: _loadUserProfile,
-                isFixedHeader: true,
-              ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

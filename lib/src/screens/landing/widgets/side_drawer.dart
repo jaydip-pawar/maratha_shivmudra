@@ -10,6 +10,7 @@ import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/main.dart';
@@ -107,10 +108,11 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
   @override
   Widget build(BuildContext context) {
     final isMarathi = appLocaleNotifier.value.languageCode == 'mr';
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Drawer(
-      backgroundColor: AppColors.darkBg,
-      surfaceTintColor: Colors.transparent,
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+      surfaceTintColor: AppColors.transparent,
       child: SafeArea(
         child: Column(
           children: [
@@ -201,11 +203,106 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
               ),
             ),
 
-            // Bottom Section (Join button if not submitted)
+            // Bottom Section (Preferences & Join/Sign-out button)
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // Preferences Row: Language & Theme Mode
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Language Toggle Pill
+                        InkWell(
+                          onTap: () {
+                            appLocaleNotifier.value = isMarathi
+                                ? const Locale('en', '')
+                                : const Locale('mr', '');
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.gold.withValues(alpha: 0.5)
+                                    : AppColors.goldDark.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.language_rounded,
+                                  size: 15,
+                                  color: isDark ? AppColors.gold : AppColors.saffron,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  isMarathi ? 'मराठी' : 'English',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppColors.goldLight : AppColors.textDarkPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Theme Mode 3-Way Switcher
+                        ValueListenableBuilder<ThemeMode>(
+                          valueListenable: appThemeModeNotifier,
+                          builder: (context, currentMode, _) {
+                            return Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.gold.withValues(alpha: 0.5)
+                                      : AppColors.goldDark.withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildThemePill(
+                                    ThemeMode.system,
+                                    Icons.brightness_auto_rounded,
+                                    isMarathi ? 'ऑटो' : 'Auto',
+                                    currentMode,
+                                    isDark,
+                                  ),
+                                  _buildThemePill(
+                                    ThemeMode.light,
+                                    Icons.light_mode_rounded,
+                                    isMarathi ? 'लाईट' : 'Light',
+                                    currentMode,
+                                    isDark,
+                                  ),
+                                  _buildThemePill(
+                                    ThemeMode.dark,
+                                    Icons.dark_mode_rounded,
+                                    isMarathi ? 'डार्क' : 'Dark',
+                                    currentMode,
+                                    isDark,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                   ValueListenableBuilder<bool>(
                     valueListenable: UserSessionService.instance.isFormSubmittedNotifier,
                     builder: (context, isSubmitted, _) {
@@ -286,8 +383,56 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
     );
   }
 
+  Widget _buildThemePill(
+    ThemeMode mode,
+    IconData icon,
+    String label,
+    ThemeMode currentMode,
+    bool isDark,
+  ) {
+    final isSelected = currentMode == mode;
+    return InkWell(
+      onTap: () => ThemeService.instance.setThemeMode(mode),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.saffron : AppColors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? AppColors.white
+                  : (isDark ? AppColors.textSecondary : AppColors.textDarkMuted),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? AppColors.white
+                    : (isDark ? AppColors.textSecondary : AppColors.textDarkMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Header displaying User Picture, Name, Number & Edit Icon
   Widget _buildDrawerUserHeader(BuildContext context, bool isMarathi) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return ValueListenableBuilder<bool>(
       valueListenable: UserSessionService.instance.isFormSubmittedNotifier,
       builder: (context, isSubmitted, _) {
@@ -307,10 +452,12 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.darkSurface,
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               border: Border(
                 bottom: BorderSide(
-                  color: AppColors.gold.withValues(alpha: 0.25),
+                  color: isDark
+                      ? AppColors.gold.withValues(alpha: 0.25)
+                      : AppColors.goldBorderMedium,
                 ),
               ),
             ),
@@ -331,11 +478,11 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                     children: [
                       Text(
                         displayName.isNotEmpty ? displayName : (isMarathi ? 'सभासद' : 'Member'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? AppColors.white : AppColors.textDarkPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -347,9 +494,9 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                           Flexible(
                             child: Text(
                               phoneText,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: isDark ? AppColors.textSecondary : AppColors.textDarkMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                               maxLines: 1,
@@ -457,14 +604,17 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
     bool isMarathi,
   ) {
     final percent = (p.completionProgress * 100).toInt().clamp(0, 100);
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.4),
+          color: isDark
+              ? AppColors.gold.withValues(alpha: 0.4)
+              : AppColors.goldDark.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -475,10 +625,10 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
             children: [
               Text(
                 isMarathi ? 'प्रोफाइल पूर्णता: $percent%' : 'Completion: $percent%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.goldLight,
+                  color: isDark ? AppColors.goldLight : AppColors.textDarkGold,
                 ),
               ),
               Container(
@@ -504,7 +654,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
             child: LinearProgressIndicator(
               value: p.completionProgress.clamp(0.0, 1.0),
               minHeight: 6,
-              backgroundColor: AppColors.darkBorder,
+              backgroundColor: isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.saffron),
             ),
           ),
@@ -517,7 +667,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.darkBgHeroTop,
+                  color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: AppColors.saffron.withValues(alpha: 0.5),
@@ -564,15 +714,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF240C0C),
-                Color(0xFF160707),
-                Color(0xFF0F0404),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppGradients.idCardBackground,
             border: Border.all(
               color: AppColors.gold,
               width: 1.2,
@@ -617,7 +759,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -664,7 +806,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -686,7 +828,7 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                   Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: QrImageView(
@@ -708,14 +850,14 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
                       Icon(
                         Icons.verified_rounded,
                         size: 10,
-                        color: Colors.greenAccent,
+                        color: AppColors.successLight,
                       ),
                       SizedBox(width: 3),
                       Text(
                         'अधिकृत ओळखपत्र',
                         style: TextStyle(
                           fontSize: 8.5,
-                          color: Colors.greenAccent,
+                          color: AppColors.successLight,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -790,14 +932,20 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return ListTile(
-      leading: Icon(icon, color: AppColors.goldLight, size: 22),
+      leading: Icon(
+        icon,
+        color: isDark ? AppColors.goldLight : AppColors.saffron,
+        size: 22,
+      ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: AppTypography.fontFamily,
           fontSize: 15,
-          color: AppColors.textPrimary,
+          color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
           fontWeight: FontWeight.w500,
         ),
       ),

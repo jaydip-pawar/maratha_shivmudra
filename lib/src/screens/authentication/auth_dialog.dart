@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
@@ -15,74 +16,86 @@ class AuthDialog {
       barrierColor: AppColors.black.withValues(alpha: 0.75),
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          insetPadding: context.isMobile
-              ? const EdgeInsets.symmetric(horizontal: 16)
-              : const EdgeInsets.symmetric(horizontal: 32),
-          child: BlocProvider(
-            create: (context) => getIt<AuthBloc>(),
-            child: BlocBuilder<AuthBloc, AuthState>(
-              buildWhen: (previous, current) {
-                return previous.runtimeType != current.runtimeType;
-              },
-              builder: (context, state) {
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  switchInCurve: Curves.easeInOut,
-                  switchOutCurve: Curves.easeInOut,
-                  transitionBuilder:
-                      (Widget child, Animation<double> animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: appThemeModeNotifier,
+          builder: (context, _, __) {
+            final isDark = ThemeService.instance.isDarkMode(context);
+            return Dialog(
+              backgroundColor: AppColors.transparent,
+              surfaceTintColor: AppColors.transparent,
+              insetPadding: context.isMobile
+                  ? const EdgeInsets.symmetric(horizontal: 16)
+                  : const EdgeInsets.symmetric(horizontal: 32),
+              child: BlocProvider(
+                create: (context) => getIt<AuthBloc>(),
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  buildWhen: (previous, current) {
+                    return previous.runtimeType != current.runtimeType;
+                  },
+                  builder: (context, state) {
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      },
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeInOut,
+                        child: Container(
+                          key: ValueKey(state.runtimeType),
+                          constraints: const BoxConstraints(
+                            maxWidth: 680,
+                            maxHeight: 520,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.cardDark : AppColors.lightSurface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.gold.withValues(alpha: 0.4)
+                                  : AppColors.goldBorderMedium,
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? AppColors.saffron.withValues(alpha: 0.15)
+                                    : AppColors.goldShadow.withValues(alpha: 0.15),
+                                blurRadius: 30,
+                                spreadRadius: 2,
+                              ),
+                              BoxShadow(
+                                color: isDark
+                                    ? AppColors.black.withValues(alpha: 0.8)
+                                    : AppColors.textDarkPrimary.withValues(alpha: 0.08),
+                                blurRadius: 25,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: () {
+                            if (state is AuthVerificationState) {
+                              return const OtpVerificationView();
+                            } else if (state is AuthSuccessState) {
+                              return const SuccessView();
+                            } else {
+                              return const LoginView();
+                            }
+                          }(),
+                        ),
+                      ),
                     );
                   },
-                  child: AnimatedSize(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOut,
-                    child: Container(
-                      key: ValueKey(state.runtimeType),
-                      constraints: const BoxConstraints(
-                        maxWidth: 680,
-                        maxHeight: 520,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardDark,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.gold.withValues(alpha: 0.4),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.saffron.withValues(alpha: 0.15),
-                            blurRadius: 30,
-                            spreadRadius: 2,
-                          ),
-                          BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.8),
-                            blurRadius: 25,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: () {
-                        if (state is AuthVerificationState) {
-                          return const OtpVerificationView();
-                        } else if (state is AuthSuccessState) {
-                          return const SuccessView();
-                        } else {
-                          return const LoginView();
-                        }
-                      }(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                ),
+              ),
+            );
+          },
         );
       },
     );

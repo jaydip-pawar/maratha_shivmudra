@@ -7,6 +7,7 @@ import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/src/screens/authentication/bloc/auth_bloc.dart';
@@ -19,6 +20,7 @@ class SuccessView extends StatelessWidget with GetItHelperMixin {
   Widget build(BuildContext context) {
     final bloc = context.read<AuthBloc>();
     final isMobile = context.isMobile;
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -66,7 +68,7 @@ class SuccessView extends StatelessWidget with GetItHelperMixin {
                 fontFamily: AppTypography.fontFamily,
                 fontWeight: FontWeight.bold,
                 fontSize: isMobile ? 20 : 22,
-                color: AppColors.goldLight,
+                color: isDark ? AppColors.goldLight : AppColors.textDarkPrimary,
               ),
             ),
           ),
@@ -74,9 +76,9 @@ class SuccessView extends StatelessWidget with GetItHelperMixin {
           Text(
             context.l10n.welcome,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppColors.textSecondary,
+              color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
             ),
           ),
           const SizedBox(height: 28),

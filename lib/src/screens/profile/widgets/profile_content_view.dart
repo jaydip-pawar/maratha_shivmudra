@@ -10,6 +10,7 @@ import 'package:maratha_shivmudra/core/constants/geo_constants.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
 import 'package:maratha_shivmudra/core/utils/camera_helper.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
@@ -47,6 +48,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   late MemberProfile _profile;
   final ImagePicker _picker = ImagePicker();
   bool _isSaving = false;
+
+  bool get isDark => ThemeService.instance.isDarkMode(context);
 
   // Active section(s) currently being edited
   Set<String> _editingSectionIds = {};
@@ -558,14 +561,22 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       firstDate: DateTime(1920),
       lastDate: DateTime.now(),
       builder: (context, child) {
+        final isDark = ThemeService.instance.isDarkMode(context);
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.saffron,
-              onPrimary: Colors.white,
-              surface: AppColors.darkSurface,
-              onSurface: Colors.white,
-            ),
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: AppColors.saffron,
+                    onPrimary: AppColors.white,
+                    surface: AppColors.darkSurface,
+                    onSurface: AppColors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: AppColors.saffron,
+                    onPrimary: AppColors.white,
+                    surface: AppColors.lightSurface,
+                    onSurface: AppColors.textDarkPrimary,
+                  ),
           ),
           child: child!,
         );
@@ -1128,7 +1139,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
         final isDesktop = constraints.maxWidth > 580 && screenWidth > 640;
@@ -1247,11 +1261,11 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         icon: _isSaving
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.white, strokeWidth: 2))
+                            : const Icon(Icons.check_circle_rounded, color: AppColors.white, size: 18),
                         label: Text(
                           isMarathi ? 'सर्व माहिती जतन करा (Save All)' : 'Save All Changes',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.white),
                         ),
                       ),
                     ),
@@ -1308,6 +1322,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         );
       },
     );
+      },
+    );
   }
 
   // ====================================================================
@@ -1315,16 +1331,23 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   // ====================================================================
   Widget _buildFixedIdentityCard(bool isMarathi, {bool isCompact = false}) {
     final compact = isCompact || widget.isCompact;
+    final isDark = ThemeService.instance.isDarkMode(context);
     final displayName = isMarathi
-        ? (_profile.fullNameMr.isNotEmpty ? _profile.fullNameMr : _profile.fullNameEn)
-        : (_profile.fullNameEn.isNotEmpty ? _profile.fullNameEn : _profile.fullNameMr);
+        ? (_profile.fullNameMr.isNotEmpty
+            ? _profile.fullNameMr
+            : _profile.fullNameEn)
+        : (_profile.fullNameEn.isNotEmpty
+            ? _profile.fullNameEn
+            : _profile.fullNameMr);
 
-    final isIssued = _profile.isCardIssued || (_profile.memberId != null && _profile.memberId != 'PENDING');
+    final isIssued = _profile.isCardIssued ||
+        (_profile.memberId != null && _profile.memberId != 'PENDING');
 
     ImageProvider? avatarImage;
     if (_profile.photoUrl != null && _profile.photoUrl!.isNotEmpty) {
       avatarImage = NetworkImage(_profile.photoUrl!);
-    } else if (_profile.photoBase64 != null && _profile.photoBase64!.isNotEmpty) {
+    } else if (_profile.photoBase64 != null &&
+        _profile.photoBase64!.isNotEmpty) {
       try {
         final clean = _profile.photoBase64!.contains(',')
             ? _profile.photoBase64!.split(',').last
@@ -1336,12 +1359,19 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35), width: 1.2),
+        border: Border.all(
+          color: isDark
+              ? AppColors.gold.withValues(alpha: 0.35)
+              : AppColors.goldBorderMedium,
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.saffron.withValues(alpha: 0.12),
+            color: isDark
+                ? AppColors.saffron.withValues(alpha: 0.12)
+                : AppColors.goldShadow.withValues(alpha: 0.12),
             blurRadius: 10,
           ),
         ],
@@ -1356,10 +1386,18 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               children: [
                 CircleAvatar(
                   radius: compact ? 28 : 34,
-                  backgroundColor: AppColors.darkBgHeroTop,
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
                   backgroundImage: avatarImage,
                   child: avatarImage == null
-                      ? Icon(Icons.person_rounded, color: AppColors.goldLight, size: compact ? 28 : 34)
+                      ? Icon(
+                          Icons.person_rounded,
+                          color: isDark
+                              ? AppColors.goldLight
+                              : AppColors.saffronDark,
+                          size: compact ? 28 : 34,
+                        )
                       : null,
                 ),
                 Positioned(
@@ -1371,7 +1409,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                       color: AppColors.saffron,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                    child: const Icon(Icons.camera_alt,
+                        size: 12, color: AppColors.white),
                   ),
                 ),
               ],
@@ -1386,12 +1425,15 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  displayName.isNotEmpty ? displayName : (isMarathi ? 'सभासद प्रोफाइल' : 'Member Profile'),
+                  displayName.isNotEmpty
+                      ? displayName
+                      : (isMarathi ? 'सभासद प्रोफाइल' : 'Member Profile'),
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: compact ? 15 : 17,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color:
+                        isDark ? AppColors.white : AppColors.textDarkPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1399,11 +1441,23 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    const Icon(Icons.phone_rounded, size: 12, color: AppColors.goldLight),
+                    Icon(
+                      Icons.phone_rounded,
+                      size: 12,
+                      color: isDark
+                          ? AppColors.goldLight
+                          : AppColors.saffronDark,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       _profile.phone,
-                      style: const TextStyle(fontSize: 12, color: AppColors.goldLight, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? AppColors.goldLight
+                            : AppColors.saffronDark,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -1414,39 +1468,62 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: isIssued
-                            ? Colors.green.withValues(alpha: 0.15)
-                            : Colors.orangeAccent.withValues(alpha: 0.15),
+                            ? AppColors.green.withValues(alpha: 0.15)
+                            : AppColors.orangeAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isIssued ? Colors.greenAccent : Colors.orangeAccent,
+                          color: isIssued
+                              ? AppColors.greenAccent
+                              : AppColors.orangeAccent,
                           width: 0.8,
                         ),
                       ),
                       child: Text(
-                        isIssued ? 'ID: ${_profile.memberId}' : (isMarathi ? 'नोंदणी: प्रलंबित' : 'Pending'),
+                        isIssued
+                            ? 'ID: ${_profile.memberId}'
+                            : (isMarathi ? 'नोंदणी: प्रलंबित' : 'Pending'),
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.bold,
-                          color: isIssued ? Colors.greenAccent : Colors.orangeAccent,
+                          color: isIssued
+                              ? AppColors.greenAccent
+                              : AppColors.orangeAccent,
                         ),
                       ),
                     ),
-                    if (_profile.isOfficial && (_profile.officialFullTitleMr != null || _profile.officialRoleMr != null))
+                    if (_profile.isOfficial &&
+                        (_profile.officialFullTitleMr != null ||
+                            _profile.officialRoleMr != null))
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.gold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.goldLight, width: 0.8),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.goldLight
+                                : AppColors.saffronDark,
+                            width: 0.8,
+                          ),
                         ),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: compact ? 150 : 250),
+                          constraints:
+                              BoxConstraints(maxWidth: compact ? 150 : 250),
                           child: Text(
-                            _profile.officialFullTitleMr ?? _profile.officialRoleMr!,
-                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.goldLight),
+                            _profile.officialFullTitleMr ??
+                                _profile.officialRoleMr!,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColors.goldLight
+                                  : AppColors.saffronDark,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1460,12 +1537,17 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           if (widget.showCloseButton && widget.onClose != null) ...[
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(Icons.close_rounded, color: AppColors.goldLight, size: 22),
+              icon: Icon(
+                Icons.close_rounded,
+                color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                size: 22,
+              ),
               onPressed: widget.onClose,
               tooltip: isMarathi ? 'बंद करा' : 'Close',
               splashRadius: 20,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              constraints:
+                  const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
           ],
         ],
@@ -1479,14 +1561,19 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   Widget _buildProgressMeter(double progress, bool isMarathi) {
     final percent = (progress * 100).toInt();
     final isComplete = progress >= 1.0;
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isComplete ? Colors.green : AppColors.gold.withValues(alpha: 0.3),
+          color: isComplete
+              ? AppColors.green
+              : (isDark
+                  ? AppColors.gold.withValues(alpha: 0.3)
+                  : AppColors.goldBorderMedium),
         ),
       ),
       child: Column(
@@ -1497,11 +1584,13 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             children: [
               Expanded(
                 child: Text(
-                  isMarathi ? 'प्रोफाइल पूर्णता: $percent%' : 'Profile Completion: $percent%',
-                  style: const TextStyle(
+                  isMarathi
+                      ? 'प्रोफाइल पूर्णता: $percent%'
+                      : 'Profile Completion: $percent%',
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1511,11 +1600,15 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               Text(
                 isComplete
                     ? (isMarathi ? '✓ १००% पूर्ण' : '✓ 100% Complete')
-                    : (isMarathi ? 'प्रलंबित ($percent%)' : 'Pending ($percent%)'),
+                    : (isMarathi
+                        ? 'प्रलंबित ($percent%)'
+                        : 'Pending ($percent%)'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isComplete ? Colors.greenAccent : Colors.orangeAccent,
+                  color: isComplete
+                      ? AppColors.greenAccent
+                      : AppColors.orangeAccent,
                 ),
               ),
             ],
@@ -1526,9 +1619,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: AppColors.darkBorder,
+              backgroundColor:
+                  isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
               valueColor: AlwaysStoppedAnimation<Color>(
-                isComplete ? Colors.green : AppColors.saffron,
+                isComplete ? AppColors.green : AppColors.saffron,
               ),
             ),
           ),
@@ -1540,17 +1634,36 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 Flexible(
                   child: Text(
                     isMarathi ? 'अपूर्ण माहिती:' : 'Missing items:',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.textMuted
+                          : AppColors.textDarkSecondary,
+                    ),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: _openPendingSectionsForEdit,
-                  icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppColors.saffronLight),
+                  icon: Icon(
+                    Icons.edit_note_rounded,
+                    size: 16,
+                    color: isDark
+                        ? AppColors.saffronLight
+                        : AppColors.saffronDark,
+                  ),
                   label: Text(
                     isMarathi ? 'माहिती पूर्ण भरा' : 'Complete Profile',
-                    style: const TextStyle(fontSize: 11, color: AppColors.saffronLight, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.saffronLight
+                          : AppColors.saffronDark,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                  style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact),
                 ),
               ],
             ),
@@ -1560,11 +1673,22 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               runSpacing: 4,
               children: _profile.missingItems.map((item) {
                 return Chip(
-                  backgroundColor: AppColors.darkBgHeroTop,
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
                   labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   visualDensity: VisualDensity.compact,
-                  avatar: const Icon(Icons.circle_outlined, size: 10, color: AppColors.saffron),
-                  label: Text(item, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                  avatar: const Icon(Icons.circle_outlined,
+                      size: 10, color: AppColors.saffron),
+                  label: Text(
+                    item,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark
+                          ? AppColors.textSecondary
+                          : AppColors.textDarkSecondary,
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -1587,13 +1711,16 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     bool isCompact = false,
   }) {
     final isEditing = _editingSectionIds.contains(sectionId);
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isEditing ? AppColors.gold : AppColors.darkBorder,
+          color: isEditing
+              ? AppColors.gold
+              : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
           width: isEditing ? 1.2 : 1,
         ),
       ),
@@ -1604,9 +1731,21 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isEditing ? AppColors.darkBgHeroTop : Colors.transparent,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-              border: Border(bottom: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.6))),
+              color: isEditing
+                  ? (isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated)
+                  : AppColors.transparent,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
+              border: Border(
+                bottom: BorderSide(
+                  color: (isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightCardBorder)
+                      .withValues(alpha: 0.6),
+                ),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1614,7 +1753,12 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(icon, size: 16, color: AppColors.goldLight),
+                      Icon(
+                        icon,
+                        size: 16,
+                        color:
+                            isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1625,7 +1769,9 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: isCompact ? 12 : 13,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.goldLight,
+                            color: isDark
+                                ? AppColors.goldLight
+                                : AppColors.saffronDark,
                           ),
                         ),
                       ),
@@ -1641,20 +1787,39 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                     },
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.12),
+                        color: isDark
+                            ? AppColors.gold.withValues(alpha: 0.12)
+                            : AppColors.saffron.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.gold.withValues(alpha: 0.3)
+                              : AppColors.saffron.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit_outlined, size: 12, color: AppColors.goldLight),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 12,
+                            color: isDark
+                                ? AppColors.goldLight
+                                : AppColors.saffronDark,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             isMarathi ? 'संपादित करा' : 'Edit',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.goldLight),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColors.goldLight
+                                  : AppColors.saffronDark,
+                            ),
                           ),
                         ],
                       ),
@@ -1663,7 +1828,13 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 else
                   Text(
                     isMarathi ? 'संपादन सुरू आहे' : 'Editing',
-                    style: const TextStyle(fontSize: 11, color: AppColors.saffronLight, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.saffronLight
+                          : AppColors.saffronDark,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
               ],
             ),
@@ -1684,21 +1855,35 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                           TextButton(
                             onPressed: () {
                               _populateControllers(_profile);
-                              setState(() => _editingSectionIds.remove(sectionId));
+                              setState(
+                                  () => _editingSectionIds.remove(sectionId));
                             },
-                            child: Text(isMarathi ? 'रद्द करा' : 'Cancel', style: const TextStyle(color: AppColors.textMuted)),
+                            child: Text(
+                              isMarathi ? 'रद्द करा' : 'Cancel',
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppColors.textMuted
+                                    : AppColors.textDarkSecondary,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton.icon(
-                            onPressed: _isSaving ? null : () => _saveSection(sectionId),
+                            onPressed: _isSaving
+                                ? null
+                                : () => _saveSection(sectionId),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.saffron,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
                             ),
-                            icon: const Icon(Icons.check, size: 15, color: Colors.white),
+                            icon: const Icon(Icons.check,
+                                size: 15, color: AppColors.white),
                             label: Text(
                               isMarathi ? 'जतन करा' : 'Save',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -2340,18 +2525,18 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       return Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.1),
+          color: AppColors.green.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.green.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 18),
+            const Icon(Icons.check_circle_rounded, color: AppColors.greenAccent, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 isMarathi ? 'सध्याचा पत्ता हाच मूळ गाव पत्ता आहे.' : 'Current address is same as native village address.',
-                style: const TextStyle(fontSize: 12, color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 12, color: AppColors.greenAccent, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -2443,14 +2628,14 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: CheckboxListTile(
             value: _isNativeAddressSame,
             contentPadding: EdgeInsets.zero,
             activeColor: AppColors.saffron,
             title: Text(
               isMarathi ? 'सध्याचा पत्ता हाच मूळ गाव पत्ता आहे' : 'Current address is same as native address',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             onChanged: (val) => setState(() => _isNativeAddressSame = val ?? true),
           ),
@@ -2668,7 +2853,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                       labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                       backgroundColor: AppColors.saffron.withValues(alpha: 0.15),
                       side: const BorderSide(color: AppColors.saffron, width: 0.8),
-                      label: Text(c, style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                      label: Text(c, style: const TextStyle(fontSize: 11, color: AppColors.white, fontWeight: FontWeight.bold)),
                     )).toList(),
                   ),
                 ),
@@ -2754,7 +2939,12 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         ] else if (_selectedProfession.contains('शेती')) ...[
           Text(
             isMarathi ? 'पिकवत असलेली पिके (उदा. ऊस, सोयाबीन, कांदा) *' : 'Crops Produced *',
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark
+                  ? AppColors.textSecondary
+                  : AppColors.textDarkSecondary,
+            ),
           ),
           const SizedBox(height: 6),
           Row(
@@ -2762,21 +2952,65 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               Expanded(
                 child: TextFormField(
                   controller: _cropInputController,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(
+                    color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                    fontSize: 13,
+                  ),
                   decoration: InputDecoration(
-                    hintText: isMarathi ? 'पिकाचे नाव लिहा...' : 'Type crop name...',
-                    hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    hintText:
+                        isMarathi ? 'पिकाचे नाव लिहा...' : 'Type crop name...',
+                    hintStyle: TextStyle(
+                      color: isDark
+                          ? AppColors.textMuted
+                          : AppColors.textDarkSecondary,
+                      fontSize: 12,
+                    ),
                     filled: true,
-                    fillColor: AppColors.darkBgHeroTop,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
+                    fillColor: isDark
+                        ? AppColors.darkBgHeroTop
+                        : AppColors.lightSurfaceElevated,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightCardBorder,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightCardBorder,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? AppColors.gold : AppColors.saffron,
+                        width: 1.2,
+                      ),
+                    ),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.keyboard_alt_outlined, size: 16, color: AppColors.goldLight),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: Icon(
+                        Icons.keyboard_alt_outlined,
+                        size: 16,
+                        color: isDark
+                            ? AppColors.goldLight
+                            : AppColors.saffronDark,
+                      ),
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
                       padding: const EdgeInsets.all(6),
                       visualDensity: VisualDensity.compact,
-                      onPressed: () => MarathiVirtualKeyboard.show(context, controller: _cropInputController, title: 'पिकाचे नाव'),
+                      onPressed: () => MarathiVirtualKeyboard.show(
+                        context,
+                        controller: _cropInputController,
+                        title: 'पिकाचे नाव',
+                      ),
                     ),
                   ),
                   onTap: () {
@@ -2795,10 +3029,17 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 onPressed: () => _addCrop(_cropInputController.text),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.saffron,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   visualDensity: VisualDensity.compact,
                 ),
-                child: Text(isMarathi ? 'जोडा' : 'Add', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(
+                  isMarathi ? 'जोडा' : 'Add',
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -2809,9 +3050,23 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             runSpacing: 4,
             children: _quickCrops.map((crop) {
               return ActionChip(
-                backgroundColor: AppColors.darkBgHeroTop,
-                side: const BorderSide(color: AppColors.darkBorder, width: 0.6),
-                label: Text('+ $crop', style: const TextStyle(fontSize: 10, color: AppColors.goldLight)),
+                backgroundColor: isDark
+                    ? AppColors.darkBgHeroTop
+                    : AppColors.lightSurfaceElevated,
+                side: BorderSide(
+                  color: isDark
+                      ? AppColors.darkBorder
+                      : AppColors.lightCardBorder,
+                  width: 0.6,
+                ),
+                label: Text(
+                  '+ $crop',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color:
+                        isDark ? AppColors.goldLight : AppColors.saffronDark,
+                  ),
+                ),
                 onPressed: () => _addCrop(crop),
               );
             }).toList(),
@@ -2824,8 +3079,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               children: _cropsProduced.map((crop) => Chip(
                 backgroundColor: AppColors.saffron.withValues(alpha: 0.2),
                 side: const BorderSide(color: AppColors.saffron, width: 0.8),
-                label: Text(crop, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                deleteIcon: const Icon(Icons.cancel_rounded, size: 14, color: Colors.redAccent),
+                label: Text(crop, style: const TextStyle(color: AppColors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                deleteIcon: const Icon(Icons.cancel_rounded, size: 14, color: AppColors.redAccent),
                 onDeleted: () => _removeCrop(crop),
               )).toList(),
             ),
@@ -2865,14 +3120,14 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           ),
           const SizedBox(height: 4),
           Material(
-            color: Colors.transparent,
+            color: AppColors.transparent,
             child: CheckboxListTile(
               value: _willingToRelocate,
               contentPadding: EdgeInsets.zero,
               activeColor: AppColors.saffron,
               title: Text(
                 isMarathi ? 'कामासाठी दुसऱ्या शहरात स्थलांतरास तयार आहात का?' : 'Willing to relocate for work?',
-                style: const TextStyle(color: Colors.white, fontSize: 11),
+                style: const TextStyle(color: AppColors.white, fontSize: 11),
               ),
               onChanged: (val) => setState(() => _willingToRelocate = val ?? true),
             ),
@@ -2898,7 +3153,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         _buildDetailRow(
           isMarathi ? 'रक्तगट (Blood Group)' : 'Blood Group',
           _profile.bloodGroup.isNotEmpty ? _profile.bloodGroup : '-',
-          valueColor: Colors.redAccent,
+          valueColor: AppColors.redAccent,
           isCompact: isCompact,
         ),
         _buildDetailRow(
@@ -2922,7 +3177,12 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       children: [
         Text(
           isMarathi ? 'रक्तगट निवडा *' : 'Select Blood Group *',
-          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark
+                ? AppColors.textSecondary
+                : AppColors.textDarkSecondary,
+          ),
         ),
         const SizedBox(height: 6),
         Wrap(
@@ -2931,12 +3191,30 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           children: _bloodGroups.map((bg) {
             final isSelected = _selectedBloodGroup == bg;
             return ChoiceChip(
-              label: Text(bg, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: isSelected ? Colors.white : AppColors.textSecondary)),
+              label: Text(
+                bg,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: isSelected
+                      ? AppColors.white
+                      : (isDark
+                          ? AppColors.textSecondary
+                          : AppColors.textDarkSecondary),
+                ),
+              ),
               selected: isSelected,
-              selectedColor: Colors.redAccent.shade700,
-              backgroundColor: AppColors.darkBgHeroTop,
-              side: BorderSide(color: isSelected ? Colors.redAccent : AppColors.darkBorder),
-              onSelected: (val) => setState(() => _selectedBloodGroup = val ? bg : ''),
+              selectedColor: AppColors.redDark,
+              backgroundColor: isDark
+                  ? AppColors.darkBgHeroTop
+                  : AppColors.lightSurfaceElevated,
+              side: BorderSide(
+                color: isSelected
+                    ? AppColors.redAccent
+                    : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+              ),
+              onSelected: (val) =>
+                  setState(() => _selectedBloodGroup = val ? bg : ''),
             );
           }).toList(),
         ),
@@ -2994,8 +3272,14 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           runSpacing: 6,
           children: [
             Text(
-              isMarathi ? 'राजकीय क्षेत्रात सक्रिय आहात का?' : 'Are you politically active?',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              isMarathi
+                  ? 'राजकीय क्षेत्रात सक्रिय आहात का?'
+                  : 'Are you politically active?',
+              style: TextStyle(
+                color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -3004,17 +3288,38 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                   label: Text(isMarathi ? 'होय (Yes)' : 'Yes'),
                   selected: _isPoliticallyActive == true,
                   selectedColor: AppColors.saffron,
-                  backgroundColor: AppColors.darkBgHeroTop,
-                  labelStyle: TextStyle(color: _isPoliticallyActive == true ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
-                  onSelected: (_) => setState(() => _isPoliticallyActive = true),
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
+                  labelStyle: TextStyle(
+                    color: _isPoliticallyActive == true
+                        ? AppColors.white
+                        : (isDark
+                            ? AppColors.textSecondary
+                            : AppColors.textDarkSecondary),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onSelected: (_) =>
+                      setState(() => _isPoliticallyActive = true),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: Text(isMarathi ? 'नाही (No)' : 'No'),
                   selected: _isPoliticallyActive == false,
                   selectedColor: AppColors.saffron,
-                  backgroundColor: AppColors.darkBgHeroTop,
-                  labelStyle: TextStyle(color: _isPoliticallyActive == false ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
+                  labelStyle: TextStyle(
+                    color: _isPoliticallyActive == false
+                        ? AppColors.white
+                        : (isDark
+                            ? AppColors.textSecondary
+                            : AppColors.textDarkSecondary),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                   onSelected: (_) => setState(() {
                     _isPoliticallyActive = false;
                     _politicalPartyController.clear();
@@ -3030,7 +3335,9 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           _buildResponsivePair(
             isDesktop: isDesktop,
             child1: _buildInput(
-              isMarathi ? 'राजकीय पक्ष / संघटना नाव' : 'Party / Organization Name',
+              isMarathi
+                  ? 'राजकीय पक्ष / संघटना नाव'
+                  : 'Party / Organization Name',
               _politicalPartyController,
               isCompulsory: true,
               keyboardTitle: 'पक्ष नाव',
@@ -3075,8 +3382,14 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           runSpacing: 6,
           children: [
             Text(
-              isMarathi ? 'इतर सामाजिक / अशासकीय संस्थेत कार्यरत आहात का?' : 'Working for any social / NGO organization?',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              isMarathi
+                  ? 'इतर सामाजिक / अशासकीय संस्थेत कार्यरत आहात का?'
+                  : 'Working for any social / NGO organization?',
+              style: TextStyle(
+                color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -3085,17 +3398,38 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                   label: Text(isMarathi ? 'होय (Yes)' : 'Yes'),
                   selected: _isAssociatedWithNgo == true,
                   selectedColor: AppColors.saffron,
-                  backgroundColor: AppColors.darkBgHeroTop,
-                  labelStyle: TextStyle(color: _isAssociatedWithNgo == true ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
-                  onSelected: (_) => setState(() => _isAssociatedWithNgo = true),
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
+                  labelStyle: TextStyle(
+                    color: _isAssociatedWithNgo == true
+                        ? AppColors.white
+                        : (isDark
+                            ? AppColors.textSecondary
+                            : AppColors.textDarkSecondary),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onSelected: (_) =>
+                      setState(() => _isAssociatedWithNgo = true),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: Text(isMarathi ? 'नाही (No)' : 'No'),
                   selected: _isAssociatedWithNgo == false,
                   selectedColor: AppColors.saffron,
-                  backgroundColor: AppColors.darkBgHeroTop,
-                  labelStyle: TextStyle(color: _isAssociatedWithNgo == false ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                  backgroundColor: isDark
+                      ? AppColors.darkBgHeroTop
+                      : AppColors.lightSurfaceElevated,
+                  labelStyle: TextStyle(
+                    color: _isAssociatedWithNgo == false
+                        ? AppColors.white
+                        : (isDark
+                            ? AppColors.textSecondary
+                            : AppColors.textDarkSecondary),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                   onSelected: (_) => setState(() {
                     _isAssociatedWithNgo = false;
                     _ngoNameController.clear();
@@ -3160,16 +3494,16 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.pink.shade900.withValues(alpha: 0.3),
+              AppColors.pinkDark.withValues(alpha: 0.3),
               AppColors.saffron.withValues(alpha: 0.2),
             ],
           ),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.pinkAccent.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.volunteer_activism_rounded, color: Colors.pinkAccent, size: 26),
+            const Icon(Icons.volunteer_activism_rounded, color: AppColors.pinkAccent, size: 26),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -3177,14 +3511,19 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                 children: [
                   Text(
                     isMarathi ? '🏅 मरणोत्तर अवयवदान संकल्पित सदस्य' : '🏅 Pledged Organ Donor',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.pinkAccent),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.pinkAccent),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     isMarathi
                         ? 'दुसऱ्याला जीवनदान देण्याचा उदात्त संकल्प आपण स्वीकारला आहे.'
                         : 'You have pledged to give the gift of life by donating organs.',
-                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.white70
+                          : AppColors.textDarkSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -3196,30 +3535,42 @@ class _ProfileContentViewState extends State<ProfileContentView> {
 
     return _buildDetailRow(
       isMarathi ? 'संकल्प स्थिती' : 'Pledge Status',
-      _profile.hasOrganDonationConsentAnswered ? (isMarathi ? 'नाही' : 'No') : (isMarathi ? 'नोंद नाही' : 'Not recorded'),
+      _profile.hasOrganDonationConsentAnswered
+          ? (isMarathi ? 'नाही' : 'No')
+          : (isMarathi ? 'नोंद नाही' : 'Not recorded'),
       isCompact: isCompact,
     );
   }
 
   Widget _buildOrganEdit(bool isMarathi) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.darkBgHeroTop,
+        color: isDark
+            ? AppColors.darkBgHeroTop
+            : AppColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.pink.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.pink.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.favorite_rounded, color: Colors.pinkAccent, size: 20),
+              const Icon(Icons.favorite_rounded,
+                  color: AppColors.pinkAccent, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isMarathi ? 'मरणोत्तर अवयवदान संकल्प' : 'Organ Donation Pledge',
-                  style: const TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                  isMarathi
+                      ? 'मरणोत्तर अवयवदान संकल्प'
+                      : 'Organ Donation Pledge',
+                  style: const TextStyle(
+                      color: AppColors.pinkAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
                 ),
               ),
             ],
@@ -3229,7 +3580,13 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             isMarathi
                 ? '"अवयवदान हेच जीवनदान" — आपल्या मरणोत्तर डोळे, मूत्रपिंड, यकृत व इतर अवयव गरजवंतांना नवे आयुष्य देऊ शकतात. आपण मरणोत्तर अवयवदानाचा संकल्प करू इच्छिता का?'
                 : '"Organ donation is the ultimate gift of life." Would you like to pledge your organs after death to save someone\'s life?',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, height: 1.4),
+            style: TextStyle(
+              color: isDark
+                  ? AppColors.textSecondary
+                  : AppColors.textDarkSecondary,
+              fontSize: 11,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -3237,11 +3594,22 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             runSpacing: 8,
             children: [
               ChoiceChip(
-                label: Text(isMarathi ? 'होय, मी संकल्प करतो (Yes)' : 'Yes, I Pledge'),
+                label: Text(isMarathi
+                    ? 'होय, मी संकल्प करतो (Yes)'
+                    : 'Yes, I Pledge'),
                 selected: _isOrganDonorPledged,
-                selectedColor: Colors.pinkAccent.shade700,
-                backgroundColor: AppColors.darkSurface,
-                labelStyle: TextStyle(color: _isOrganDonorPledged ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                selectedColor: AppColors.pinkDark,
+                backgroundColor:
+                    isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                labelStyle: TextStyle(
+                  color: _isOrganDonorPledged
+                      ? AppColors.white
+                      : (isDark
+                          ? AppColors.textSecondary
+                          : AppColors.textDarkSecondary),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
                 onSelected: (val) {
                   setState(() {
                     _isOrganDonorPledged = val;
@@ -3251,10 +3619,21 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               ),
               ChoiceChip(
                 label: Text(isMarathi ? 'नाही (No)' : 'No'),
-                selected: !_isOrganDonorPledged && _hasOrganDonationConsentAnswered,
+                selected:
+                    !_isOrganDonorPledged && _hasOrganDonationConsentAnswered,
                 selectedColor: AppColors.saffron,
-                backgroundColor: AppColors.darkSurface,
-                labelStyle: TextStyle(color: (!_isOrganDonorPledged && _hasOrganDonationConsentAnswered) ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                backgroundColor:
+                    isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                labelStyle: TextStyle(
+                  color: (!_isOrganDonorPledged &&
+                          _hasOrganDonationConsentAnswered)
+                      ? AppColors.white
+                      : (isDark
+                          ? AppColors.textSecondary
+                          : AppColors.textDarkSecondary),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
                 onSelected: (_) {
                   setState(() {
                     _isOrganDonorPledged = false;
@@ -3273,15 +3652,24 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   // OFFICIAL ID CARD PREVIEW
   // ====================================================================
   Widget _buildIdCardSection(bool isMarathi) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.goldLight.withValues(alpha: 0.5), width: 1.2),
+        border: Border.all(
+          color: isDark
+              ? AppColors.goldLight.withValues(alpha: 0.5)
+              : AppColors.goldBorderMedium,
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.gold.withValues(alpha: 0.12),
+            color: isDark
+                ? AppColors.gold.withValues(alpha: 0.12)
+                : AppColors.goldShadow.withValues(alpha: 0.12),
             blurRadius: 16,
           ),
         ],
@@ -3294,15 +3682,20 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.badge_rounded, color: AppColors.goldLight, size: 20),
+                  Icon(
+                    Icons.badge_rounded,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     isMarathi ? 'आपले डिजिटल ओळखपत्र' : 'Your Digital ID Card',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.goldLight,
+                      color:
+                          isDark ? AppColors.goldLight : AppColors.saffronDark,
                     ),
                   ),
                 ],
@@ -3310,13 +3703,13 @@ class _ProfileContentViewState extends State<ProfileContentView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.2),
+                  color: AppColors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.greenAccent, width: 0.8),
+                  border: Border.all(color: AppColors.greenAccent, width: 0.8),
                 ),
                 child: Text(
                   isMarathi ? '✓ सक्रिय' : '✓ Active',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.greenAccent),
                 ),
               ),
             ],
@@ -3333,10 +3726,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     );
   }
 
-  // ====================================================================
-  // HELPER WIDGETS
-  // ====================================================================
-  Widget _buildDetailRow(String label, String value, {Color? valueColor, bool isCompact = false}) {
+  Widget _buildDetailRow(String label, String value,
+      {Color? valueColor, bool isCompact = false}) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.5),
       child: Row(
@@ -3346,17 +3739,29 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             width: isCompact ? 105 : 135,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: TextStyle(
+                fontSize: 12,
+                color:
+                    isDark ? AppColors.textMuted : AppColors.textDarkSecondary,
+              ),
             ),
           ),
-          const Text(': ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          Text(
+            ': ',
+            style: TextStyle(
+              color:
+                  isDark ? AppColors.textMuted : AppColors.textDarkSecondary,
+              fontSize: 12,
+            ),
+          ),
           Expanded(
             child: SelectableText(
               value,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: valueColor ?? Colors.white,
+                color: valueColor ??
+                    (isDark ? AppColors.white : AppColors.textDarkPrimary),
               ),
             ),
           ),
@@ -3433,6 +3838,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   }) {
     final cleanLabel = label.replaceAll('*', '').trim();
     final requiresStar = isCompulsory || label.contains('*');
+    final isDark = ThemeService.instance.isDarkMode(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3440,7 +3846,15 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(cleanLabel, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            Text(
+              cleanLabel,
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark
+                    ? AppColors.textSecondary
+                    : AppColors.textDarkSecondary,
+              ),
+            ),
             if (requiresStar) ...[
               const SizedBox(width: 4),
               const Text(
@@ -3471,7 +3885,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             onTap?.call();
           },
           maxLines: maxLines,
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: TextStyle(
+            color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+            fontSize: 13,
+          ),
           validator: validator ??
               (requiresStar
                   ? (val) {
@@ -3485,9 +3902,16 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             suffixIcon: customSuffixIcon ??
                 (showKeyboardIcon
                     ? IconButton(
-                        icon: const Icon(Icons.keyboard_alt_outlined, size: 16, color: AppColors.goldLight),
+                        icon: Icon(
+                          Icons.keyboard_alt_outlined,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.goldLight
+                              : AppColors.saffronDark,
+                        ),
                         tooltip: 'मराठी कीबोर्ड',
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
                         padding: const EdgeInsets.all(6),
                         visualDensity: VisualDensity.compact,
                         splashRadius: 18,
@@ -3508,15 +3932,40 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   }
 
   InputDecoration _inputDecoration({Widget? suffixIcon, Widget? prefixIcon}) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return InputDecoration(
       filled: true,
-      fillColor: AppColors.darkBgHeroTop,
+      fillColor:
+          isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.gold, width: 1.2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.errorColor, width: 1.2)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.errorColor, width: 1.4)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.gold : AppColors.saffron,
+          width: 1.2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.errorColor, width: 1.2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.errorColor, width: 1.4),
+      ),
       errorStyle: const TextStyle(fontSize: 10, color: AppColors.errorColor),
       suffixIcon: suffixIcon,
       prefixIcon: prefixIcon,

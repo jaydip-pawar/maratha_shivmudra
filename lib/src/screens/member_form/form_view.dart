@@ -8,6 +8,7 @@ import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/geo_constants.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/main.dart';
@@ -35,108 +36,124 @@ class MemberFormView extends ModularState<MemberFormBloc> {
           : model.selectedState.value.nameEn;
     }
 
-    return Form(
-      key: formBloc.formKey,
-      child: Scaffold(
-        backgroundColor: AppColors.darkBg,
-        body: Stack(
-          children: [
-            // Ambient Subtle Glow Background (matching Home Page theme)
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.darkBgHeroTop,
-                      AppColors.darkBg,
-                      AppColors.maroonLowest,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        final isDark = ThemeService.instance.isDarkMode(context);
+
+        return Form(
+          key: formBloc.formKey,
+          child: Scaffold(
+            backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+            body: Stack(
+              children: [
+                // Ambient Subtle Glow Background (matching Home Page theme)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? const [
+                                AppColors.darkBgHeroTop,
+                                AppColors.darkBg,
+                                AppColors.maroonLowest,
+                              ]
+                            : const [
+                                AppColors.lightBg,
+                                AppColors.lightSurfaceElevated,
+                                AppColors.lightBg,
+                              ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              top: -100,
-              left: 0,
-              right: 0,
-              height: 400,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 0.9,
-                    colors: [
-                      AppColors.saffron.withValues(alpha: 0.08),
-                      Colors.transparent,
-                    ],
+                Positioned(
+                  top: -100,
+                  left: 0,
+                  right: 0,
+                  height: 400,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.topCenter,
+                        radius: 0.9,
+                        colors: [
+                          (isDark ? AppColors.saffron : AppColors.gold)
+                              .withValues(alpha: isDark ? 0.08 : 0.05),
+                          AppColors.transparent,
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // Main Scrollable Form Body
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 12 : 24,
-                  vertical: 16,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 880),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Top Navigation & Action Bar
-                        _buildTopBar(context, isMarathi),
+                // Main Scrollable Form Body
+                SafeArea(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 12 : 24,
+                      vertical: 16,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 880),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Top Navigation & Action Bar
+                            _buildTopBar(context, isMarathi),
 
-                        const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                        // Form Hero Header Card
-                        _buildFormHeader(context, isMobile, isMarathi),
+                            // Form Hero Header Card
+                            _buildFormHeader(context, isMobile, isMarathi),
 
-                        const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                        // Form Container Card
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.cardDark,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColors.gold.withValues(alpha: 0.3),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.black.withValues(alpha: 0.5),
-                                blurRadius: 25,
-                                offset: const Offset(0, 8),
+                            // Form Container Card
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.cardDark : AppColors.lightSurface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.gold.withValues(alpha: 0.3)
+                                      : AppColors.lightCardBorder,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isDark
+                                        ? AppColors.black.withValues(alpha: 0.5)
+                                        : AppColors.textDarkPrimary.withValues(alpha: 0.06),
+                                    blurRadius: 25,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                  BoxShadow(
+                                    color: (isDark ? AppColors.saffron : AppColors.goldShadow)
+                                        .withValues(alpha: isDark ? 0.08 : 0.1),
+                                    blurRadius: 30,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
                               ),
-                              BoxShadow(
-                                color:
-                                    AppColors.saffron.withValues(alpha: 0.08),
-                                blurRadius: 30,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          padding: EdgeInsets.all(isMobile ? 18 : 32),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 1. Personal Details Section
-                              _buildSectionTitle(
-                                icon: Icons.person_rounded,
-                                title: isMarathi
-                                    ? 'वैयक्तिक माहिती'
-                                    : 'Personal Details',
-                                subtitle: isMarathi
-                                    ? 'नाव आणि जन्मतारीख'
-                                    : 'Name & Date of Birth',
-                              ),
-                              const SizedBox(height: 16),
+                              padding: EdgeInsets.all(isMobile ? 18 : 32),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 1. Personal Details Section
+                                  _buildSectionTitle(
+                                    icon: Icons.person_rounded,
+                                    title: isMarathi
+                                        ? 'वैयक्तिक माहिती'
+                                        : 'Personal Details',
+                                    subtitle: isMarathi
+                                        ? 'नाव आणि जन्मतारीख'
+                                        : 'Name & Date of Birth',
+                                  ),
+                                  const SizedBox(height: 16),
 
 
                               if (isDesktop) ...[
@@ -560,14 +577,22 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                     firstDate: DateTime(1930),
                                     lastDate: DateTime.now(),
                                     builder: (context, child) {
+                                      final isDarkPicker = ThemeService.instance.isDarkMode(context);
                                       return Theme(
                                         data: Theme.of(context).copyWith(
-                                          colorScheme: const ColorScheme.dark(
-                                            primary: AppColors.saffron,
-                                            onPrimary: AppColors.white,
-                                            surface: AppColors.cardDark,
-                                            onSurface: AppColors.textPrimary,
-                                          ),
+                                          colorScheme: isDarkPicker
+                                              ? const ColorScheme.dark(
+                                                  primary: AppColors.saffron,
+                                                  onPrimary: AppColors.white,
+                                                  surface: AppColors.cardDark,
+                                                  onSurface: AppColors.textPrimary,
+                                                )
+                                              : const ColorScheme.light(
+                                                  primary: AppColors.saffron,
+                                                  onPrimary: AppColors.white,
+                                                  surface: AppColors.lightSurface,
+                                                  onSurface: AppColors.textDarkPrimary,
+                                                ),
                                         ),
                                         child: child!,
                                       );
@@ -1172,14 +1197,14 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                   child: Text.rich(
                                     TextSpan(
                                       children: [
-                                        const WidgetSpan(
+                                        WidgetSpan(
                                           alignment: PlaceholderAlignment.middle,
                                           child: Padding(
-                                            padding: EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.only(right: 6),
                                             child: Icon(
                                               Icons.lock_outline_rounded,
                                               size: 14,
-                                              color: AppColors.goldLight,
+                                              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                             ),
                                           ),
                                         ),
@@ -1191,9 +1216,9 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                       ],
                                     ),
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.textMuted,
+                                      color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
                                     ),
                                   ),
                                 ),
@@ -1213,9 +1238,13 @@ class MemberFormView extends ModularState<MemberFormBloc> {
         ),
       ),
     );
+  },
+);
   }
 
   Widget _buildTopBar(BuildContext context, bool isMarathi) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1226,28 +1255,30 @@ class MemberFormView extends ModularState<MemberFormBloc> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.darkSurface,
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.3),
+                color: isDark
+                    ? AppColors.gold.withValues(alpha: 0.3)
+                    : AppColors.lightCardBorder,
                 width: 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.arrow_back_rounded,
                   size: 16,
-                  color: AppColors.goldLight,
+                  color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   isMarathi ? 'मुख्यपृष्ठ' : 'Home',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                   ),
                 ),
               ],
@@ -1255,58 +1286,110 @@ class MemberFormView extends ModularState<MemberFormBloc> {
           ),
         ),
 
-        // Language Switcher
-        ValueListenableBuilder<Locale>(
-          valueListenable: appLocaleNotifier,
-          builder: (context, currentLocale, _) {
-            final isCurrentMarathi = currentLocale.languageCode == 'mr';
-            return InkWell(
-              onTap: () {
-                appLocaleNotifier.value = isCurrentMarathi
-                    ? const Locale('en', '')
-                    : const Locale('mr', '');
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.darkSurface,
+        // Action controls: Theme Switcher & Language Switcher
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Theme Switcher Button
+            _buildThemeButton(context, isMarathi, isDark),
+            const SizedBox(width: 10),
+
+            // Language Switcher
+            ValueListenableBuilder<Locale>(
+              valueListenable: appLocaleNotifier,
+              builder: (context, currentLocale, _) {
+                final isCurrentMarathi = currentLocale.languageCode == 'mr';
+                return InkWell(
+                  onTap: () {
+                    appLocaleNotifier.value = isCurrentMarathi
+                        ? const Locale('en', '')
+                        : const Locale('mr', '');
+                  },
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.language_rounded,
-                      size: 15,
-                      color: AppColors.gold,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isCurrentMarathi ? 'English' : 'मराठी',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.goldLight,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.gold.withValues(alpha: 0.3)
+                            : AppColors.lightCardBorder,
+                        width: 1,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.language_rounded,
+                          size: 15,
+                          color: isDark ? AppColors.gold : AppColors.saffron,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isCurrentMarathi ? 'English' : 'मराठी',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
   }
 
+  Widget _buildThemeButton(BuildContext context, bool isMarathi, bool isDark) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, currentMode, _) {
+        final icon = ThemeService.instance.getIcon(currentMode);
+        final label = ThemeService.instance.getLabel(currentMode, isMarathi: isMarathi);
+
+        return Tooltip(
+          message: isMarathi
+              ? 'थीम: $label (बदलण्यासाठी क्लिक करा)'
+              : 'Theme: $label (Click to toggle)',
+          child: InkWell(
+            onTap: () => ThemeService.instance.cycleThemeMode(),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.gold.withValues(alpha: 0.3)
+                      : AppColors.lightCardBorder,
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: isDark ? AppColors.gold : AppColors.saffron,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFormHeader(
       BuildContext context, bool isMobile, bool isMarathi) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Column(
       children: [
         // Brand Logo Emblem
@@ -1326,11 +1409,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
         Text(
           context.l10n.maratha_shivmudra,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: AppTypography.fontFamily,
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.goldLight,
+            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
             letterSpacing: 0.5,
           ),
         ),
@@ -1344,7 +1427,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
             fontFamily: AppTypography.fontFamily,
             fontSize: isMobile ? 26 : 32,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.textPrimary : AppColors.textDarkPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -1359,7 +1442,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: isMobile ? 13 : 14,
-              color: AppColors.textSecondary,
+              color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
               height: 1.4,
             ),
           ),
@@ -1369,49 +1452,56 @@ class MemberFormView extends ModularState<MemberFormBloc> {
   }
 
   Widget _buildSectionTitle({
+    BuildContext? context,
     required IconData icon,
     required String title,
     required String subtitle,
   }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.saffron.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.saffron.withValues(alpha: 0.4),
-              width: 1,
+    return Builder(
+      builder: (ctx) {
+        final c = context ?? ctx;
+        final isDark = ThemeService.instance.isDarkMode(c);
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.saffron : AppColors.saffronLight).withValues(alpha: isDark ? 0.15 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: (isDark ? AppColors.saffron : AppColors.saffron).withValues(alpha: isDark ? 0.4 : 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Icon(icon, size: 20, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
             ),
-          ),
-          child: Icon(icon, size: 20, color: AppColors.goldLight),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.goldLight,
-                ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textMuted : AppColors.textDarkMuted,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1471,6 +1561,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
       builder: (context, living, _) {
         if (living.trim().isEmpty) return const SizedBox.shrink();
 
+        final isDark = ThemeService.instance.isDarkMode(context);
         final l = living.toLowerCase();
         final isUnemployed = l == 'बेरोजगार' ||
             l == 'unemployed' ||
@@ -1491,12 +1582,18 @@ class MemberFormView extends ModularState<MemberFormBloc> {
           margin: const EdgeInsets.only(top: 18),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           decoration: BoxDecoration(
-            color: AppColors.darkSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.35), width: 1.2),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.gold.withValues(alpha: 0.35)
+                  : AppColors.goldBorderMedium,
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.saffron.withValues(alpha: 0.08),
+                color: (isDark ? AppColors.saffron : AppColors.goldShadow)
+                    .withValues(alpha: isDark ? 0.08 : 0.06),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -1509,13 +1606,27 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               if (isJob) ...[
                 Row(
                   children: [
-                    Icon(isSelfEmployed ? Icons.business_center_rounded : Icons.work_rounded, color: AppColors.goldLight, size: 18),
+                    Icon(
+                      isSelfEmployed
+                          ? Icons.business_center_rounded
+                          : Icons.work_rounded,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       isSelfEmployed
-                          ? (isMarathi ? 'स्वयंरोजगार तपशील (किमान १ माहिती आवश्यक)' : 'Self-Employment Details (At least 1 required)')
-                          : (isMarathi ? 'नोकरीचा सविस्तर तपशील' : 'Job / Employment Details'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                          ? (isMarathi
+                              ? 'स्वयंरोजगार तपशील (किमान १ माहिती आवश्यक)'
+                              : 'Self-Employment Details (At least 1 required)')
+                          : (isMarathi
+                              ? 'नोकरीचा सविस्तर तपशील'
+                              : 'Job / Employment Details'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      ),
                     ),
                   ],
                 ),
@@ -1639,13 +1750,21 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               if (isBusiness) ...[
                 Row(
                   children: [
-                    const Icon(Icons.storefront_rounded, color: AppColors.goldLight, size: 18),
+                    Icon(
+                      Icons.storefront_rounded,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       isSelfEmployed
                           ? (isMarathi ? 'व्यवसायाचे स्वरूप / प्रकार' : 'Nature / Type of Business')
                           : (isMarathi ? 'व्यवसायाचे स्वरूप व प्रकार' : 'Business Details'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      ),
                     ),
                   ],
                 ),
@@ -1678,11 +1797,19 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               if (isStudent) ...[
                 Row(
                   children: [
-                    const Icon(Icons.school_rounded, color: AppColors.goldLight, size: 18),
+                    Icon(
+                      Icons.school_rounded,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       isMarathi ? 'शैक्षणिक पात्रता / शिक्षण' : 'Educational Qualification',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      ),
                     ),
                   ],
                 ),
@@ -1761,11 +1888,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               if (isFarmer) ...[
                 Row(
                   children: [
-                    const Icon(Icons.grass_rounded, color: AppColors.goldLight, size: 18),
+                    Icon(Icons.grass_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 18),
                     const SizedBox(width: 8),
                     Text(
                       isMarathi ? 'शेतीत पिकवत असलेली पिके' : 'Crops Produced',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
                     ),
                     const SizedBox(width: 4),
                     const Text('*', style: TextStyle(color: AppColors.errorColor, fontWeight: FontWeight.bold, fontSize: 14)),
@@ -1776,7 +1903,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                   isMarathi
                       ? 'आपण घेत असलेली पिके लिहा किंवा खालील बटणावर क्लिक करून जोडा:'
                       : 'Enter or tap crops you cultivate:',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 11, color: isDark ? AppColors.textMuted : AppColors.textDarkMuted),
                 ),
                 const SizedBox(height: 10),
 
@@ -1786,17 +1913,17 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                     Expanded(
                       child: TextFormField(
                         controller: formBloc.cropInputController,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary, fontSize: 13),
                         decoration: InputDecoration(
                           hintText: isMarathi ? 'पिकाचे नाव लिहा (उदा. हळद, आंबा)...' : 'Type crop name...',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          hintStyle: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkMuted, fontSize: 12),
                           filled: true,
-                          fillColor: AppColors.darkBgHeroTop,
-                          prefixIcon: const Icon(Icons.eco_outlined, color: AppColors.gold, size: 18),
+                          fillColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
+                          prefixIcon: Icon(Icons.eco_outlined, color: isDark ? AppColors.gold : AppColors.saffron, size: 18),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.darkBorder)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.gold, width: 1.2)),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron, width: 1.2)),
                         ),
                         onFieldSubmitted: (val) => formBloc.addCrop(val),
                       ),
@@ -1804,8 +1931,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () => formBloc.addCrop(formBloc.cropInputController.text),
-                      icon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
-                      label: Text(isMarathi ? 'जोडा' : 'Add', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.add_rounded, size: 18, color: AppColors.white),
+                      label: Text(isMarathi ? 'जोडा' : 'Add', style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.saffron,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1834,10 +1961,10 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                   ].map((sug) {
                     final cropName = sug.split(' ').first;
                     return ActionChip(
-                      avatar: const Icon(Icons.add, size: 12, color: AppColors.goldLight),
-                      label: Text(sug, style: const TextStyle(fontSize: 10, color: AppColors.goldLight)),
-                      backgroundColor: AppColors.gold.withValues(alpha: 0.1),
-                      side: BorderSide(color: AppColors.gold.withValues(alpha: 0.3)),
+                      avatar: Icon(Icons.add, size: 12, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                      label: Text(sug, style: TextStyle(fontSize: 10, color: isDark ? AppColors.goldLight : AppColors.saffronDark)),
+                      backgroundColor: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: isDark ? 0.1 : 0.08),
+                      side: BorderSide(color: (isDark ? AppColors.gold : AppColors.goldBorderMedium).withValues(alpha: 0.3)),
                       visualDensity: VisualDensity.compact,
                       onPressed: () => formBloc.addCrop(cropName),
                     );
@@ -1853,17 +1980,17 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                       return Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.darkBgHeroTop,
+                          color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.darkBorder),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
+                            Icon(Icons.info_outline, size: 14, color: isDark ? AppColors.textMuted : AppColors.textDarkMuted),
                             const SizedBox(width: 8),
                             Text(
                               isMarathi ? 'अद्याप कोणतेही पीक जोडलेले नाही.' : 'No crops added yet.',
-                              style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                              style: TextStyle(fontSize: 11, color: isDark ? AppColors.textMuted : AppColors.textDarkMuted),
                             ),
                           ],
                         ),
@@ -1875,11 +2002,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                       runSpacing: 8,
                       children: crops.map((crop) {
                         return Chip(
-                          backgroundColor: AppColors.saffron.withValues(alpha: 0.2),
+                          backgroundColor: isDark ? AppColors.saffron.withValues(alpha: 0.2) : AppColors.saffron.withValues(alpha: 0.12),
                           side: const BorderSide(color: AppColors.saffron, width: 1),
-                          avatar: const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.goldLight),
-                          label: Text(crop, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white)),
-                          deleteIcon: const Icon(Icons.cancel_rounded, size: 14, color: Colors.redAccent),
+                          avatar: Icon(Icons.check_circle_rounded, size: 14, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                          label: Text(crop, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isDark ? AppColors.white : AppColors.saffronDark)),
+                          deleteIcon: const Icon(Icons.cancel_rounded, size: 14, color: AppColors.redAccent),
                           onDeleted: () => formBloc.removeCrop(crop),
                         );
                       }).toList(),
@@ -1892,11 +2019,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               if (isUnemployed) ...[
                 Row(
                   children: [
-                    const Icon(Icons.badge_rounded, color: AppColors.goldLight, size: 18),
+                    Icon(Icons.badge_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 18),
                     const SizedBox(width: 8),
                     Text(
                       isMarathi ? 'रोजगार व करिअर सहाय्य माहिती' : 'Career & Employment Assistance',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
                     ),
                   ],
                 ),
@@ -1905,7 +2032,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                   isMarathi
                       ? 'मराठा शिवमुद्रा रोजगार सेलद्वारे योग्य नोकरीच्या संधींसाठी खालील माहिती भरा:'
                       : 'Fill details for job placement and career assistance:',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 11, color: isDark ? AppColors.textMuted : AppColors.textDarkMuted),
                 ),
                 const SizedBox(height: 12),
 
@@ -2028,7 +2155,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                     children: [
                       Text(
                         isMarathi ? 'इतर शहरात काम करण्याची तयारी:' : 'Willing to relocate:',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 12),
                       ValueListenableBuilder<bool>(
@@ -2041,8 +2168,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 label: Text(isMarathi ? 'होय (तयार आहे)' : 'Yes'),
                                 selected: willing,
                                 selectedColor: AppColors.saffron,
-                                backgroundColor: AppColors.darkBgHeroTop,
-                                labelStyle: TextStyle(color: willing ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                                backgroundColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
+                                labelStyle: TextStyle(color: willing ? AppColors.white : (isDark ? AppColors.textSecondary : AppColors.textDarkSecondary), fontSize: 11, fontWeight: FontWeight.bold),
                                 onSelected: (_) => formBloc.willingToRelocate.value = true,
                               ),
                               const SizedBox(width: 8),
@@ -2050,8 +2177,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 label: Text(isMarathi ? 'नाही (केवळ स्थानिक)' : 'No (Local only)'),
                                 selected: !willing,
                                 selectedColor: AppColors.saffron,
-                                backgroundColor: AppColors.darkBgHeroTop,
-                                labelStyle: TextStyle(color: !willing ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                                backgroundColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
+                                labelStyle: TextStyle(color: !willing ? AppColors.white : (isDark ? AppColors.textSecondary : AppColors.textDarkSecondary), fontSize: 11, fontWeight: FontWeight.bold),
                                 onSelected: (_) => formBloc.willingToRelocate.value = false,
                               ),
                             ],
@@ -2066,7 +2193,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                     children: [
                       Text(
                         isMarathi ? 'इतर शहरात काम करण्याची तयारी:' : 'Willing to relocate:',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       ValueListenableBuilder<bool>(
@@ -2080,16 +2207,16 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 label: Text(isMarathi ? 'होय (तयार आहे)' : 'Yes'),
                                 selected: willing,
                                 selectedColor: AppColors.saffron,
-                                backgroundColor: AppColors.darkBgHeroTop,
-                                labelStyle: TextStyle(color: willing ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                                backgroundColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
+                                labelStyle: TextStyle(color: willing ? AppColors.white : (isDark ? AppColors.textSecondary : AppColors.textDarkSecondary), fontSize: 11, fontWeight: FontWeight.bold),
                                 onSelected: (_) => formBloc.willingToRelocate.value = true,
                               ),
                               ChoiceChip(
                                 label: Text(isMarathi ? 'नाही (केवळ स्थानिक)' : 'No (Local only)'),
                                 selected: !willing,
                                 selectedColor: AppColors.saffron,
-                                backgroundColor: AppColors.darkBgHeroTop,
-                                labelStyle: TextStyle(color: !willing ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                                backgroundColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurface,
+                                labelStyle: TextStyle(color: !willing ? AppColors.white : (isDark ? AppColors.textSecondary : AppColors.textDarkSecondary), fontSize: 11, fontWeight: FontWeight.bold),
                                 onSelected: (_) => formBloc.willingToRelocate.value = false,
                               ),
                             ],
@@ -2156,17 +2283,23 @@ class MemberFormView extends ModularState<MemberFormBloc> {
   }
 
   Widget _buildDivider() {
-    return Container(
-      height: 1,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.transparent,
-            AppColors.gold.withValues(alpha: 0.25),
-            Colors.transparent,
-          ],
-        ),
-      ),
+    return Builder(
+      builder: (context) {
+        final isDark = ThemeService.instance.isDarkMode(context);
+        return Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.transparent,
+                (isDark ? AppColors.gold : AppColors.goldBorderMedium)
+                    .withValues(alpha: isDark ? 0.25 : 0.35),
+                AppColors.transparent,
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -2222,6 +2355,8 @@ class _OccupationSelectorState extends State<_OccupationSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
+
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -2238,19 +2373,26 @@ class _OccupationSelectorState extends State<_OccupationSelector> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.saffron.withValues(alpha: 0.25)
-                  : AppColors.darkSurface,
+                  ? (isDark
+                      ? AppColors.saffron.withValues(alpha: 0.25)
+                      : AppColors.saffron.withValues(alpha: 0.15))
+                  : (isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurfaceElevated),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.gold
-                    : AppColors.gold.withValues(alpha: 0.2),
+                    ? (isDark ? AppColors.gold : AppColors.saffron)
+                    : (isDark
+                        ? AppColors.gold.withValues(alpha: 0.2)
+                        : AppColors.lightCardBorder),
                 width: isSelected ? 1.8 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.saffron.withValues(alpha: 0.3),
+                        color: (isDark ? AppColors.saffron : AppColors.goldShadow)
+                            .withValues(alpha: isDark ? 0.3 : 0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -2269,16 +2411,18 @@ class _OccupationSelectorState extends State<_OccupationSelector> {
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
-                        ? AppColors.goldLight
-                        : AppColors.textPrimary,
+                        ? (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                        : (isDark
+                            ? AppColors.textPrimary
+                            : AppColors.textDarkPrimary),
                   ),
                 ),
                 if (isSelected) ...[
                   const SizedBox(width: 6),
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
                     size: 16,
-                    color: AppColors.gold,
+                    color: isDark ? AppColors.gold : AppColors.saffron,
                   ),
                 ],
               ],

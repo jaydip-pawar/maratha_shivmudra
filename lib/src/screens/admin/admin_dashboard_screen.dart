@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:auto_route/auto_route.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maratha_shivmudra/core/utils/url_helper_stub.dart'
+    if (dart.library.js_interop) 'package:maratha_shivmudra/core/utils/url_helper_web.dart';
 import 'package:maratha_shivmudra/core/constants/assets.dart';
 import 'package:maratha_shivmudra/core/constants/district_constants.dart';
 import 'package:maratha_shivmudra/core/constants/styles.dart';
@@ -12,6 +15,7 @@ import 'package:maratha_shivmudra/core/services/admin_auth_service.dart';
 import 'package:maratha_shivmudra/core/services/member_id_service.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 import 'package:maratha_shivmudra/core/services/referral_service.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/core/constants/organization_roles.dart';
 import 'package:maratha_shivmudra/core/models/official_member.dart';
@@ -31,6 +35,7 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool get isDark => ThemeService.instance.isDarkMode(context);
 
   // Search & Filters for Tab 0 (Overview / डॅशबोर्ड)
   String _overviewSelectedState = 'MH';     // Default: Maharashtra
@@ -78,73 +83,89 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   Widget build(BuildContext context) {
     final admin = AdminAuthService.instance.currentAdminNotifier.value;
 
-    return Scaffold(
-      backgroundColor: AppColors.darkBg,
-      appBar: AppBar(
-        backgroundColor: AppColors.darkSurface,
-        title: Row(
-          children: [
-            Image.asset(AppAssets.logo, width: 34, height: 34),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, _, __) {
+        return Scaffold(
+          backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+          appBar: AppBar(
+            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            title: Row(
               children: [
-                const Text(
-                  'मराठा शिवमुद्रा ॲडमिन कन्सोल',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
-                  ),
-                ),
-                Text(
-                  'Admin: ${admin?.email ?? "Super Admin"} (${admin?.role ?? "Super Admin"})',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                Image.asset(AppAssets.logo, width: 34, height: 34),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'मराठा शिवमुद्रा ॲडमिन कन्सोल',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      ),
+                    ),
+                    Text(
+                      'Admin: ${admin?.email ?? "Super Admin"} (${admin?.role ?? "Super Admin"})',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.goldLight),
-            tooltip: 'डेटा रिफ्रेश करा',
-            onPressed: () {
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('डॅशबोर्ड डेटा रिफ्रेश केला आहे.')),
-              );
-            },
+            actions: [
+              IconButton(
+                icon: Icon(
+                  isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                  color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                ),
+                tooltip: isDark ? 'लाइट मोड (Light Mode)' : 'डार्क मोड (Dark Mode)',
+                onPressed: () => ThemeService.instance.cycleThemeMode(),
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                tooltip: 'डेटा रिफ्रेश करा',
+                onPressed: () {
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('डॅशबोर्ड डेटा रिफ्रेश केला आहे.')),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout_rounded, color: AppColors.errorAccent),
+                tooltip: 'लॉगआउट करा (Logout)',
+                onPressed: _handleLogout,
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              indicatorColor: AppColors.saffron,
+              labelColor: isDark ? AppColors.goldLight : AppColors.saffronDark,
+              unselectedLabelColor: isDark ? AppColors.textMuted : AppColors.textDarkSecondary,
+              tabs: const [
+                Tab(icon: Icon(Icons.dashboard_rounded), text: 'डॅशबोर्ड (Overview)'),
+                Tab(icon: Icon(Icons.badge_rounded), text: 'कार्यकारिणी (Officials)'),
+                Tab(icon: Icon(Icons.link_rounded), text: 'रेफरल मोहीम (Referrals)'),
+              ],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-            tooltip: 'लॉगआउट करा (Logout)',
-            onPressed: _handleLogout,
+          body: TabBarView(
+            controller: _tabController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildOverviewTab(),
+              _buildOfficialsTab(),
+              _buildReferralsTab(),
+            ],
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: AppColors.saffron,
-          labelColor: AppColors.goldLight,
-          unselectedLabelColor: AppColors.textMuted,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard_rounded), text: 'डॅशबोर्ड (Overview)'),
-            Tab(icon: Icon(Icons.badge_rounded), text: 'कार्यकारिणी (Officials)'),
-            Tab(icon: Icon(Icons.link_rounded), text: 'रेफरल मोहीम (Referrals)'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _buildOverviewTab(),
-          _buildOfficialsTab(),
-          _buildReferralsTab(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -627,7 +648,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           'जारी केलेली ओळखपत्रे',
                           issued.toString(),
                           Icons.badge,
-                          Colors.greenAccent,
+                          AppColors.successLight,
                           subtitle: '100% पूर्ण प्रोफाईल (क्लिक करा)',
                           isSelected: _appliedOverviewProfileStatus == 'COMPLETE',
                           onTap: () {
@@ -644,7 +665,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           'प्रलंबित नोंदण्या',
                           pending.toString(),
                           Icons.pending_actions,
-                          Colors.orangeAccent,
+                          AppColors.orangeLight,
                           subtitle: 'अपूर्ण प्रोफाईल (क्लिक करा)',
                           isSelected: _appliedOverviewProfileStatus == 'PENDING',
                           onTap: () {
@@ -663,9 +684,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.darkBorder),
+                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                     ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -770,14 +791,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               _appliedOverviewProfileStatus = _overviewSelectedProfileStatus;
                             });
                           },
-                          icon: const Icon(Icons.search_rounded, color: Colors.white, size: 18),
+                          icon: const Icon(Icons.search_rounded, color: AppColors.white, size: 18),
                           label: const Text(
                             'शोधा',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -830,19 +851,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+                      border: Border.all(color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.35)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.gold.withValues(alpha: 0.15),
+                            color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.people_alt_rounded, color: AppColors.goldLight, size: 20),
+                          child: Icon(Icons.people_alt_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -851,20 +872,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             children: [
                               Row(
                                 children: [
-                                  const Text(
+                                  Text(
                                     'शोधलेले एकूण सभासद: ',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: AppColors.textSecondary,
+                                      color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                                     ),
                                   ),
                                   Text(
                                     '${filteredOverviewDocs.length}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: AppTypography.fontFamily,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.goldLight,
+                                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                     ),
                                   ),
                                 ],
@@ -872,9 +893,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               const SizedBox(height: 2),
                               Text(
                                 filterBreadcrumb,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.textMuted,
+                                  color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                                 maxLines: 1,
@@ -900,10 +921,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 _overviewSearchQuery = '';
                               });
                             },
-                            icon: const Icon(Icons.refresh_rounded, size: 14, color: AppColors.goldLight),
-                            label: const Text(
+                            icon: Icon(Icons.refresh_rounded, size: 14, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                            label: Text(
                               'रीसेट',
-                              style: TextStyle(fontSize: 12, color: AppColors.goldLight),
+                              style: TextStyle(fontSize: 12, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
                             ),
                           ),
                         ],
@@ -915,16 +936,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   // Live Search Field
                   TextField(
                     controller: _overviewSearchController,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'नाव, मोबाईल, तालुका, गाव किंवा सभासद क्र. शोधा...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      hintStyle: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary, fontSize: 13),
                       filled: true,
-                      fillColor: AppColors.darkSurface,
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.gold),
+                      fillColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                      prefixIcon: Icon(Icons.search_rounded, color: isDark ? AppColors.gold : AppColors.saffronDark),
                       suffixIcon: _overviewSearchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted),
+                              icon: Icon(Icons.clear_rounded, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                               onPressed: () {
                                 _overviewSearchController.clear();
                                 setState(() => _overviewSearchQuery = '');
@@ -933,11 +954,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: AppColors.darkBorder),
+                        borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: AppColors.darkBorder),
+                        borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -955,23 +976,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.all(36),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSurface,
+                        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.darkBorder),
+                        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                       ),
-                      child: const Column(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.person_search_rounded, color: AppColors.textMuted, size: 48),
-                          SizedBox(height: 12),
+                          Icon(Icons.person_search_rounded, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary, size: 48),
+                          const SizedBox(height: 12),
                           Text(
                             'या निकषांनुसार कोणतेही सभासद आढळले नाहीत.',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                            style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary, fontSize: 14),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'कृपया जिल्हा/तालुका तपासा किंवा वेगळा शोध शब्द वापरा.',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            style: TextStyle(color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary, fontSize: 12),
                           ),
                         ],
                       ),
@@ -999,16 +1020,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         final memberId = profile.memberId ?? 'PENDING';
 
                         return Material(
-                          color: Colors.transparent,
+                          color: AppColors.transparent,
                           child: InkWell(
                             onTap: () => _showMemberFullDetailsDialog(data, doc),
                             borderRadius: BorderRadius.circular(10),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.darkSurface,
+                                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.darkBorder),
+                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                               ),
                               child: Row(
                                 children: [
@@ -1023,10 +1044,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                             Flexible(
                                               child: Text(
                                                 displayName,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 14,
-                                                  color: Colors.white,
+                                                  color: isDark ? AppColors.white : AppColors.textDarkPrimary,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -1036,9 +1057,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                               Flexible(
                                                 child: Text(
                                                   '($nameEn)',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 12,
-                                                    color: AppColors.textSecondary,
+                                                    color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                                                   ),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -1049,21 +1070,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.amber.shade900.withValues(alpha: 0.3),
+                                                  color: AppColors.amberDark.withValues(alpha: 0.3),
                                                   borderRadius: BorderRadius.circular(4),
-                                                  border: Border.all(color: Colors.amber, width: 0.8),
+                                                  border: Border.all(color: AppColors.amber, width: 0.8),
                                                 ),
                                                 child: const Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    Icon(Icons.military_tech_rounded, color: Colors.amber, size: 11),
+                                                    Icon(Icons.military_tech_rounded, color: AppColors.amber, size: 11),
                                                     SizedBox(width: 3),
                                                     Text(
                                                       'पदोन्नतीकृत (Promoted)',
                                                       style: TextStyle(
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.bold,
-                                                        color: Colors.amber,
+                                                        color: AppColors.amber,
                                                       ),
                                                     ),
                                                   ],
@@ -1075,7 +1096,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFFB8860B),
+                                                  color: AppColors.goldMetallic,
                                                   borderRadius: BorderRadius.circular(4),
                                                 ),
                                                 child: Text(
@@ -1083,7 +1104,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                                   style: const TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                                    color: AppColors.white,
                                                   ),
                                                 ),
                                               ),
@@ -1093,9 +1114,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         const SizedBox(height: 3),
                                         Text(
                                           'फोन: ${profile.phone}  •  तालुका: ${subDistrict.isNotEmpty ? subDistrict : "-"}  •  जिल्हा: $district${village.isNotEmpty ? "  •  गाव: $village" : ""}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: AppColors.textSecondary,
+                                            color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -1108,8 +1129,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: isIssued
-                                          ? Colors.green.withValues(alpha: 0.15)
-                                          : Colors.orangeAccent.withValues(alpha: 0.15),
+                                          ? AppColors.green.withValues(alpha: 0.15)
+                                          : AppColors.orangeAccent.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -1117,12 +1138,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: isIssued ? Colors.greenAccent : Colors.orangeAccent,
+                                        color: isIssued ? AppColors.greenAccent : AppColors.orangeAccent,
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Icon(Icons.chevron_right_rounded, color: AppColors.goldLight, size: 20),
+                                  Icon(Icons.chevron_right_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 20),
                                 ],
                               ),
                             ),
@@ -1149,7 +1170,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     bool isSelected = false,
   }) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -1157,10 +1178,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.darkSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppColors.gold : AppColors.darkBorder,
+              color: isSelected ? AppColors.gold : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected
@@ -1171,7 +1192,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       offset: const Offset(0, 2),
                     ),
                   ]
-                : null,
+                : [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Row(
             children: [
@@ -1185,7 +1212,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(title, style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary)),
                     const SizedBox(height: 4),
                     Text(
                       value,
@@ -1202,7 +1229,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         subtitle,
                         style: TextStyle(
                           fontSize: 10,
-                          color: isSelected ? AppColors.goldLight : AppColors.textMuted,
+                          color: isSelected
+                              ? (isDark ? AppColors.goldLight : AppColors.saffronDark)
+                              : (isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
@@ -1211,7 +1240,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ),
               ),
               if (isSelected)
-                const Icon(Icons.check_circle_rounded, color: AppColors.goldLight, size: 20),
+                Icon(Icons.check_circle_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 20),
             ],
           ),
         ),
@@ -1220,7 +1249,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   // ==========================================
-  // TAB 3: REFERRAL CAMPAIGNS & QUOTAS
+  // TAB 3: MEMBER REFERRAL LINKS (सभासद रेफरल)
   // ==========================================
   Widget _buildReferralsTab() {
     return Padding(
@@ -1230,14 +1259,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'रेफरल मोहिमा व मर्यादा (Referral Campaigns)',
-                style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.goldLight),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'सभासद नोंदणी रेफरल लिंक्स (Referral Links)',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '१००% पूर्ण प्रोफाइल असलेल्या सभासदांसाठी थेट नोंदणी रेफरल लिंक्स',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                    ),
+                  ),
+                ],
               ),
               ElevatedButton.icon(
-                onPressed: _showCreateReferralDialog,
-                icon: const Icon(Icons.add_link_rounded, color: Colors.white),
-                label: const Text('नवीन रेफरल लिंक तयार करा', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                onPressed: _showAddReferralDialog,
+                icon: const Icon(Icons.person_add_alt_1_rounded, color: AppColors.white, size: 18),
+                label: const Text('नवीन रेफरल जोडा (Add Referral)', style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.saffron, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
               ),
             ],
@@ -1254,96 +1301,265 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
                 final campaigns = snapshot.data ?? [];
                 if (campaigns.isEmpty) {
-                  return const Center(child: Text('कोणतीही सक्रिय रेफरल मोहीम आढळली नाही. वरील बटणावर क्लिक करून तयार करा.', style: TextStyle(color: AppColors.textMuted)));
+                  return Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.link_off_rounded, size: 48, color: isDark ? AppColors.goldLight : AppColors.saffron),
+                          const SizedBox(height: 12),
+                          Text(
+                            'कोणतीही रेफरल लिंक अद्याप जोडलेली नाही.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'वरील \'नवीन रेफरल जोडा\' बटणावर क्लिक करून १००% पूर्ण प्रोफाईल असलेल्या सभासदाची रेफरल लिंक तयार करा.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 return ListView.separated(
                   itemCount: campaigns.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final c = campaigns[index];
                     final link = 'https://marathashivmudra.in/?ref=${c.code}';
+                    final displayName = (c.memberNameMr != null && c.memberNameMr!.isNotEmpty)
+                        ? c.memberNameMr!
+                        : c.title;
+                    final displayId = c.memberId ?? c.code;
 
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.darkSurface,
+                        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: c.isActive ? AppColors.gold.withValues(alpha: 0.4) : AppColors.darkBorder),
+                        border: Border.all(
+                          color: c.isActive
+                              ? (isDark ? AppColors.gold.withValues(alpha: 0.4) : AppColors.saffron.withValues(alpha: 0.4))
+                              : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Top Row: Avatar, Member Name, ID, Location, Registrations & Actions
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(color: AppColors.saffron, borderRadius: BorderRadius.circular(6)),
-                                    child: Text(c.code, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(c.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-                                ],
-                              ),
-                              Switch(
-                                value: c.isActive,
-                                activeThumbColor: AppColors.goldLight,
-                                activeTrackColor: AppColors.saffron,
-                                onChanged: (val) => ReferralService.instance.toggleStatus(c.code, val),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
+                              // Avatar / Photo
+                              _buildReferralAvatar(c),
+                              const SizedBox(width: 14),
 
-                          // Quota Progress
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'वापर: ${c.usedCount} / ${c.isUnlimited ? "अमर्यादित (Unlimited)" : "${c.maxLimit} सभासद"}',
-                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              // Info Column
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            displayName,
+                                            style: TextStyle(
+                                              fontFamily: AppTypography.fontFamily,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Switch(
+                                              value: c.isActive,
+                                              activeThumbColor: AppColors.goldLight,
+                                              activeTrackColor: AppColors.saffron,
+                                              onChanged: (val) => ReferralService.instance.toggleStatus(c.code, val),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete_outline_rounded, color: AppColors.redAccent, size: 20),
+                                              tooltip: 'रेफरल लिंक हटवा',
+                                              onPressed: () => _confirmDeleteReferral(c),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    if (c.memberNameEn != null && c.memberNameEn!.isNotEmpty && c.memberNameEn != displayName) ...[
+                                      Text(
+                                        c.memberNameEn!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: isDark ? AppColors.gold : AppColors.saffron,
+                                              width: 0.8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'ID: $displayId',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                            ),
+                                          ),
+                                        ),
+                                        if (c.district != null && c.district!.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: isDark ? AppColors.darkBorder : AppColors.lightSurfaceElevated,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              '📍 ${c.district}${c.memberTaluka != null && c.memberTaluka!.isNotEmpty ? ', ${c.memberTaluka}' : ''}',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                        if (c.memberPhone != null && c.memberPhone!.isNotEmpty)
+                                          Text(
+                                            '📞 ${c.memberPhone}',
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.green.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            '👥 नोंदणी: ${c.usedCount} सभासद',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark ? AppColors.greenAccent : AppColors.greenDark,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                              if (c.isLimitReached)
-                                const Text('⚠️ मर्यादा समाप्त (Limit Reached)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
                             ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: c.progress,
-                              minHeight: 8,
-                              backgroundColor: AppColors.darkBorder,
-                              valueColor: AlwaysStoppedAnimation<Color>(c.isLimitReached ? Colors.orangeAccent : AppColors.saffron),
-                            ),
                           ),
                           const SizedBox(height: 12),
 
-                          // Copy Link
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  link,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.goldLight),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                          // Bottom Row: Referral Link Box + Copy & Share buttons
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.link_rounded,
+                                  color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                  size: 18,
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.copy_rounded, color: AppColors.goldLight, size: 20),
-                                tooltip: 'लिंक कॉपी करा',
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: link));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('रेफरल लिंक कॉपी झाली: $link')),
-                                  );
-                                },
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: SelectableText(
+                                    link,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(text: link));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('रेफरल लिंक कॉपी केली: $link'),
+                                        backgroundColor: AppColors.greenDark,
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.copy_rounded, color: AppColors.white, size: 15),
+                                  label: const Text(
+                                    'कॉपी',
+                                    style: TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.saffron,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  onPressed: () => _showShareReferralModal(c, link),
+                                  icon: Icon(
+                                    Icons.share_rounded,
+                                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                    size: 15,
+                                  ),
+                                  label: Text(
+                                    'शेअर',
+                                    style: TextStyle(
+                                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -1358,65 +1574,216 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  void _showCreateReferralDialog() {
-    final codeCtrl = TextEditingController();
-    final titleCtrl = TextEditingController();
-    final limitCtrl = TextEditingController(text: '50');
+  Widget _buildReferralAvatar(ReferralCampaign c) {
+    if (c.memberPhoto != null && c.memberPhoto!.isNotEmpty) {
+      if (c.memberPhoto!.startsWith('http')) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Image.network(
+            c.memberPhoto!,
+            width: 44,
+            height: 44,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildReferralInitial(c),
+          ),
+        );
+      } else {
+        try {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Image.memory(
+              base64Decode(c.memberPhoto!),
+              width: 44,
+              height: 44,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildReferralInitial(c),
+            ),
+          );
+        } catch (_) {}
+      }
+    }
+    return _buildReferralInitial(c);
+  }
+
+  Widget _buildReferralInitial(ReferralCampaign c) {
+    final name = (c.memberNameMr != null && c.memberNameMr!.isNotEmpty)
+        ? c.memberNameMr!
+        : (c.title.isNotEmpty ? c.title : (c.memberNameEn ?? 'M'));
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'M';
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.saffron, AppColors.goldMetallic],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.goldLight, width: 1.2),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.white),
+      ),
+    );
+  }
+
+  void _showShareReferralModal(ReferralCampaign c, String link) {
+    final displayName = (c.memberNameMr != null && c.memberNameMr!.isNotEmpty) ? c.memberNameMr! : c.title;
+    final displayId = c.memberId ?? c.code;
+    final shareMessage = '🚩 मराठा शिवमुद्रा अधिकृत नोंदणी 🚩\n\n'
+        'सभासद: $displayName (ID: $displayId)\n'
+        'नोंदणी लिंक: $link\n\n'
+        'कृपया वरील लिंकद्वारे मराठा शिवमुद्रा संघटनेमध्ये आपले सदस्यत्व नोंदणी करा.';
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('नवीन रेफरल लिंक तयार करा', style: TextStyle(color: AppColors.goldLight)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron),
+        ),
+        title: Row(
           children: [
-            TextField(
-              controller: codeCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'रेफरल कोड (उदा. PUNE_50, YOUTH_100)', filled: true, fillColor: AppColors.darkBgHeroTop),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: titleCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'मोहीम शीर्षक (Campaign Title)', filled: true, fillColor: AppColors.darkBgHeroTop),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: limitCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'मर्यादा / कोटा (0 = अमर्यादित)', filled: true, fillColor: AppColors.darkBgHeroTop),
+            Icon(Icons.share_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+            const SizedBox(width: 10),
+            Text(
+              'रेफरल लिंक शेअर करा',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('रद्द करा', style: TextStyle(color: AppColors.textMuted))),
-          ElevatedButton(
-            onPressed: () async {
-              final code = codeCtrl.text.trim().toUpperCase();
-              final title = titleCtrl.text.trim();
-              final limit = int.tryParse(limitCtrl.text.trim()) ?? 0;
-
-              if (code.isNotEmpty) {
-                await ReferralService.instance.saveCampaign(
-                  ReferralCampaign(
-                    code: code,
-                    title: title.isNotEmpty ? title : code,
-                    maxLimit: limit,
-                    usedCount: 0,
-                    isActive: true,
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$displayName (ID: $displayId)',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.3)),
+                ),
+                child: SelectableText(
+                  shareMessage,
+                  style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        final waUrl = 'https://api.whatsapp.com/send?text=${Uri.encodeComponent(shareMessage)}';
+                        openExternalUrl(waUrl);
+                        Clipboard.setData(ClipboardData(text: shareMessage));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('WhatsApp वर उघडले आणि संदेश क्लिपबोर्डवर कॉपी केला.'),
+                            backgroundColor: AppColors.greenDark,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.chat_bubble_rounded, color: AppColors.white, size: 16),
+                      label: const Text('WhatsApp वर शेअर करा', style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.green),
+                    ),
                   ),
-                );
-              }
-              if (mounted) Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.saffron),
-            child: const Text('तयार करा', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: link));
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('रेफरल लिंक कॉपी केली: $link'),
+                            backgroundColor: AppColors.greenDark,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      label: const Text('फक्त लिंक कॉपी करा (Copy Link)'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('बंद करा', style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
           ),
         ],
       ),
+    );
+  }
+
+  void _confirmDeleteReferral(ReferralCampaign c) {
+    final displayName = (c.memberNameMr != null && c.memberNameMr!.isNotEmpty) ? c.memberNameMr! : c.title;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: const Text('रेफरल लिंक हटवायची आहे का?'),
+        content: Text('$displayName यांची रेफरल लिंक कायमस्वरूपी हटवली जाईल.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('रद्द करा'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ReferralService.instance.deleteCampaign(c.code);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? 'रेफरल लिंक हटवली आहे.' : 'त्रुटी: रेफरल लिंक हटवता आली नाही.'),
+                    backgroundColor: success ? AppColors.greenDark : AppColors.redDark,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.redAccent),
+            child: const Text('हटवा (Delete)', style: TextStyle(color: AppColors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddReferralDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _AddReferralDialog(),
     );
   }
 
@@ -1454,9 +1821,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF2E0F0F),
-            Color(0xFF1B0808),
-            Color(0xFF120505),
+            AppColors.adminMaroonDark1,
+            AppColors.adminMaroonDark2,
+            AppColors.adminMaroonDark3,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1511,7 +1878,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.darkBorder, height: 1),
+          Divider(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder, height: 1),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
@@ -1519,9 +1886,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             children: [
               _buildHierarchyPill('👑 संस्थापक व अध्यक्ष', 'Super Admin (सर्वोच्च प्रमुख)', AppColors.gold),
               _buildHierarchyPill('🏛️ राज्य / कोर समिती', '१९ पदे (राज्यस्तरीय संचालन)', AppColors.saffron),
-              _buildHierarchyPill('🏢 विभाग समिती', '६ विभाग (प्रत्येकी ५ पदे)', Colors.purpleAccent),
-              _buildHierarchyPill('🚩 जिल्हा समिती', '३६ जिल्हे (प्रत्येकी ११ पदे)', Colors.cyanAccent),
-              _buildHierarchyPill('📍 तालुका समिती', 'प्रत्येकी ५ पदे', Colors.greenAccent),
+              _buildHierarchyPill('🏢 विभाग समिती', '६ विभाग (प्रत्येकी ५ पदे)', AppColors.purpleAccent),
+              _buildHierarchyPill('🚩 जिल्हा समिती', '३६ जिल्हे (प्रत्येकी ११ पदे)', AppColors.cyanAccent),
+              _buildHierarchyPill('📍 तालुका समिती', 'प्रत्येकी ५ पदे', AppColors.greenAccent),
             ],
           ),
         ],
@@ -1603,7 +1970,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     'विभाग समिती',
                     '${counts['vibhag']} / 30',
                     Icons.business_rounded,
-                    Colors.purpleAccent,
+                    AppColors.purpleAccent,
                     subtitle: '६ महसूल विभाग',
                     isSelected: _filterOfficialLevel == 'vibhag',
                     onTap: () => setState(() {
@@ -1616,7 +1983,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     'जिल्हा व तालुका',
                     '${(counts['jilha'] ?? 0) + (counts['taluka'] ?? 0)}',
                     Icons.location_city_rounded,
-                    Colors.cyanAccent,
+                    AppColors.cyanAccent,
                     subtitle: 'स्थानिक कार्यकारिणी',
                     isSelected: _filterOfficialLevel == 'jilha' || _filterOfficialLevel == 'taluka',
                     onTap: () => setState(() => _filterOfficialLevel = 'jilha'),
@@ -1661,10 +2028,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
         return Container(
           decoration: BoxDecoration(
-            color: AppColors.darkSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: candidates.isNotEmpty ? AppColors.gold.withValues(alpha: 0.6) : AppColors.darkBorder,
+              color: candidates.isNotEmpty
+                  ? (isDark ? AppColors.gold.withValues(alpha: 0.6) : AppColors.saffron.withValues(alpha: 0.6))
+                  : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
               width: candidates.isNotEmpty ? 1.5 : 1.0,
             ),
             boxShadow: candidates.isNotEmpty
@@ -1684,9 +2053,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
-                  color: candidates.isNotEmpty ? AppColors.gold.withValues(alpha: 0.12) : AppColors.darkBgHeroTop,
+                  color: candidates.isNotEmpty
+                      ? (isDark ? AppColors.gold.withValues(alpha: 0.12) : AppColors.saffron.withValues(alpha: 0.1))
+                      : (isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                  border: Border(bottom: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.8))),
+                  border: Border(bottom: BorderSide(color: (isDark ? AppColors.darkBorder : AppColors.lightCardBorder).withValues(alpha: 0.8))),
                 ),
                 child: Row(
                   children: [
@@ -1697,10 +2068,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.gold, width: 1.2),
                       ),
-                      child: const Icon(Icons.star_rounded, color: AppColors.goldLight, size: 20),
+                      child: Icon(Icons.star_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 20),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1710,13 +2081,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.goldLight,
+                              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'डॅशबोर्डवरून पदोन्नती मिळालेले सभासद. खालीलपैकी उमेदवारास योग्य समिती व पदावर नियुक्त करा.',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
                           ),
                         ],
                       ),
@@ -1724,12 +2095,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: candidates.isNotEmpty ? AppColors.saffron : AppColors.darkBorder,
+                        color: candidates.isNotEmpty ? AppColors.saffron : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${candidates.length} उमेदवार',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.white),
                       ),
                     ),
                   ],
@@ -1743,16 +2114,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.workspace_premium_outlined, size: 40, color: AppColors.textMuted.withValues(alpha: 0.6)),
+                        Icon(
+                          Icons.workspace_premium_outlined,
+                          size: 40,
+                          color: (isDark ? AppColors.textMuted : AppColors.textDarkSecondary).withValues(alpha: 0.6),
+                        ),
                         const SizedBox(height: 10),
-                        const Text(
+                        Text(
                           'सध्या कोणताही पदोन्नतीकृत उमेदवार प्रलंबित नाही.',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'डॅशबोर्डवरील सभासद कार्डमधील "पदोन्नती करा (Promote to Official)" बटण दाबून येथे उमेदवार पाठवा.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -1792,22 +2171,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.darkBgHeroTop,
+        color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+        border: Border.all(color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: AppColors.darkSurface,
+            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             backgroundImage: (photoBase64 != null && photoBase64.isNotEmpty)
                 ? (photoBase64.startsWith('http')
                     ? NetworkImage(photoBase64) as ImageProvider
                     : MemoryImage(base64Decode(photoBase64)))
                 : null,
             child: (photoBase64 == null || photoBase64.isEmpty)
-                ? const Icon(Icons.person_rounded, color: AppColors.goldLight, size: 24)
+                ? Icon(Icons.person_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 24)
                 : null,
           ),
           const SizedBox(width: 14),
@@ -1820,11 +2199,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     Flexible(
                       child: Text(
                         nameMr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? AppColors.white : AppColors.textDarkPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1834,7 +2213,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       Flexible(
                         child: Text(
                           '($nameEn)',
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1846,10 +2225,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   spacing: 12,
                   runSpacing: 4,
                   children: [
-                    Text('📞 $phone', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                    Text('ID: $memberId', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.greenAccent)),
+                    Text('📞 $phone', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary)),
+                    Text('ID: $memberId', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.greenAccent)),
                     if (district.isNotEmpty)
-                      Text('📍 $district${taluka.isNotEmpty ? ', $taluka' : ''}', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                      Text('📍 $district${taluka.isNotEmpty ? ', $taluka' : ''}', style: TextStyle(fontSize: 12, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
                   ],
                 ),
               ],
@@ -1861,10 +2240,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             children: [
               ElevatedButton.icon(
                 onPressed: () => _showAppointOfficialDialog(context, initialCandidate: candidate),
-                icon: const Icon(Icons.assignment_ind_rounded, size: 16, color: Colors.white),
+                icon: const Icon(Icons.assignment_ind_rounded, size: 16, color: AppColors.white),
                 label: const Text(
                   'पदभार सोपवा',
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.saffron,
@@ -1874,7 +2253,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 20, color: Colors.redAccent),
+                icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.redAccent),
                 tooltip: 'पदोन्नती रद्द करा',
                 onPressed: () => _confirmUnpromoteMember(candidate),
               ),
@@ -1894,15 +2273,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: AppColors.darkBorder)),
-        title: const Text('पदोन्नती रद्द करा?', style: TextStyle(color: Colors.redAccent)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+        ),
+        title: const Text('पदोन्नती रद्द करा?', style: TextStyle(color: AppColors.redAccent)),
         content: Text(
           'तुम्हाला खरोखर $name यांची पदोन्नती रद्द करायची आहे का? ते पदभार वाटपाच्या यादीतून काढले जातील.',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('रद्द करा', style: TextStyle(color: AppColors.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('रद्द करा', style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -1913,8 +2298,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('होय, रद्द करा', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.redAccent),
+            child: const Text('होय, रद्द करा', style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -1933,7 +2318,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -1942,26 +2327,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
                   'विविध समित्यांमध्ये कार्यरत असलेले अधिकृत पदाधिकारी',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12.5, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
                 ),
               ],
             ),
             ElevatedButton.icon(
               onPressed: () => _showAppointOfficialDialog(context),
-              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18, color: Colors.white),
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18, color: AppColors.white),
               label: const Text(
                 'नवीन पदभार सोपवा',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
-                  color: Colors.white,
+                  color: AppColors.white,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -2011,14 +2396,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         style: TextStyle(
           fontSize: 12.5,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-          color: isSelected ? Colors.black : Colors.white,
+          color: isSelected ? AppColors.black : (isDark ? AppColors.white : AppColors.textDarkPrimary),
         ),
       ),
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       selectedColor: AppColors.gold,
-      checkmarkColor: Colors.black,
+      checkmarkColor: AppColors.black,
       side: BorderSide(
-        color: isSelected ? AppColors.gold : AppColors.darkBorder,
+        color: isSelected ? AppColors.gold : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
         width: isSelected ? 1.5 : 1.0,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -2046,9 +2431,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.darkBorder),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2056,14 +2441,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           // Search Field
           TextField(
             controller: _officialSearchController,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'नाव, फोन, पद किंवा जिल्ह्यानुसार शोधा...',
-              hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-              prefixIcon: const Icon(Icons.search, color: AppColors.goldLight, size: 18),
+              hintStyle: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary, fontSize: 13),
+              prefixIcon: Icon(Icons.search, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 18),
               suffixIcon: _officialSearchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, size: 16, color: AppColors.textMuted),
+                      icon: Icon(Icons.clear, size: 16, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                       onPressed: () {
                         setState(() {
                           _officialSearchController.clear();
@@ -2073,7 +2458,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     )
                   : null,
               filled: true,
-              fillColor: AppColors.darkBgHeroTop,
+              fillColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
             ),
@@ -2114,7 +2499,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ];
 
                 final talukaItems = [
-                  const AppDropdownItem<String>(value: 'ALL', label: 'सर्व तालुके (All Talukas)', searchKey: 'all sarva taluka'),
+                  const AppDropdownItem<String>(value: 'ALL', label: 'सर्व तालुke (All Talukas)', searchKey: 'all sarva taluka'),
                   ..._getTalukasForDistrict(_filterOfficialDistrict).map((t) => AppDropdownItem<String>(
                         value: t.nameEn,
                         label: '${t.nameMr} (${t.nameEn})',
@@ -2243,23 +2628,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             padding: const EdgeInsets.all(40),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.darkSurface,
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.darkBorder),
+              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
             ),
             child: Column(
               children: [
-                const Icon(Icons.shield_outlined, size: 48, color: AppColors.textMuted),
+                Icon(Icons.shield_outlined, size: 48, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'निवडलेल्या निकषांनुसार कोणतेही पदाधिकारी नियुक्त केलेले नाहीत.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                  style: TextStyle(color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () => _showAppointOfficialDialog(context),
-                  icon: const Icon(Icons.add, size: 18, color: Colors.white),
-                  label: const Text('नवीन नियुक्ती करा', style: TextStyle(color: Colors.white)),
+                  icon: const Icon(Icons.add, size: 18, color: AppColors.white),
+                  label: const Text('नवीन नियुक्ती करा', style: TextStyle(color: AppColors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.saffron),
                 ),
               ],
@@ -2299,21 +2684,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             _buildCommitteeGroupSection(
               title: '🏢 विभागीय समित्या (Divisional Committees)',
               subtitle: '६ प्रशासकीय विभागांचे विभागीय नेतृत्व (प्रत्येकी ५ पदे)',
-              accentColor: Colors.purpleAccent,
+              accentColor: AppColors.purpleAccent,
               officials: vibhagList,
             ),
             const SizedBox(height: 24),
             _buildCommitteeGroupSection(
               title: '🚩 जिल्हा समित्या (District Committees)',
               subtitle: 'जिल्हास्तरीय कार्यकारी मंडळ (प्रत्येकी ११ पदे)',
-              accentColor: Colors.cyanAccent,
+              accentColor: AppColors.cyanAccent,
               officials: jilhaList,
             ),
             const SizedBox(height: 24),
             _buildCommitteeGroupSection(
               title: '📍 तालुका समित्या (Taluka Committees)',
               subtitle: 'तालुका व स्थानिक पातळीवरील संघटनात्मक नेतृत्व (प्रत्येकी ५ पदे)',
-              accentColor: Colors.greenAccent,
+              accentColor: AppColors.greenAccent,
               officials: talukaList,
             ),
           ],
@@ -2330,9 +2715,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.darkBorder),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2343,7 +2728,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.08),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
-              border: Border(bottom: BorderSide(color: AppColors.darkBorder.withValues(alpha: 0.8))),
+              border: Border(bottom: BorderSide(color: (isDark ? AppColors.darkBorder : AppColors.lightCardBorder).withValues(alpha: 0.8))),
             ),
             child: Row(
               children: [
@@ -2361,7 +2746,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted)),
+                      Text(subtitle, style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
                     ],
                   ),
                 ),
@@ -2387,7 +2772,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               child: Center(
                 child: Text(
                   'या समितीमध्ये सध्या कोणतेही पदाधिकारी नियुक्त केलेले नाहीत.',
-                  style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 13),
+                  style: TextStyle(color: (isDark ? AppColors.textMuted : AppColors.textDarkSecondary).withValues(alpha: 0.8), fontSize: 13),
                 ),
               ),
             )
@@ -2411,25 +2796,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     Color levelColor = AppColors.gold;
     String levelBadgeText = 'राज्य कोर समिती';
     if (official.level == OrganizationLevel.vibhag) {
-      levelColor = Colors.purpleAccent;
+      levelColor = AppColors.purpleAccent;
       levelBadgeText = 'विभाग: ${official.vibhagMr ?? official.vibhag}';
     } else if (official.level == OrganizationLevel.jilha) {
-      levelColor = Colors.cyanAccent;
+      levelColor = AppColors.cyanAccent;
       levelBadgeText = 'जिल्हा: ${official.districtMr ?? official.district}';
     } else if (official.level == OrganizationLevel.taluka) {
-      levelColor = Colors.greenAccent;
+      levelColor = AppColors.greenAccent;
       levelBadgeText = 'तालुका: ${official.talukaMr ?? official.taluka}';
     }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.darkBorder),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: AppColors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -2441,7 +2826,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           // Member Photo / Avatar
           CircleAvatar(
             radius: 26,
-            backgroundColor: AppColors.darkBgHeroTop,
+            backgroundColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
             backgroundImage: official.photoUrl != null && official.photoUrl!.isNotEmpty
                 ? NetworkImage(official.photoUrl!)
                 : null,
@@ -2474,7 +2859,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     const SizedBox(width: 8),
                     Text(
                       'ID: ${official.memberId}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.greenAccent),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.greenAccent),
                     ),
                   ],
                 ),
@@ -2483,16 +2868,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 // Official Role Designation
                 Text(
                   official.roleNameMr,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.goldLight,
+                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                   ),
                 ),
                 Text(
                   '${official.roleNameEn}  •  ${official.fullTitleMr}',
-                  style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
                 ),
                 const SizedBox(height: 4),
 
@@ -2501,12 +2886,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   children: [
                     Text(
                       '${official.nameMr} (${official.nameEn})',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
                     ),
                     const SizedBox(width: 10),
                     Text(
                       '📞 ${official.phone}',
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+                      style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                     ),
                   ],
                 ),
@@ -2526,7 +2911,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     showDialog(
                       context: context,
                       builder: (ctx) => Dialog(
-                        backgroundColor: Colors.transparent,
+                        backgroundColor: AppColors.transparent,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 480),
                           child: MemberIdCardWidget(profile: prof),
@@ -2535,16 +2920,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     );
                   }
                 },
-                icon: const Icon(Icons.badge_outlined, size: 16, color: AppColors.goldLight),
-                label: const Text('ओळखपत्र', style: TextStyle(fontSize: 11, color: AppColors.goldLight)),
+                icon: Icon(Icons.badge_outlined, size: 16, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                label: Text('ओळखपत्र', style: TextStyle(fontSize: 11, color: isDark ? AppColors.goldLight : AppColors.saffronDark)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.gold, width: 0.8),
+                  side: BorderSide(color: isDark ? AppColors.gold : AppColors.saffronDark, width: 0.8),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 ),
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
+                icon: const Icon(Icons.remove_circle_outline, color: AppColors.redAccent, size: 20),
                 tooltip: 'पदमुक्ती करा (Revoke Appointment)',
                 onPressed: () => _confirmRevokeOfficial(official),
               ),
@@ -2559,14 +2944,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkSurface,
-        title: const Text('पदमुक्ती निश्चित करा', style: TextStyle(color: Colors.redAccent)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: const Text('पदमुक्ती निश्चित करा', style: TextStyle(color: AppColors.redAccent)),
         content: Text(
           'तुम्हाला खरोखर ${official.nameMr} (${official.roleNameMr}) यांना या पदावरून पदमुक्त करायचे आहे का?',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('रद्द करा', style: TextStyle(color: AppColors.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('रद्द करा', style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -2578,8 +2966,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 setState(() {});
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('होय, पदमुक्त करा', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.redAccent),
+            child: const Text('होय, पदमुक्त करा', style: TextStyle(color: AppColors.white)),
           ),
         ],
       ),
@@ -2610,10 +2998,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: AppColors.darkSurface,
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.darkBorder),
+          side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
         ),
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: ConstrainedBox(
@@ -2624,35 +3012,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               // Header
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: const BoxDecoration(
-                  color: AppColors.darkBgHeroTop,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  border: Border(bottom: BorderSide(color: AppColors.darkBorder)),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  border: Border(bottom: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.15),
+                        color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.badge_rounded, color: AppColors.goldLight, size: 20),
+                      child: Icon(
+                        Icons.badge_rounded,
+                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'सभासद संपूर्ण माहिती',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.goldLight,
+                          color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                      icon: Icon(Icons.close_rounded, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                       onPressed: () => Navigator.pop(ctx),
                       splashRadius: 20,
                     ),
@@ -2671,9 +3063,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.darkBgHeroTop,
+                          color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                          border: Border.all(color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
@@ -2686,20 +3078,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 children: [
                                   Text(
                                     nameMr,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: AppTypography.fontFamily,
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: isDark ? AppColors.white : AppColors.textDarkPrimary,
                                     ),
                                   ),
                                   if (nameEn.isNotEmpty && nameEn != nameMr) ...[
                                     const SizedBox(height: 2),
                                     Text(
                                       nameEn,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
-                                        color: AppColors.textSecondary,
+                                        color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                                       ),
                                     ),
                                   ],
@@ -2713,11 +3105,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: isIssued
-                                              ? Colors.green.withValues(alpha: 0.2)
-                                              : Colors.orangeAccent.withValues(alpha: 0.2),
+                                              ? (isDark ? AppColors.green.withValues(alpha: 0.2) : AppColors.green.withValues(alpha: 0.1))
+                                              : (isDark ? AppColors.orangeAccent.withValues(alpha: 0.2) : AppColors.orange.withValues(alpha: 0.1)),
                                           borderRadius: BorderRadius.circular(6),
                                           border: Border.all(
-                                            color: isIssued ? Colors.greenAccent : Colors.orangeAccent,
+                                            color: isIssued
+                                                ? (isDark ? AppColors.greenAccent : AppColors.greenDark)
+                                                : (isDark ? AppColors.orangeAccent : AppColors.orangeDark),
                                             width: 0.8,
                                           ),
                                         ),
@@ -2726,7 +3120,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
-                                            color: isIssued ? Colors.greenAccent : Colors.orangeAccent,
+                                            color: isIssued
+                                                ? (isDark ? AppColors.greenAccent : AppColors.greenDark)
+                                                : (isDark ? AppColors.orangeAccent : AppColors.orangeDark),
                                           ),
                                         ),
                                       ),
@@ -2734,13 +3130,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: profile.isProfileComplete
-                                              ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                                              : Colors.amber.withValues(alpha: 0.2),
+                                              ? (isDark ? AppColors.emeraldGreen.withValues(alpha: 0.2) : AppColors.emeraldGreen.withValues(alpha: 0.1))
+                                              : (isDark ? AppColors.amber.withValues(alpha: 0.2) : AppColors.amber.withValues(alpha: 0.1)),
                                           borderRadius: BorderRadius.circular(6),
                                           border: Border.all(
                                             color: profile.isProfileComplete
-                                                ? const Color(0xFF10B981)
-                                                : Colors.amber,
+                                                ? (isDark ? AppColors.emeraldGreen : AppColors.emeraldGreen)
+                                                : (isDark ? AppColors.amber : AppColors.amberDark),
                                             width: 0.8,
                                           ),
                                         ),
@@ -2750,16 +3146,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
                                             color: profile.isProfileComplete
-                                                ? const Color(0xFF10B981)
-                                                : Colors.amber,
+                                                ? (isDark ? AppColors.emeraldGreen : AppColors.emeraldGreen)
+                                                : (isDark ? AppColors.amber : AppColors.amberDark),
                                           ),
                                         ),
                                       ),
                                       Text(
                                         '📞 ${profile.phone}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
-                                          color: AppColors.goldLight,
+                                          color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -2778,41 +3174,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFB8860B).withValues(alpha: 0.15),
+                            color: (isDark ? AppColors.goldMetallic : AppColors.saffron).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFB8860B).withValues(alpha: 0.5)),
+                            border: Border.all(color: (isDark ? AppColors.goldMetallic : AppColors.saffron).withValues(alpha: 0.5)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.military_tech_rounded, color: AppColors.goldLight, size: 28),
+                              Icon(Icons.military_tech_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 28),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'मराठा शिवमुद्रा अधिकृत पदाधिकारी',
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.goldLight,
+                                        color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       profile.officialFullTitleMr ?? (profile.designation.isNotEmpty ? profile.designation : 'पदाधिकारी'),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: isDark ? AppColors.white : AppColors.textDarkPrimary,
                                       ),
                                     ),
                                     if (profile.officialFullTitleEn != null && profile.officialFullTitleEn!.isNotEmpty) ...[
                                       Text(
                                         profile.officialFullTitleEn!,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.textSecondary,
+                                          color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
                                         ),
                                       ),
                                     ],
@@ -2847,7 +3243,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               'स्थिती',
                               'सध्याचा पत्ता हाच मूळ गाव पत्ता आहे (Same as Current Address)',
                               icon: Icons.check_circle_outline_rounded,
-                              valueColor: Colors.greenAccent,
+                              valueColor: isDark ? AppColors.greenAccent : AppColors.greenDark,
                             )
                           else ...[
                             _buildDetailRow('मूळ राज्य (Native State)', profile.nativeState.isNotEmpty ? profile.nativeState : '-', icon: Icons.map_rounded),
@@ -2866,7 +3262,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         [
                           _buildDetailRow('जन्मतारीख (DOB)', profile.dateOfBirth.isNotEmpty ? profile.dateOfBirth : '-', icon: Icons.cake_rounded),
                           _buildDetailRow('लिंग (Gender)', profile.gender.isNotEmpty ? profile.getLocalizedGender(isMarathi: true) : '-', icon: Icons.person_rounded),
-                          _buildDetailRow('रक्तगट (Blood Group)', profile.bloodGroup.isNotEmpty ? profile.bloodGroup : '-', icon: Icons.bloodtype_rounded, valueColor: Colors.redAccent),
+                          _buildDetailRow('रक्तगट (Blood Group)', profile.bloodGroup.isNotEmpty ? profile.bloodGroup : '-', icon: Icons.bloodtype_rounded, valueColor: AppColors.redAccent),
                           _buildDetailRow('सद्यस्थिती (Living)', profile.living.isNotEmpty ? profile.living : '-', icon: Icons.home_work_rounded),
                           _buildDetailRow(
                             'मरणोत्तर अवयवदान (Organ Pledge)',
@@ -2874,7 +3270,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ? 'होय, मरणोत्तर अवयवदान संकल्पित 🫀'
                                 : (profile.hasOrganDonationConsentAnswered ? 'नाही' : 'नोंद नाही'),
                             icon: Icons.favorite_rounded,
-                            valueColor: profile.isOrganDonorPledged ? const Color(0xFF10B981) : AppColors.textMuted,
+                            valueColor: profile.isOrganDonorPledged
+                                ? (isDark ? AppColors.emeraldGreen : AppColors.greenDark)
+                                : (isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                           ),
                         ],
                       ),
@@ -2907,7 +3305,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               'पिकवली जाणारी पिके',
                               profile.cropsProduced.isNotEmpty ? profile.cropsProduced.join(', ') : '-',
                               icon: Icons.agriculture_rounded,
-                              valueColor: Colors.lightGreenAccent,
+                              valueColor: isDark ? AppColors.lightGreenAccent : AppColors.greenDark,
                             ),
                           ],
                           if (profile.profession.contains('बेरोजगार') || profile.unemployedEducation.isNotEmpty) ...[
@@ -2929,7 +3327,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ? 'सक्रिय (होय)'
                                 : (profile.isPoliticallyActive == false ? 'नाही' : '-'),
                             icon: Icons.how_to_vote_rounded,
-                            valueColor: profile.isPoliticallyActive == true ? Colors.amberAccent : null,
+                            valueColor: profile.isPoliticallyActive == true ? (isDark ? AppColors.amberAccent : AppColors.amberDark) : null,
                           ),
                           if (profile.isPoliticallyActive == true) ...[
                             _buildDetailRow('पक्ष / संघटना', profile.politicalParty.isNotEmpty ? profile.politicalParty : '-', icon: Icons.flag_rounded),
@@ -2941,7 +3339,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ? 'सक्रिय (होय)'
                                 : (profile.isAssociatedWithNgo == false ? 'नाही' : '-'),
                             icon: Icons.groups_rounded,
-                            valueColor: profile.isAssociatedWithNgo == true ? Colors.lightBlueAccent : null,
+                            valueColor: profile.isAssociatedWithNgo == true ? (isDark ? AppColors.lightBlueAccent : AppColors.blueAccent) : null,
                           ),
                           if (profile.isAssociatedWithNgo == true) ...[
                             _buildDetailRow('संस्थेचे नाव (NGO Name)', profile.ngoName.isNotEmpty ? profile.ngoName : '-', icon: Icons.corporate_fare_rounded),
@@ -2955,7 +3353,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         '🚨 आपत्कालीन संपर्क (Emergency Contact)',
                         [
                           _buildDetailRow('संपर्क व्यक्ती नाव', profile.emergencyContactName.isNotEmpty ? profile.emergencyContactName : '-', icon: Icons.contact_phone_rounded),
-                          _buildDetailRow('संपर्क मोबाईल', profile.emergencyContactPhone.isNotEmpty ? profile.emergencyContactPhone : '-', icon: Icons.phone_in_talk_rounded, valueColor: AppColors.goldLight),
+                          _buildDetailRow('संपर्क मोबाईल', profile.emergencyContactPhone.isNotEmpty ? profile.emergencyContactPhone : '-', icon: Icons.phone_in_talk_rounded, valueColor: isDark ? AppColors.goldLight : AppColors.saffronDark),
                         ],
                       ),
 
@@ -2964,7 +3362,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         '💳 नोंदणी व ओळखपत्र माहिती (System & ID Card)',
                         [
                           _buildDetailRow('नोंदणी तारीख', _formatDate(profile.createdAt), icon: Icons.calendar_today_rounded),
-                          _buildDetailRow('ओळखपत्र स्थिती', profile.isCardIssued ? 'जारी केले (Issued)' : 'प्रलंबित (Pending)', icon: Icons.verified_user_rounded, valueColor: isIssued ? Colors.greenAccent : Colors.orangeAccent),
+                          _buildDetailRow('ओळखपत्र स्थिती', profile.isCardIssued ? 'जारी केले (Issued)' : 'प्रलंबित (Pending)', icon: Icons.verified_user_rounded, valueColor: isIssued ? (isDark ? AppColors.greenAccent : AppColors.greenDark) : (isDark ? AppColors.orangeAccent : AppColors.orangeDark)),
                           if (profile.cardIssuedDate != null)
                             _buildDetailRow('कार्ड जारी दिनांक', _formatDate(profile.cardIssuedDate), icon: Icons.event_available_rounded),
                           _buildDetailRow('रेफरल कोड (Referral ID)', (profile.referralId != null && profile.referralId!.isNotEmpty) ? profile.referralId! : '-', icon: Icons.share_rounded),
@@ -2978,10 +3376,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               // Bottom Action Buttons
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppColors.darkBgHeroTop,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-                  border: Border(top: BorderSide(color: AppColors.darkBorder)),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                  border: Border(top: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
                 ),
                 child: Wrap(
                   alignment: WrapAlignment.end,
@@ -2991,7 +3389,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('बंद करा', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('बंद करा', style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
                     ),
                     if (data['is_promoted'] == true) ...[
                       OutlinedButton.icon(
@@ -3002,19 +3400,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('$nameMr यांची पदोन्नती रद्द करण्यात आली आहे.'),
-                                backgroundColor: Colors.orange.shade800,
+                                backgroundColor: AppColors.orangeDark,
                               ),
                             );
                             setState(() {});
                           }
                         },
-                        icon: const Icon(Icons.person_remove_rounded, color: Colors.orangeAccent, size: 16),
+                        icon: const Icon(Icons.person_remove_rounded, color: AppColors.orangeAccent, size: 16),
                         label: const Text(
                           'पदोन्नती रद्द करा',
-                          style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                          style: TextStyle(color: AppColors.orangeAccent, fontSize: 12),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.orangeAccent),
+                          side: const BorderSide(color: AppColors.orangeAccent),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         ),
                       ),
@@ -3031,24 +3429,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                       ? '$nameMr यांना कार्यकारिणीसाठी यशस्वीरीत्या पदोन्नती दिली आहे! आता आपण \'कार्यकारिणी\' टॅबमधून पदभार सोपवू शकता.'
                                       : 'त्रुटी: पदोन्नती करता आली नाही.',
                                 ),
-                                backgroundColor: success ? Colors.green.shade800 : Colors.red.shade800,
+                                backgroundColor: success ? AppColors.greenDark : AppColors.redDark,
                               ),
                             );
                             setState(() {});
                           }
                         },
-                        icon: const Icon(Icons.military_tech_rounded, color: Colors.white, size: 18),
+                        icon: const Icon(Icons.military_tech_rounded, color: AppColors.white, size: 18),
                         label: const Text(
                           'कार्यकारिणीसाठी पदोन्नती द्या (Promote)',
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontSize: 12.5,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.shade900,
+                          backgroundColor: AppColors.amberDark,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         ),
                       ),
@@ -3058,13 +3456,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         Navigator.pop(ctx);
                         _showIdCardPreview(profile);
                       },
-                      icon: const Icon(Icons.badge_rounded, color: Colors.white, size: 18),
+                      icon: const Icon(Icons.badge_rounded, color: AppColors.white, size: 18),
                       label: const Text(
                         'ओळखपत्र पाहा (View ID Card)',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -3087,7 +3485,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
           child: MemberIdCardWidget(profile: profile),
@@ -3134,7 +3532,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       height: size,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.saffron, Color(0xFFB8860B)],
+          colors: [AppColors.saffron, AppColors.goldMetallic],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -3147,7 +3545,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         style: TextStyle(
           fontSize: size * 0.42,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: AppColors.white,
         ),
       ),
     );
@@ -3158,22 +3556,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.darkBorder),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13,
-              color: AppColors.goldLight,
+              color: isDark ? AppColors.goldLight : AppColors.saffronDark,
             ),
           ),
-          const Divider(color: AppColors.darkBorder, height: 16),
+          Divider(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder, height: 16),
           ...rows,
         ],
       ),
@@ -3187,24 +3585,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: AppColors.goldLight),
+            Icon(icon, size: 14, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
             const SizedBox(width: 8),
           ],
           SizedBox(
             width: 140,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
             ),
           ),
-          const Text(': ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text(': ', style: TextStyle(color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary, fontSize: 12)),
           Expanded(
             child: SelectableText(
               value,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: valueColor ?? Colors.white,
+                color: valueColor ?? (isDark ? AppColors.white : AppColors.textDarkPrimary),
               ),
             ),
           ),
@@ -3239,6 +3637,8 @@ class _AppointOfficialDialog extends StatefulWidget {
 }
 
 class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
+  bool get isDark => ThemeService.instance.isDarkMode(context);
+
   OrganizationLevel _selectedLevel = OrganizationLevel.core;
   String _selectedVibhagEn = 'Pune';
   String _selectedDistrictEn = 'Pune';
@@ -3427,10 +3827,10 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
     }).toList();
 
     return Dialog(
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.gold, width: 1.2),
+        side: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron, width: 1.2),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620, maxHeight: 760),
@@ -3444,23 +3844,23 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.badge_rounded, color: AppColors.goldLight, size: 24),
-                      SizedBox(width: 10),
+                      Icon(Icons.badge_rounded, color: isDark ? AppColors.goldLight : AppColors.saffronDark, size: 24),
+                      const SizedBox(width: 10),
                       Text(
                         'नवीन पदाधिकारी नियुक्ती',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.goldLight,
+                          color: isDark ? AppColors.goldLight : AppColors.saffronDark,
                         ),
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textMuted),
+                    icon: Icon(Icons.close, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -3468,9 +3868,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               const SizedBox(height: 18),
 
               // STEP 1: Select Candidate (Only Promoted Members)
-              const Text(
+              Text(
                 '१. पदोन्नतीकृत उमेदवार निवडा (Select Promoted Candidate)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
               ),
               const SizedBox(height: 8),
               if (_isLoadingMembers)
@@ -3484,18 +3884,18 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: AppColors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                    border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.orangeAccent, size: 18),
+                      Icon(Icons.info_outline, color: AppColors.orangeAccent, size: 18),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'कोणताही पदोन्नतीकृत उमेदवार उपलब्ध नाही. कृपया आधी डॅशबोर्डवरून सभासदास पदोन्नती द्या.',
-                          style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                          style: TextStyle(color: AppColors.orangeAccent, fontSize: 12),
                         ),
                       ),
                     ],
@@ -3534,9 +3934,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               const SizedBox(height: 18),
 
               // STEP 2: Organization Level / Main Body
-              const Text(
+              Text(
                 '२. संघटनात्मक स्तर / समिती निवडा (Organization Level / Body)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
               ),
               const SizedBox(height: 8),
               AppSearchableDropdown<OrganizationLevel>(
@@ -3580,9 +3980,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
 
               // STEP 3: Jurisdiction (if applicable)
               if (_selectedLevel == OrganizationLevel.vibhag) ...[
-                const Text(
+                Text(
                   '३. विभाग निवडा (Select Division)',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
                 ),
                 const SizedBox(height: 8),
                 AppSearchableDropdown<String>(
@@ -3604,9 +4004,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               ],
 
               if (_selectedLevel == OrganizationLevel.jilha || _selectedLevel == OrganizationLevel.taluka) ...[
-                const Text(
+                Text(
                   '३. जिल्हा निवडा (Select District)',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
                 ),
                 const SizedBox(height: 8),
                 AppSearchableDropdown<String>(
@@ -3633,9 +4033,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               ],
 
               if (_selectedLevel == OrganizationLevel.taluka && talukas.isNotEmpty) ...[
-                const Text(
+                Text(
                   'तालुका निवडा (Select Taluka)',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
                 ),
                 const SizedBox(height: 8),
                 AppSearchableDropdown<String>(
@@ -3659,9 +4059,9 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
               ],
 
               // STEP 4: Select Role / Designation
-              const Text(
+              Text(
                 '४. पद निवडा (Select Role / Designation)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
               ),
               const SizedBox(height: 8),
               AppSearchableDropdown<RoleDefinition>(
@@ -3686,21 +4086,21 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.1),
+                  color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                  border: Border.all(color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'पदाधिकारी ओळखपत्र व प्रोफाइलवर दिसणारे शीर्षक:',
-                      style: TextStyle(fontSize: 11, color: AppColors.goldLight, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 11, color: isDark ? AppColors.goldLight : AppColors.saffronDark, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    Text(previewMr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(previewMr, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.white : AppColors.textDarkPrimary)),
                     const SizedBox(height: 2),
-                    Text(previewEn, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(previewEn, style: TextStyle(fontSize: 12, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary)),
                   ],
                 ),
               ),
@@ -3712,7 +4112,7 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('रद्द करा', style: TextStyle(color: AppColors.textMuted)),
+                    child: Text('रद्द करा', style: TextStyle(color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary)),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
@@ -3796,7 +4196,7 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
                                       ? '$nameMr यांना $previewMr पदावर यशस्वीरीत्या नियुक्त केले आहे!'
                                       : 'त्रुटी: नियुक्ती होऊ शकली नाही.',
                                 ),
-                                backgroundColor: success ? Colors.green.shade800 : Colors.red.shade800,
+                                backgroundColor: success ? AppColors.greenDark : AppColors.redDark,
                               ),
                             );
                           },
@@ -3805,13 +4205,596 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                     child: _isSubmitting
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('पदावर नियुक्त करा', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.white, strokeWidth: 2))
+                        : const Text('पदावर नियुक्त करा', style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Modal dialog to search and add referral links for 100% completed profiles
+class _AddReferralDialog extends StatefulWidget {
+  const _AddReferralDialog();
+
+  @override
+  State<_AddReferralDialog> createState() => _AddReferralDialogState();
+}
+
+class _AddReferralDialogState extends State<_AddReferralDialog> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  bool get isDark => ThemeService.instance.isDarkMode(context);
+
+  bool _isLoading = true;
+  List<MemberProfile> _allCompleteMembers = [];
+  List<MemberProfile> _filteredMembers = [];
+  Set<String> _existingCodes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    _searchCtrl.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_onSearchChanged);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchCtrl.text.trim().toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredMembers = _allCompleteMembers;
+      } else {
+        _filteredMembers = _allCompleteMembers.where((p) {
+          final mMr = p.fullNameMr.toLowerCase();
+          final mEn = p.fullNameEn.toLowerCase();
+          final phone = p.phone.toLowerCase();
+          final id = (p.memberId ?? '').toLowerCase();
+          final distMr = p.districtMr.toLowerCase();
+          final distEn = p.districtEn.toLowerCase();
+          final taluka = p.subDistrict.toLowerCase();
+          final village = p.village.toLowerCase();
+          final city = p.city.toLowerCase();
+          final nVillage = p.nativeVillage.toLowerCase();
+          final nTaluka = p.nativeTaluka.toLowerCase();
+          final nDist = p.nativeDistrict.toLowerCase();
+
+          return mMr.contains(query) ||
+              mEn.contains(query) ||
+              phone.contains(query) ||
+              id.contains(query) ||
+              distMr.contains(query) ||
+              distEn.contains(query) ||
+              taluka.contains(query) ||
+              village.contains(query) ||
+              city.contains(query) ||
+              nVillage.contains(query) ||
+              nTaluka.contains(query) ||
+              nDist.contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  Future<void> _loadData() async {
+    try {
+      // 1. Fetch existing referral codes
+      final refSnap = await FirebaseFirestore.instance.collection('referrals').get();
+      final existingCodes = refSnap.docs.map((d) => d.id.toUpperCase()).toSet();
+
+      // 2. Fetch all members and filter only 100% complete
+      final memSnap = await FirebaseFirestore.instance.collection('members').get();
+      final completeMembers = <MemberProfile>[];
+
+      for (final doc in memSnap.docs) {
+        final profile = MemberProfile.fromFirestore(doc.id, doc.data());
+        if (profile.isProfileComplete) {
+          completeMembers.add(profile);
+        }
+      }
+
+      // Sort by Name (Marathi or English)
+      completeMembers.sort((a, b) {
+        final nameA = a.fullNameMr.isNotEmpty ? a.fullNameMr : a.fullNameEn;
+        final nameB = b.fullNameMr.isNotEmpty ? b.fullNameMr : b.fullNameEn;
+        return nameA.compareTo(nameB);
+      });
+
+      if (mounted) {
+        setState(() {
+          _existingCodes = existingCodes;
+          _allCompleteMembers = completeMembers;
+          _filteredMembers = completeMembers;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addReferral(MemberProfile profile) async {
+    final code = (profile.memberId != null &&
+            profile.memberId!.isNotEmpty &&
+            profile.memberId != 'PENDING')
+        ? profile.memberId!
+        : profile.phone;
+    final title = profile.fullNameMr.isNotEmpty ? profile.fullNameMr : profile.fullNameEn;
+
+    final campaign = ReferralCampaign(
+      code: code,
+      title: title,
+      maxLimit: 0, // No limit!
+      usedCount: 0,
+      isActive: true,
+      district: profile.districtEn,
+      memberId: profile.memberId,
+      memberPhone: profile.phone,
+      memberNameMr: profile.fullNameMr,
+      memberNameEn: profile.fullNameEn,
+      memberPhoto: profile.photoUrl ?? profile.photoBase64,
+      memberTaluka: profile.subDistrict,
+      createdAt: DateTime.now(),
+    );
+
+    final success = await ReferralService.instance.saveCampaign(campaign);
+    if (success) {
+      // Also update member's record with referral ID
+      await FirebaseFirestore.instance.collection('members').doc(profile.phone).set({
+        'membership': {'referral_id': code},
+        'referral_id': code,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$title यांची रेफरल लिंक तयार झाली! (ID: $code)'),
+            backgroundColor: AppColors.greenDark,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('त्रुटी: रेफरल लिंक तयार करता आली नाही.'),
+            backgroundColor: AppColors.redDark,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildMemberAvatar(MemberProfile profile, {double size = 52}) {
+    if (profile.photoBase64 != null && profile.photoBase64!.isNotEmpty) {
+      try {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(size / 2),
+          child: Image.memory(
+            base64Decode(profile.photoBase64!),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildAvatarInitial(profile, size),
+          ),
+        );
+      } catch (_) {}
+    }
+    if (profile.photoUrl != null && profile.photoUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: Image.network(
+          profile.photoUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildAvatarInitial(profile, size),
+        ),
+      );
+    }
+    return _buildAvatarInitial(profile, size);
+  }
+
+  Widget _buildAvatarInitial(MemberProfile profile, double size) {
+    final name = profile.fullNameMr.isNotEmpty ? profile.fullNameMr : profile.fullNameEn;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'M';
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.saffron, AppColors.goldMetallic],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.goldLight, width: 1.5),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(fontSize: size * 0.4, fontWeight: FontWeight.bold, color: AppColors.white),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron, width: 1.2),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 760),
+        child: Column(
+          children: [
+            // Dialog Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                border: Border(bottom: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.person_add_alt_1_rounded,
+                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'नवीन रेफरल लिंक जोडा',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                          ),
+                        ),
+                        Text(
+                          'फक्त १००% पूर्ण प्रोफाइल असलेले सभासद (100% Completed Only)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close_rounded, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchCtrl,
+                style: TextStyle(color: isDark ? AppColors.white : AppColors.textDarkPrimary),
+                decoration: InputDecoration(
+                  hintText: 'नाव, फोन नंबर, सभासद आयडी, जिल्हा किंवा गाव शोधा...',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary,
+                  ),
+                  prefixIcon: Icon(Icons.search_rounded, color: isDark ? AppColors.goldLight : AppColors.saffron),
+                  suffixIcon: _searchCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () => _searchCtrl.clear(),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: isDark ? AppColors.gold : AppColors.saffron, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+
+            // Results List
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.saffron))
+                  : _filteredMembers.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.search_off_rounded, size: 44, color: isDark ? AppColors.textMuted : AppColors.textDarkSecondary),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'कोणताही १००% पूर्ण प्रोफाइल असलेला सभासद आढळला नाही.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'केवळ ज्या सभासदांची प्रोफाईल १००% पूर्ण झाली आहे, त्यांनाच रेफरल लिंक दिली जाऊ शकते.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          itemCount: _filteredMembers.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final profile = _filteredMembers[index];
+                            final id = (profile.memberId != null && profile.memberId!.isNotEmpty && profile.memberId != 'PENDING')
+                                ? profile.memberId!
+                                : profile.phone;
+                            final isAlreadyAdded = _existingCodes.contains(id.toUpperCase()) ||
+                                _existingCodes.contains(profile.phone.toUpperCase());
+
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.darkBgHeroTop : AppColors.lightSurfaceElevated,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isAlreadyAdded
+                                      ? (isDark ? AppColors.darkBorder : AppColors.lightCardBorder)
+                                      : (isDark ? AppColors.gold.withValues(alpha: 0.3) : AppColors.saffron.withValues(alpha: 0.3)),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Profile header row
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildMemberAvatar(profile, size: 52),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    profile.fullNameMr.isNotEmpty ? profile.fullNameMr : profile.fullNameEn,
+                                                    style: TextStyle(
+                                                      fontFamily: AppTypography.fontFamily,
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: isDark ? AppColors.white : AppColors.textDarkPrimary,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (isAlreadyAdded)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.green.withValues(alpha: 0.15),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                      border: Border.all(color: AppColors.greenAccent, width: 0.8),
+                                                    ),
+                                                    child: const Text(
+                                                      'आधीच जोडले (Added)',
+                                                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.greenAccent),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            if (profile.fullNameEn.isNotEmpty && profile.fullNameEn != profile.fullNameMr) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                profile.fullNameEn,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                            const SizedBox(height: 6),
+                                            Wrap(
+                                              spacing: 8,
+                                              runSpacing: 4,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                                  decoration: BoxDecoration(
+                                                    color: (isDark ? AppColors.gold : AppColors.saffron).withValues(alpha: 0.15),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    'ID: $id',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.emeraldGreen.withValues(alpha: 0.15),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: const Text(
+                                                    '✅ १००% प्रोफाईल पूर्ण',
+                                                    style: TextStyle(
+                                                      fontSize: 10.5,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.emeraldGreen,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '📞 ${profile.phone}',
+                                                  style: TextStyle(
+                                                    fontSize: 11.5,
+                                                    color: isDark ? AppColors.goldLight : AppColors.saffronDark,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+
+                                  // Comprehensive Identifying Information
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Current Address
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(Icons.location_on_rounded, size: 13, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                'सध्याचा पत्ता: ${profile.districtMr} (${profile.districtEn})${profile.subDistrict.isNotEmpty ? ' • ${profile.subDistrict}' : ''}${profile.village.isNotEmpty ? ' • ${profile.village}' : (profile.city.isNotEmpty ? ' • ${profile.city}' : '')}',
+                                                style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.white : AppColors.textDarkPrimary),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        // Native Address
+                                        if (profile.nativeVillage.isNotEmpty || profile.nativeTaluka.isNotEmpty || profile.nativeDistrict.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(Icons.home_rounded, size: 13, color: isDark ? AppColors.goldLight : AppColors.saffronDark),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  'मूळ गाव: ${profile.nativeVillage.isNotEmpty ? profile.nativeVillage : '-'}${profile.nativeTaluka.isNotEmpty ? ', ${profile.nativeTaluka}' : ''}${profile.nativeDistrict.isNotEmpty ? ' (${profile.nativeDistrict})' : ''}',
+                                                  style: TextStyle(fontSize: 11.5, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+
+                                        // DOB & Profession
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '🎂 जन्मतारीख: ${profile.dateOfBirth.isNotEmpty ? profile.dateOfBirth : '-'}',
+                                                style: TextStyle(fontSize: 11, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                '💼 व्यवसाय: ${profile.profession.isNotEmpty ? profile.profession : '-'}',
+                                                style: TextStyle(fontSize: 11, color: isDark ? AppColors.textSecondary : AppColors.textDarkSecondary),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+
+                                  // Action Button
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: isAlreadyAdded
+                                        ? OutlinedButton.icon(
+                                            onPressed: null,
+                                            icon: const Icon(Icons.check_circle_rounded, size: 15, color: AppColors.greenAccent),
+                                            label: const Text('रेफरल लिंक आधीच सक्रिय आहे', style: TextStyle(fontSize: 12)),
+                                            style: OutlinedButton.styleFrom(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            ),
+                                          )
+                                        : ElevatedButton.icon(
+                                            onPressed: () => _addReferral(profile),
+                                            icon: const Icon(Icons.add_link_rounded, size: 16, color: AppColors.white),
+                                            label: const Text(
+                                              'या सभासदाची रेफरल लिंक तयार करा',
+                                              style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.saffron,
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
         ),
       ),
     );

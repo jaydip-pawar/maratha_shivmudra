@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maratha_shivmudra/core/theme/theme_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 
 class OtpField extends StatefulWidget {
@@ -123,6 +124,7 @@ class _OtpFieldState extends State<OtpField>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         return AnimatedBuilder(
@@ -159,7 +161,7 @@ class _OtpFieldState extends State<OtpField>
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     maxLength: 1,
-                    cursorColor: AppColors.gold,
+                    cursorColor: isDark ? AppColors.gold : AppColors.saffron,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: TextStyle(
                       fontSize: constraints.maxWidth < 400 ? 16 : 20,
@@ -168,7 +170,7 @@ class _OtpFieldState extends State<OtpField>
                           ? AppColors.green
                           : _hasError
                               ? AppColors.errorColor
-                              : AppColors.goldLight,
+                              : (isDark ? AppColors.goldLight : AppColors.textDarkPrimary),
                     ),
                     decoration: InputDecoration(
                       counterText: "",
@@ -180,7 +182,7 @@ class _OtpFieldState extends State<OtpField>
                               ? AppColors.green
                               : _hasError
                                   ? AppColors.errorColor
-                                  : AppColors.darkBorder,
+                                  : (isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
                           width: 1.2,
                         ),
                       ),
@@ -191,7 +193,7 @@ class _OtpFieldState extends State<OtpField>
                               ? AppColors.green
                               : _hasError
                                   ? AppColors.errorColor
-                                  : AppColors.gold,
+                                  : (isDark ? AppColors.gold : AppColors.saffronDark),
                           width: 1.5,
                         ),
                       ),
@@ -200,7 +202,7 @@ class _OtpFieldState extends State<OtpField>
                           ? AppColors.green.withValues(alpha: 0.15)
                           : _hasError
                               ? AppColors.errorColor.withValues(alpha: 0.15)
-                              : AppColors.darkSurface,
+                              : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
                     ),
                     onChanged: (value) {
                       if (value.isNotEmpty) {
