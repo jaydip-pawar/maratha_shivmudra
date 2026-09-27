@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:maratha_shivmudra/core/constants/organization_roles.dart';
+import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/models/official_member.dart';
 
 class OrganizationService {
@@ -122,10 +123,19 @@ class OrganizationService {
     }
   }
 
-  /// Promote a member as an official candidate
+  /// Promote a member as an official candidate (only 100% complete profiles allowed)
   Future<bool> promoteMember(String phone) async {
     try {
+      final docSnap = await _membersCol.doc(phone).get();
+      if (!docSnap.exists || docSnap.data() == null) return false;
+      final profile = MemberProfile.fromFirestore(phone, docSnap.data()!);
+      if (!profile.isProfileComplete) {
+        debugPrint('Cannot promote member: Profile is not 100% complete ($phone)');
+        return false;
+      }
+
       await _membersCol.doc(phone).set({
+        'is_promoted': true,
         'membership': {
           'is_promoted': true,
           'promoted_at': FieldValue.serverTimestamp(),
@@ -143,6 +153,7 @@ class OrganizationService {
   Future<bool> unpromoteMember(String phone) async {
     try {
       await _membersCol.doc(phone).set({
+        'is_promoted': false,
         'membership': {
           'is_promoted': false,
           'promoted_at': null,
@@ -164,7 +175,12 @@ class OrganizationService {
         .map((snap) {
       return snap.docs
           .map((doc) => doc.data())
-          .where((data) => data['is_official'] != true)
+          .where((data) {
+            if (data['is_official'] == true) return false;
+            final phone = data['phone']?.toString() ?? '';
+            final profile = MemberProfile.fromFirestore(phone, data);
+            return profile.isProfileComplete;
+          })
           .toList();
     });
   }

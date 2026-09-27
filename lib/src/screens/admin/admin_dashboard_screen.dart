@@ -3417,39 +3417,63 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ),
                       ),
                     ] else if (!profile.isOfficial) ...[
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final success = await OrganizationService.instance.promoteMember(phone);
-                          if (context.mounted) {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success
-                                      ? '$nameMr यांना कार्यकारिणीसाठी यशस्वीरीत्या पदोन्नती दिली आहे! आता आपण \'कार्यकारिणी\' टॅबमधून पदभार सोपवू शकता.'
-                                      : 'त्रुटी: पदोन्नती करता आली नाही.',
+                      if (profile.isProfileComplete)
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final success = await OrganizationService.instance.promoteMember(phone);
+                            if (context.mounted) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success
+                                        ? '$nameMr यांना कार्यकारिणीसाठी यशस्वीरीत्या पदोन्नती दिली आहे! आता आपण \'कार्यकारिणी\' टॅबमधून पदभार सोपवू शकता.'
+                                        : 'त्रुटी: पदोन्नती करता आली नाही. प्रोफाईल १००% पूर्ण असणे आवश्यक आहे.',
+                                  ),
+                                  backgroundColor: success ? AppColors.greenDark : AppColors.redDark,
                                 ),
-                                backgroundColor: success ? AppColors.greenDark : AppColors.redDark,
-                              ),
-                            );
-                            setState(() {});
-                          }
-                        },
-                        icon: const Icon(Icons.military_tech_rounded, color: AppColors.white, size: 18),
-                        label: const Text(
-                          'कार्यकारिणीसाठी पदोन्नती द्या (Promote)',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.white,
-                            fontSize: 12.5,
+                              );
+                              setState(() {});
+                            }
+                          },
+                          icon: const Icon(Icons.military_tech_rounded, color: AppColors.white, size: 18),
+                          label: const Text(
+                            'कार्यकारिणीसाठी पदोन्नती द्या (Promote)',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.amberDark,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          ),
+                        )
+                      else
+                        Tooltip(
+                          message: 'पदोन्नतीसाठी प्रोफाईल १००% पूर्ण असणे बंधनकारक आहे.',
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('केवळ १००% प्रोफाईल पूर्ण असलेल्या सभासदांनाच पदोन्नती दिली जाऊ शकते.'),
+                                  backgroundColor: AppColors.orangeDark,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.lock_outline_rounded, color: AppColors.textMuted, size: 16),
+                            label: const Text(
+                              'पदोन्नतीसाठी १००% प्रोफाईल आवश्यक',
+                              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightCardBorder),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.amberDark,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        ),
-                      ),
                     ],
                     ElevatedButton.icon(
                       onPressed: () {
@@ -3728,12 +3752,17 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
             'district': p.districtEn,
             'member_id': p.memberId ?? 'PENDING',
             'photo_url': p.photoUrl,
+            'is_profile_complete': p.isProfileComplete,
             ...d.data(),
           };
-        }).toList();
+        }).where((m) => m['is_profile_complete'] == true).toList();
         if (widget.initialCandidate != null) {
           final phone = widget.initialCandidate!['phone'];
-          if (!list.any((m) => m['phone'] == phone)) {
+          final initialProfile = MemberProfile.fromFirestore(
+            phone?.toString() ?? '',
+            widget.initialCandidate!,
+          );
+          if (initialProfile.isProfileComplete && !list.any((m) => m['phone'] == phone)) {
             list.insert(0, widget.initialCandidate!);
           }
         }
