@@ -4,12 +4,15 @@ import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/admin_auth_service.dart';
 
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+
 class AuthGuard extends AutoRouteGuard {
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) async {
     final ss = getIt<SecureStorage>();
     final mobileNumber = await ss.getMobileNumber();
-    if (mobileNumber.trim().isNotEmpty) {
+    if (mobileNumber.trim().isNotEmpty &&
+        UserSessionService.instance.isLoggedInNotifier.value) {
       resolver.next(true);
     } else {
       resolver.next(false);

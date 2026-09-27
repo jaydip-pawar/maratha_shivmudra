@@ -118,6 +118,11 @@ abstract class BilingualHelper {
     'mumbai': 'मुंबई',
     'pune': 'पुणे',
     'thane': 'ठाणे',
+    'dombivli': 'डोंबिवली',
+    'dombivali': 'डोंबिवली',
+    'kalyan': 'कल्याण',
+    'regency': 'रिजेन्सी',
+    'anantam': 'अनंतम',
     'nashik': 'नाशिक',
     'nagpur': 'नागपूर',
     'sambhajinagar': 'संभाजीनगर',
@@ -178,14 +183,20 @@ abstract class BilingualHelper {
         continue;
       }
 
-      final candidates =
-          await GoogleTransliterationClient.getCandidates(word);
-      if (candidates.isNotEmpty) {
-        final chosen = _reRankCandidates(candidates, word);
-        _transliterationCache[lowerWord] = chosen;
-        results.add(chosen);
-      } else {
-        // Fallback to pure algorithmic Indic transliterator
+      try {
+        final candidates =
+            await GoogleTransliterationClient.getCandidates(word);
+        if (candidates.isNotEmpty) {
+          final chosen = _reRankCandidates(candidates, word);
+          _transliterationCache[lowerWord] = chosen;
+          results.add(chosen);
+        } else {
+          // Fallback to pure algorithmic Indic transliterator
+          final converted = _phoneticLatinToMarathi(lowerWord);
+          _transliterationCache[lowerWord] = converted;
+          results.add(converted);
+        }
+      } catch (_) {
         final converted = _phoneticLatinToMarathi(lowerWord);
         _transliterationCache[lowerWord] = converted;
         results.add(converted);
@@ -528,6 +539,7 @@ abstract class BilingualHelper {
     required String memberId,
     String? district,
     String? taluka,
+    String? village,
   }) {
     final Set<String> tokens = {};
 
@@ -552,7 +564,34 @@ abstract class BilingualHelper {
     addTokenParts(memberId);
     if (district != null) addTokenParts(district);
     if (taluka != null) addTokenParts(taluka);
+    if (village != null) addTokenParts(village);
 
     return tokens.toList();
+  }
+
+  /// Localize gender string based on locale:
+  /// - Marathi (isMarathi: true): 'पुरुष', 'स्त्री', 'इतर'
+  /// - English (isMarathi: false): 'Male', 'Female', 'Other'
+  static String localizeGender(String? gender, {bool isMarathi = true}) {
+    if (gender == null || gender.trim().isEmpty) return '';
+    final g = gender.trim().toLowerCase();
+    if (g.startsWith('f') || g.contains('स्त्री') || g.contains('female')) {
+      return isMarathi ? 'स्त्री' : 'Female';
+    } else if (g.startsWith('m') || g.contains('पुरुष') || g.contains('male')) {
+      return isMarathi ? 'पुरुष' : 'Male';
+    } else if (g.startsWith('o') || g.contains('इतर') || g.contains('other')) {
+      return isMarathi ? 'इतर' : 'Other';
+    }
+    return gender.trim();
+  }
+
+  /// Normalize any gender string to canonical English ('Male', 'Female', 'Other') for DB storage.
+  static String normalizeGenderToEn(String? gender) {
+    if (gender == null || gender.trim().isEmpty) return '';
+    final g = gender.trim().toLowerCase();
+    if (g.startsWith('f') || g.contains('स्त्री') || g.contains('female')) return 'Female';
+    if (g.startsWith('m') || g.contains('पुरुष') || g.contains('male')) return 'Male';
+    if (g.startsWith('o') || g.contains('इतर') || g.contains('other')) return 'Other';
+    return gender.trim();
   }
 }

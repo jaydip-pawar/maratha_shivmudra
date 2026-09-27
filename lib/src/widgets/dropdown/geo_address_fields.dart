@@ -16,8 +16,9 @@ class GeoAddressFields extends StatefulWidget {
   final String? districtLabel;
   final String? talukaLabel;
   final bool isRequired;
+  final bool defaultToMaharashtra;
   final String keyPrefix;
-  final void Function(StateInfo state, DistrictInfo? district, TalukaInfo? taluka)? onChanged;
+  final void Function(StateInfo? state, DistrictInfo? district, TalukaInfo? taluka)? onChanged;
 
   const GeoAddressFields({
     super.key,
@@ -30,6 +31,7 @@ class GeoAddressFields extends StatefulWidget {
     this.districtLabel,
     this.talukaLabel,
     this.isRequired = true,
+    this.defaultToMaharashtra = true,
     this.keyPrefix = 'geo',
     this.onChanged,
   });
@@ -39,7 +41,7 @@ class GeoAddressFields extends StatefulWidget {
 }
 
 class _GeoAddressFieldsState extends State<GeoAddressFields> {
-  late StateInfo _selectedState;
+  StateInfo? _selectedState;
   DistrictInfo? _selectedDistrict;
   TalukaInfo? _selectedTaluka;
 
@@ -65,20 +67,24 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
     _selectedTaluka = _matchTaluka(_selectedDistrict, widget.initialTaluka);
   }
 
-  StateInfo _matchState(String? val) {
-    if (val == null || val.trim().isEmpty) return GeoConstants.defaultState;
+  StateInfo? _matchState(String? val) {
+    if (val == null || val.trim().isEmpty) {
+      if (!widget.defaultToMaharashtra || !widget.isRequired) return null;
+      return GeoConstants.defaultState;
+    }
     final clean = val.trim().toLowerCase();
-    return GeoConstants.states.firstWhere(
-      (s) =>
-          s.code.toLowerCase() == clean ||
+    for (final s in GeoConstants.states) {
+      if (s.code.toLowerCase() == clean ||
           s.nameEn.toLowerCase() == clean ||
-          s.nameMr == val.trim(),
-      orElse: () => GeoConstants.defaultState,
-    );
+          s.nameMr == val.trim()) {
+        return s;
+      }
+    }
+    return (widget.isRequired && widget.defaultToMaharashtra) ? GeoConstants.defaultState : null;
   }
 
-  DistrictInfo? _matchDistrict(StateInfo state, String? val) {
-    if (state.districts.isEmpty) return null;
+  DistrictInfo? _matchDistrict(StateInfo? state, String? val) {
+    if (state == null || state.districts.isEmpty) return null;
     if (val == null || val.trim().isEmpty) return null;
     final clean = val.trim().toLowerCase();
     for (final d in state.districts) {
@@ -104,11 +110,16 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
   }
 
   void _onStateSelected(String? stateCode) {
-    if (stateCode == null) return;
-    final newState = GeoConstants.states.firstWhere(
-      (s) => s.code == stateCode,
-      orElse: () => GeoConstants.defaultState,
-    );
+    if (stateCode == null || stateCode.trim().isEmpty) {
+      setState(() {
+        _selectedState = null;
+        _selectedDistrict = null;
+        _selectedTaluka = null;
+      });
+      widget.onChanged?.call(null, null, null);
+      return;
+    }
+    final newState = GeoConstants.findState(stateCode);
     const DistrictInfo? newDist = null;
     const TalukaInfo? newTal = null;
 
@@ -122,11 +133,24 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
   }
 
   void _onDistrictSelected(String? distCode) {
-    if (distCode == null || _selectedState.districts.isEmpty) return;
-    final newDist = _selectedState.districts.firstWhere(
-      (d) => d.code == distCode,
-      orElse: () => _selectedState.districts.first,
-    );
+    if (distCode == null || distCode.trim().isEmpty || _selectedState == null || _selectedState!.districts.isEmpty) {
+      setState(() {
+        _selectedDistrict = null;
+        _selectedTaluka = null;
+      });
+      widget.onChanged?.call(_selectedState, null, null);
+      return;
+    }
+    DistrictInfo? newDist;
+    for (final d in _selectedState!.districts) {
+      if (d.code.toLowerCase() == distCode.trim().toLowerCase() ||
+          d.nameEn.toLowerCase() == distCode.trim().toLowerCase() ||
+          d.nameMr == distCode.trim()) {
+        newDist = d;
+        break;
+      }
+    }
+    newDist ??= DistrictInfo(code: distCode, nameEn: distCode, nameMr: distCode);
     const TalukaInfo? newTal = null;
 
     setState(() {
@@ -138,12 +162,22 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
   }
 
   void _onTalukaSelected(String? talukaNameEn) {
-    if (talukaNameEn == null || _selectedDistrict == null) return;
+    if (talukaNameEn == null || talukaNameEn.trim().isEmpty || _selectedDistrict == null) {
+      setState(() {
+        _selectedTaluka = null;
+      });
+      widget.onChanged?.call(_selectedState, _selectedDistrict, null);
+      return;
+    }
     final talukas = _selectedDistrict!.talukas;
-    final newTal = talukas.firstWhere(
-      (t) => t.nameEn == talukaNameEn,
-      orElse: () => talukas.first,
-    );
+    TalukaInfo? newTal;
+    for (final t in talukas) {
+      if (t.nameEn.toLowerCase() == talukaNameEn.trim().toLowerCase() || t.nameMr == talukaNameEn.trim()) {
+        newTal = t;
+        break;
+      }
+    }
+    newTal ??= TalukaInfo(nameEn: talukaNameEn, nameMr: talukaNameEn);
 
     setState(() {
       _selectedTaluka = newTal;
@@ -167,8 +201,8 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
     }).toList();
 
     final stateWidget = AppSearchableDropdown<String>(
-      key: ValueKey('${widget.keyPrefix}_state_${_selectedState.code}'),
-      value: _selectedState.code,
+      key: ValueKey('${widget.keyPrefix}_state_${_selectedState?.code}'),
+      value: _selectedState?.code,
       labelText: widget.stateLabel ?? (isMr ? 'राज्य' : 'State'),
       hintText: isMr ? 'राज्य निवडा...' : 'Select state...',
       searchHint: isMr ? 'राज्य शोधा...' : 'Search state...',
@@ -186,7 +220,7 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
     );
 
     // 2. District Dropdown
-    final districts = _selectedState.districts;
+    final districts = _selectedState?.districts ?? [];
     final districtItems = districts.map((d) {
       final label = isMr ? d.nameMr : '${d.nameEn} (${d.code})';
       return AppDropdownItem<String>(
@@ -197,7 +231,7 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
     }).toList();
 
     final distWidget = AppSearchableDropdown<String>(
-      key: ValueKey('${widget.keyPrefix}_dist_${_selectedState.code}_${_selectedDistrict?.code}'),
+      key: ValueKey('${widget.keyPrefix}_dist_${_selectedState?.code}_${_selectedDistrict?.code}'),
       value: _selectedDistrict?.code,
       labelText: widget.districtLabel ?? (isMr ? 'जिल्हा' : 'District'),
       hintText: isMr ? 'जिल्हा निवडा...' : 'Select district...',
@@ -205,7 +239,7 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
       isRequired: widget.isRequired,
       enabled: districts.isNotEmpty,
       validator: (val) {
-        if (!widget.isRequired || _selectedState.districts.isEmpty) return null;
+        if (!widget.isRequired || districts.isEmpty) return null;
         if (val == null || val.trim().isEmpty) {
           return isMr ? 'कृपया जिल्हा निवडा' : 'Please select district';
         }
@@ -230,7 +264,7 @@ class _GeoAddressFieldsState extends State<GeoAddressFields> {
     final talukaWidget = AppSearchableDropdown<String>(
       key: ValueKey('${widget.keyPrefix}_tal_${_selectedDistrict?.code}_${_selectedTaluka?.nameEn}'),
       value: _selectedTaluka?.nameEn,
-      labelText: widget.talukaLabel ?? (isMr ? 'तालुका / शहर' : 'Taluka / City'),
+      labelText: widget.talukaLabel ?? (isMr ? 'तालुका' : 'Taluka'),
       hintText: isMr ? 'तालुका निवडा...' : 'Select taluka...',
       searchHint: isMr ? 'तालुका शोधा...' : 'Search taluka...',
       isRequired: widget.isRequired,

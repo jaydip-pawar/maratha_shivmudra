@@ -1477,5 +1477,103 @@ void main() {
         expect(field.keyboardType, equals(TextInputType.text));
       },
     );
+
+    testWidgets(
+      'Typing Dombivali on virtual keyboard: adding dot on Do to make Don works via dynamic chip and dedicated key',
+      (tester) async {
+        final controller = TextEditingController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 600,
+                width: 500,
+                child: MarathiVirtualKeyboard(controller: controller),
+              ),
+            ),
+          ),
+        );
+
+        // 1. Tap 'ड'
+        await tester.tap(find.text('ड'));
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('ड'));
+
+        // Top signs row shows 'डो'
+        expect(find.text('डो'), findsOneWidget);
+
+        // 2. Tap 'डो' to apply matra
+        await tester.tap(find.text('डो'));
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डो'));
+
+        // Bottom action row shows '.' (dot kept in below line)
+        expect(find.text('.'), findsOneWidget);
+
+        // 3. Use the dedicated bottom row [ ं ] key beside Spacebar to add dot
+        final anusvaraBottomKeys = find.widgetWithText(Tooltip, 'ं');
+        expect(anusvaraBottomKeys, findsOneWidget);
+        await tester.tap(anusvaraBottomKeys);
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डों'));
+
+        // 4. Tap dedicated [ ं ] key again to toggle off
+        await tester.tap(anusvaraBottomKeys);
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डो'));
+
+        // Tap [ ं ] to restore 'डों'
+        await tester.tap(anusvaraBottomKeys);
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डों'));
+
+        // 5. Test canonical reordering: 'ड' + 'ं' + 'ो' becomes 'डों'
+        controller.clear();
+        await tester.tap(find.text('ड'));
+        await tester.pumpAndSettle();
+        await tester.tap(anusvaraBottomKeys);
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डं'));
+
+        // Now tap 'डो' matra -> must produce 'डों', NOT 'डंो'
+        await tester.tap(find.text('डो'));
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('डों'));
+      },
+    );
+
+    testWidgets(
+      'Verify ऱ (Eyelash Ra) is present and symbols mode contains ॐ and ऽ',
+      (tester) async {
+        final controller = TextEditingController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 600,
+                width: 500,
+                child: MarathiVirtualKeyboard(controller: controller),
+              ),
+            ),
+          ),
+        );
+
+        // Verify 'ऱ' exists in consonant rows
+        expect(find.text('ऱ'), findsOneWidget);
+        await tester.tap(find.text('ऱ'));
+        await tester.pumpAndSettle();
+        expect(controller.text, equals('ऱ'));
+
+        // Switch to ?123
+        await tester.tap(find.text('?123'));
+        await tester.pumpAndSettle();
+
+        // Verify ॐ and ऽ exist
+        expect(find.text('ॐ'), findsOneWidget);
+        expect(find.text('ऽ'), findsOneWidget);
+      },
+    );
   });
 }

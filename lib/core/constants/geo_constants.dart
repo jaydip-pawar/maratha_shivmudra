@@ -7825,13 +7825,22 @@ abstract class GeoConstants {
   }
 
   static DistrictInfo getDistrictByCode(String code) {
-    final upper = code.trim().toUpperCase();
+    final trimmed = code.trim();
+    final upper = trimmed.toUpperCase();
+    if (upper.isEmpty) {
+      return const DistrictInfo(code: '', nameEn: '', nameMr: '', talukas: []);
+    }
     for (final s in states) {
       for (final d in s.districts) {
-        if (d.code == upper || d.code.endsWith(upper)) return d;
+        if (d.code == upper ||
+            d.code.endsWith(upper) ||
+            d.nameEn.toUpperCase() == upper ||
+            d.nameMr == trimmed) {
+          return d;
+        }
       }
     }
-    return defaultState.districts.firstWhere((d) => d.code == 'PUN');
+    return const DistrictInfo(code: '', nameEn: '', nameMr: '', talukas: []);
   }
 
   static String getDistrictNameMr(String code) => getDistrictByCode(code).nameMr;

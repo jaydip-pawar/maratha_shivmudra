@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
 
 class SocialImpactModel {
   final String volunteers;
@@ -27,7 +28,11 @@ class SocialImpactModel {
     Map<String, dynamic>? data, {
     String? liveVolunteers,
   }) {
-    if (data == null) return const SocialImpactModel();
+    if (data == null) {
+      return SocialImpactModel(
+        volunteers: liveVolunteers ?? '101',
+      );
+    }
     return SocialImpactModel(
       volunteers: liveVolunteers ??
           _parseVal(
@@ -131,20 +136,39 @@ class LandingFirebaseService {
         .doc('social_impact')
         .snapshots()
         .asyncMap((snapshot) async {
-      int liveVolunteers = 101;
+      int? liveVolunteers;
       try {
-        final countSnap = await _firestore
-            .collection('members')
-            .where('is_registered', isEqualTo: true)
-            .count()
-            .get();
-        liveVolunteers = countSnap.count ?? 101;
-      } catch (_) {}
+        final count = await MemberProfileService.instance.getRegisteredCount();
+        if (count > 0) {
+          liveVolunteers = count;
+        } else {
+          final countSnap = await _firestore
+              .collection('members')
+              .where('membership.is_registered', isEqualTo: true)
+              .count()
+              .get();
+          final c = countSnap.count ?? 0;
+          if (c > 0) {
+            liveVolunteers = c;
+          } else {
+            final fallbackSnap = await _firestore
+                .collection('members')
+                .where('is_registered', isEqualTo: true)
+                .count()
+                .get();
+            if ((fallbackSnap.count ?? 0) > 0) {
+              liveVolunteers = fallbackSnap.count;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading member count in LandingFirebaseService: $e');
+      }
 
       final data = snapshot.data();
       return SocialImpactModel.fromFirestore(
         data,
-        liveVolunteers: liveVolunteers.toString(),
+        liveVolunteers: liveVolunteers?.toString(),
       );
     }).handleError((Object e) {
       debugPrint('Error loading social impact stats: $e');

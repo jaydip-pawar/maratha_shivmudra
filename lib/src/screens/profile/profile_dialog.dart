@@ -7,6 +7,7 @@ import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/profile/widgets/profile_content_view.dart';
@@ -117,9 +118,23 @@ class _ProfileModalDialogState extends State<ProfileModalDialog> {
     }
 
     final p = await MemberProfileService.instance.getProfile(_userPhone);
+    if (p == null) {
+      await UserSessionService.instance.forceDestruct(
+        reason: 'ProfileModalDialog: Profile for $_userPhone not found in Firestore',
+      );
+      if (mounted) {
+        setState(() {
+          _profile = null;
+          _isLoading = false;
+        });
+        Navigator.of(context).maybePop();
+      }
+      return;
+    }
+
     if (mounted) {
       setState(() {
-        _profile = p ?? MemberProfile(phone: _userPhone);
+        _profile = p;
         _isLoading = false;
       });
     }
@@ -158,12 +173,12 @@ class _ProfileModalDialogState extends State<ProfileModalDialog> {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: _isLoading
+      child: (_isLoading || _profile == null)
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.saffron),
             )
           : ProfileContentView(
-              initialProfile: _profile ?? MemberProfile(phone: _userPhone),
+              initialProfile: _profile!,
               isCompact: widget.isCompact,
               isFixedHeader: true,
               showCloseButton: true,

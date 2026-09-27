@@ -10,8 +10,7 @@ class SecureStorageImpl implements SecureStorage {
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
     aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-      sharedPreferencesName: 'IMobile_Key:',
+      storageNamespace: 'IMobile_Key:',
       preferencesKeyPrefix: 'IMobile_Encrypted_Key:',
     ),
   );

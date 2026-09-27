@@ -454,14 +454,51 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
       return false;
     }
 
-    final stateInfo = selectedState.value;
-    final districtInfo = selectedDistrict.value;
-    final talukaInfo = selectedTaluka.value;
+    final rawStateInfo = selectedState.value;
+    final rawDistrictInfo = selectedDistrict.value;
+    final rawTalukaInfo = selectedTaluka.value;
 
-    if (districtInfo == null || talukaInfo == null) {
+    if (rawDistrictInfo == null || rawTalukaInfo == null) {
       debugPrint('Error: District or Taluka is not selected');
       return false;
     }
+
+    // Canonical Geo Resolution to guarantee 100% correct bilingual hierarchy
+    final canonicalState = GeoConstants.findState(rawStateInfo.code) ??
+        GeoConstants.findState(rawStateInfo.nameEn) ??
+        GeoConstants.defaultState;
+
+    final canonicalDistrict = canonicalState.districts.firstWhere(
+      (d) =>
+          d.code.toLowerCase() == rawDistrictInfo.code.toLowerCase() ||
+          d.nameEn.toLowerCase() == rawDistrictInfo.nameEn.toLowerCase() ||
+          d.nameMr == rawDistrictInfo.nameMr,
+      orElse: () => rawDistrictInfo,
+    );
+
+    final canonicalTaluka = canonicalDistrict.talukas.firstWhere(
+      (t) =>
+          t.nameEn.toLowerCase() == rawTalukaInfo.nameEn.toLowerCase() ||
+          t.nameMr == rawTalukaInfo.nameMr ||
+          t.nameMr == rawTalukaInfo.nameEn,
+      orElse: () => rawTalukaInfo,
+    );
+
+    // Safeguard: Ensure state_mr is never district name
+    final stateMrSafe = (canonicalState.nameMr.isNotEmpty &&
+            canonicalState.nameMr != canonicalDistrict.nameMr)
+        ? canonicalState.nameMr
+        : 'महाराष्ट्र';
+
+    // Safeguard: Ensure taluka_mr is never district name (unless taluka actually equals district, e.g. Pune/Thane)
+    final talukaMrSafe = (canonicalTaluka.nameMr.isNotEmpty &&
+            (canonicalTaluka.nameMr != canonicalDistrict.nameMr ||
+                canonicalTaluka.nameEn.toLowerCase() == canonicalDistrict.nameEn.toLowerCase()))
+        ? canonicalTaluka.nameMr
+        : (canonicalDistrict.talukas.firstWhere(
+            (t) => t.nameEn.toLowerCase() == canonicalTaluka.nameEn.toLowerCase(),
+            orElse: () => canonicalTaluka,
+          ).nameMr);
 
     final fName = firstNameController.text.trim();
     final mName = middleNameController.text.trim();
@@ -493,15 +530,6 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
       }
     }
 
-    final searchTokens = BilingualHelper.generateSearchTokens(
-      nameEn: fullName,
-      nameMr: fullNameMr,
-      phone: phone,
-      memberId: 'PENDING',
-      district: districtInfo.nameEn,
-      taluka: talukaInfo.nameEn,
-    );
-
     final normalizedPin = _normalizeDigits(pincodeController.text);
     final village = villageController.text.trim();
     final villageMr = villageMrController.text.trim().isNotEmpty
@@ -512,81 +540,169 @@ class MemberFormBloc extends BlocBase<MemberFormEvent, MemberFormState>
         ? addressMrController.text.trim()
         : BilingualHelper.transliterateToMarathi(address);
 
+    final searchTokens = BilingualHelper.generateSearchTokens(
+      nameEn: fullName,
+      nameMr: fullNameMr,
+      phone: phone,
+      memberId: 'PENDING',
+      district: canonicalDistrict.nameEn,
+      taluka: canonicalTaluka.nameEn,
+      village: '$village $villageMr'.trim(),
+    );
+
     final db = FirebaseFirestore.instance;
     final memberRef = db.collection('members').doc(phone);
     final memberSnap = await memberRef.get();
 
+    final occRaw = living.trim();
+    final occLower = occRaw.toLowerCase();
+
+    final isUnemployed = occLower == 'बेरोजगार' ||
+        occLower == 'unemployed' ||
+        occLower == 'नोकरी शोधत आहे' ||
+        occLower == 'job-seeker';
+    final isSelfEmployed = occLower == 'स्वयंरोजगार' || occLower == 'self-employed';
+    final isJob = (occLower == 'नोकरी' || occLower == 'employed') || isSelfEmployed;
+    final isBusiness = (occLower == 'व्यवसाय' || occLower == 'business') || isSelfEmployed;
+    final isStudent = occLower == 'विद्यार्थी' || occLower == 'student' || occLower.contains('शिक्षण');
+    final isFarmer = occLower == 'शेती' || occLower == 'farmer' || occLower.contains('शेतकरी');
+    final isRetired = occLower == 'निवृत्त' || occLower == 'retired';
+    final isHomemaker = occLower == 'गृहपालक' || occLower == 'homemaker';
+
+    String occCategory = 'other';
+    if (isSelfEmployed) {
+      occCategory = 'self_employed';
+    } else if (isJob) {
+      occCategory = 'job';
+    } else if (isBusiness) {
+      occCategory = 'business';
+    } else if (isStudent) {
+      occCategory = 'student';
+    } else if (isFarmer) {
+      occCategory = 'farmer';
+    } else if (isUnemployed) {
+      occCategory = 'unemployed';
+    } else if (isRetired) {
+      occCategory = 'retired';
+    } else if (isHomemaker) {
+      occCategory = 'homemaker';
+    }
+
+    final Map<String, dynamic> occMap = {
+      'category': occCategory,
+      'category_mr': occRaw,
+    };
+
+    if (isJob) {
+      if (jobDesignationController.text.trim().isNotEmpty || jobCompanyController.text.trim().isNotEmpty || !isSelfEmployed) {
+        occMap['job_details'] = {
+          'designation': jobDesignationController.text.trim(),
+          'company': jobCompanyController.text.trim(),
+        };
+      }
+    }
+    if (isBusiness) {
+      if (businessTypeController.text.trim().isNotEmpty || !isSelfEmployed) {
+        occMap['business_details'] = {
+          'business_type': businessTypeController.text.trim(),
+        };
+      }
+    }
+    if (isStudent) {
+      occMap['student_details'] = {
+        'qualification': (selectedEducation.value == 'Other' || selectedEducation.value == 'इतर')
+            ? educationOtherController.text.trim()
+            : (selectedEducation.value ?? ''),
+        'qualification_other': educationOtherController.text.trim(),
+      };
+    }
+    if (isFarmer) {
+      occMap['farming_details'] = {
+        'crops_produced': cropsList.value,
+      };
+    }
+    if (isUnemployed) {
+      final unempEdu = unemployedEducation.value ?? '';
+      occMap['unemployed_details'] = {
+        'highest_qualification': unempEdu,
+        if (unempEdu.startsWith('Other') || unempEdu.startsWith('इतर'))
+          'qualification_other': unemployedEducationOtherController.text.trim(),
+        'preferred_sector': unemployedPreferredSectorController.text.trim(),
+        'skills_and_licenses': unemployedSkillsController.text.trim(),
+        'willing_to_relocate': willingToRelocate.value,
+      };
+    }
+
     final memberData = {
-      'phone': phone,
-      'first_name_en': fName,
-      'middle_name_en': mName,
-      'last_name_en': lName,
-      'full_name_en': fullName,
-      'name': fullName,
-      'first_name_mr': fNameMr,
-      'middle_name_mr': mNameMr,
-      'last_name_mr': lNameMr,
-      'full_name_mr': fullNameMr,
-      'name_mr': fullNameMr,
-      'date_of_birth': dateOfBirthController.text.trim(),
-      'gender': 'Male',
-      'address': address,
-      'address_mr': addressMr,
-      'village': village,
-      'village_mr': villageMr,
-      'city': cityController.text.trim().isNotEmpty
-          ? cityController.text.trim()
-          : talukaInfo.nameEn,
-      'sub_district': talukaInfo.nameEn,
-      'sub_district_mr': talukaInfo.nameMr,
-      'taluka': talukaInfo.nameEn,
-      'taluka_en': talukaInfo.nameEn,
-      'taluka_mr': talukaInfo.nameMr,
-      'state': stateInfo.nameEn,
-      'state_code': stateInfo.code,
-      'state_en': stateInfo.nameEn,
-      'state_mr': stateInfo.nameMr,
-      'district': districtInfo.nameEn,
-      'district_code': districtInfo.code,
-      'district_en': districtInfo.nameEn,
-      'district_mr': districtInfo.nameMr,
-      'pincode': normalizedPin,
-      'email': emailController.text.trim(),
-      'living': living.trim(),
-      'profession': living.trim(),
-      'job_designation': jobDesignationController.text.trim(),
-      'job_company': jobCompanyController.text.trim(),
-      'business_type': businessTypeController.text.trim(),
-      'education_level': selectedEducation.value ?? '',
-      'education_other': educationOtherController.text.trim(),
-      'education': (selectedEducation.value == 'Other' || selectedEducation.value == 'इतर')
-          ? educationOtherController.text.trim()
-          : (selectedEducation.value ?? ''),
-      'crops_produced': cropsList.value,
-      'unemployed_education': (unemployedEducation.value == 'Other' ||
-              unemployedEducation.value == 'इतर' ||
-              (unemployedEducation.value != null &&
-                  (unemployedEducation.value!.startsWith('इतर') ||
-                      unemployedEducation.value!.startsWith('Other'))))
-          ? (unemployedEducationOtherController.text.trim().isNotEmpty
-              ? unemployedEducationOtherController.text.trim()
-              : (unemployedEducation.value ?? ''))
-          : (unemployedEducation.value ?? ''),
-      'unemployed_preferred_sector': unemployedPreferredSectorController.text.trim(),
-      'unemployed_skills': unemployedSkillsController.text.trim(),
-      'willing_to_relocate': willingToRelocate.value,
-      'blood_group': '',
-      'emergency_contact_name': '',
-      'emergency_contact_phone': '',
-      'role_type': 'member',
-      'designation': '',
-      'member_id': 'PENDING',
-      'referral_id': referralId,
+      'personal': {
+        'first_name_en': fName,
+        'first_name_mr': fNameMr,
+        'middle_name_en': mName,
+        'middle_name_mr': mNameMr,
+        'last_name_en': lName,
+        'last_name_mr': lNameMr,
+        'full_name_en': fullName,
+        'full_name_mr': fullNameMr,
+        'date_of_birth': dateOfBirthController.text.trim(),
+        'email': emailController.text.trim(),
+        'gender': null,
+        'living_status': null,
+      },
+      'residence': {
+        'address_en': address,
+        'address_mr': addressMr,
+        'village_en': village,
+        'village_mr': villageMr,
+        'taluka_en': canonicalTaluka.nameEn,
+        'taluka_mr': talukaMrSafe,
+        'district_en': canonicalDistrict.nameEn,
+        'district_mr': canonicalDistrict.nameMr,
+        'district_code': canonicalDistrict.code,
+        'state_en': canonicalState.nameEn,
+        'state_mr': stateMrSafe,
+        'state_code': canonicalState.code,
+        'pincode': normalizedPin,
+      },
+      'native_place': {
+        'is_same_as_current': false,
+      },
+      'occupation': occMap,
+      'emergency': {
+        'blood_group': null,
+        'contact_name': null,
+        'contact_phone': null,
+      },
+      'affiliations': {
+        'is_politically_active': null,
+        'political_party': null,
+        'political_role': null,
+        'is_associated_with_ngo': null,
+        'ngo_name': null,
+        'ngo_role': null,
+      },
+      'pledges': {
+        'has_answered_organ_donation': false,
+        'is_organ_donor_pledged': false,
+      },
+      'official': {
+        'is_official': false,
+      },
+      'media': {
+        'photo_base64': null,
+        'photo_url': null,
+      },
+      'membership': {
+        'phone': phone,
+        'member_id': 'PENDING',
+        'referral_id': referralId,
+        'role_type': 'member',
+        'designation': '',
+        'is_registered': true,
+        'is_profile_complete': false,
+        'is_card_issued': false,
+        'is_valid': true,
+      },
       'search_tokens': searchTokens,
-      'is_registered': true,
-      'is_profile_complete': false,
-      'is_card_issued': false,
-      'is_valid': true,
       'updated_at': FieldValue.serverTimestamp(),
       if (!memberSnap.exists) 'created_at': FieldValue.serverTimestamp(),
     };

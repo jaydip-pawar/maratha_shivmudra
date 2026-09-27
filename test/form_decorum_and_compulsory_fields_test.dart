@@ -461,7 +461,7 @@ void main() {
       expect(profile.addressMr, equals('सदाशिव पेठ, पुणे'));
 
       final map = profile.toFirestore();
-      expect(map['address_mr'], equals('सदाशिव पेठ, पुणे'));
+      expect(map['residence']['address_mr'], equals('सदाशिव पेठ, पुणे'));
     });
 
     testWidgets('MarathiVirtualKeyboard respects inputFormatters filtering digits', (tester) async {

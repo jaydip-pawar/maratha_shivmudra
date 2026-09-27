@@ -14,6 +14,7 @@ import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/bloc/form_bloc.dart';
 import 'package:maratha_shivmudra/src/screens/member_form/dialogs/form_submitted_dialog.dart';
 import 'package:maratha_shivmudra/src/widgets/buttons/animated_button.dart';
+import 'package:maratha_shivmudra/src/widgets/feedback/app_floating_toast.dart';
 import 'package:maratha_shivmudra/src/widgets/keyboard/marathi_virtual_keyboard.dart';
 import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
 
@@ -608,9 +609,6 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                       child: _buildTextField(
                                         context,
                                         label: '${isMarathi ? "पत्ता" : "Address"} (English)',
-                                        hintText: isMarathi
-                                            ? 'उदा. Flat 102, Shaniwar Peth'
-                                            : 'e.g., Flat 102, Shaniwar Peth',
                                         controller: formBloc.addressController,
                                         isCompulsory: true,
                                         icon: Icons.home_outlined,
@@ -624,9 +622,6 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                       child: _buildTextField(
                                         context,
                                         label: '${isMarathi ? "पत्ता" : "Address"} (मराठी)',
-                                        hintText: isMarathi
-                                            ? 'उदा. घर क्र. १२, शनिवार पेठ'
-                                            : 'e.g., House No. 12, Shaniwar Peth',
                                         controller: formBloc.addressMrController,
                                         focusNode: formBloc.addressMrFocusNode,
                                         isCompulsory: true,
@@ -660,9 +655,6 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 _buildTextField(
                                   context,
                                   label: '${isMarathi ? "पत्ता" : "Address"} (English)',
-                                  hintText: isMarathi
-                                      ? 'उदा. Flat 102, Shaniwar Peth'
-                                      : 'e.g., Flat 102, Shaniwar Peth',
                                   controller: formBloc.addressController,
                                   isCompulsory: true,
                                   icon: Icons.home_outlined,
@@ -674,9 +666,6 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 _buildTextField(
                                   context,
                                   label: '${isMarathi ? "पत्ता" : "Address"} (मराठी)',
-                                  hintText: isMarathi
-                                      ? 'उदा. घर क्र. १२, शनिवार पेठ'
-                                      : 'e.g., House No. 12, Shaniwar Peth',
                                   controller: formBloc.addressMrController,
                                   focusNode: formBloc.addressMrFocusNode,
                                   isCompulsory: true,
@@ -715,7 +704,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 isMarathi: isMarathi,
                                 isDesktop: isDesktop,
                                 onChanged: (state, district, taluka) {
-                                  if (formBloc.selectedState.value.code != state.code) {
+                                  if (state != null && formBloc.selectedState.value.code != state.code) {
                                     formBloc.onStateSelected(state, isMarathi: isMarathi);
                                   } else if (formBloc.selectedDistrict.value?.code != district?.code) {
                                     formBloc.onDistrictSelected(district, isMarathi: isMarathi);
@@ -733,7 +722,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                     Expanded(
                                       child: _buildTextField(
                                         context,
-                                        label: '${isMarathi ? "गाव / वाडी / परिसर" : "Village / Locality"} (English)',
+                                        label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (English)',
                                         controller: formBloc.villageController,
                                         isCompulsory: false,
                                         icon: Icons.holiday_village_outlined,
@@ -747,8 +736,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                           final mr = formBloc.villageMrController.text.trim();
                                           if (mr.isNotEmpty && en.isEmpty) {
                                             return isMarathi
-                                                ? 'कृपया गाव इंग्रजीत प्रविष्ट करा'
-                                                : 'Please enter village in English';
+                                                ? 'कृपया गाव/शहर इंग्रजीत प्रविष्ट करा'
+                                                : 'Please enter village/city in English';
                                           }
                                           if (en.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(en)) {
                                             return isMarathi
@@ -763,7 +752,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                     Expanded(
                                       child: _buildTextField(
                                         context,
-                                        label: '${isMarathi ? "गाव / वाडी / परिसर" : "Village / Locality"} (मराठी)',
+                                        label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (मराठी)',
                                         controller: formBloc.villageMrController,
                                         focusNode: formBloc.villageMrFocusNode,
                                         isCompulsory: false,
@@ -773,7 +762,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                           context,
                                           controller: formBloc.villageMrController,
                                           focusNode: formBloc.villageMrFocusNode,
-                                          title: isMarathi ? 'गाव / वाडी / परिसर' : 'Village / Locality',
+                                          title: isMarathi ? 'गाव / शहर / परिसर' : 'Village / City / Locality',
                                           inputFormatters: [
                                             FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
                                           ],
@@ -786,8 +775,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                           final en = formBloc.villageController.text.trim();
                                           if (en.isNotEmpty && mr.isEmpty) {
                                             return isMarathi
-                                                ? 'कृपया गाव मराठीत प्रविष्ट करा'
-                                                : 'Please enter village in Marathi';
+                                                ? 'कृपया गाव/शहर मराठीत प्रविष्ट करा'
+                                                : 'Please enter village/city in Marathi';
                                           }
                                           if (mr.isNotEmpty &&
                                               (RegExp(r'[0-9\u0966-\u096F]').hasMatch(mr) ||
@@ -839,7 +828,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                               else ...[
                                 _buildTextField(
                                   context,
-                                  label: '${isMarathi ? "गाव / वाडी / परिसर" : "Village / Locality"} (English)',
+                                  label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (English)',
                                   controller: formBloc.villageController,
                                   isCompulsory: false,
                                   icon: Icons.holiday_village_outlined,
@@ -853,8 +842,8 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                     final mr = formBloc.villageMrController.text.trim();
                                     if (mr.isNotEmpty && en.isEmpty) {
                                       return isMarathi
-                                          ? 'कृपया गाव इंग्रजीत प्रविष्ट करा'
-                                          : 'Please enter village in English';
+                                          ? 'कृपया गाव/शहर इंग्रजीत प्रविष्ट करा'
+                                          : 'Please enter village/city in English';
                                     }
                                     if (en.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(en)) {
                                       return isMarathi
@@ -867,7 +856,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                 const SizedBox(height: 8),
                                 _buildTextField(
                                   context,
-                                  label: '${isMarathi ? "गाव / वाडी / परिसर" : "Village / Locality"} (मराठी)',
+                                  label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (मराठी)',
                                   controller: formBloc.villageMrController,
                                   focusNode: formBloc.villageMrFocusNode,
                                   isCompulsory: false,
@@ -877,7 +866,7 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                     context,
                                     controller: formBloc.villageMrController,
                                     focusNode: formBloc.villageMrFocusNode,
-                                    title: isMarathi ? 'गाव / वाडी / परिसर' : 'Village / Locality',
+                                    title: isMarathi ? 'गाव / शहर / परिसर' : 'Village / City / Locality',
                                     inputFormatters: [
                                       FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
                                     ],
@@ -1162,17 +1151,11 @@ class MemberFormView extends ModularState<MemberFormBloc> {
                                       if (isSuccess && context.mounted) {
                                         FormSubmittedDialog.show(context);
                                       } else if (!isSuccess && context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              isMarathi
-                                                  ? 'नोंदणी करताना त्रुटी आली. कृपया सर्व माहिती तपासा.'
-                                                  : 'Failed to submit form. Please verify all fields.',
-                                            ),
-                                            backgroundColor:
-                                                AppColors.errorColor,
-                                          ),
+                                        AppFloatingToast.showError(
+                                          context,
+                                          isMarathi
+                                              ? 'नोंदणी करताना त्रुटी आली. कृपया सर्व माहिती तपासा.'
+                                              : 'Failed to submit form. Please verify all fields.',
                                         );
                                       }
                                     },
@@ -1471,108 +1454,6 @@ class MemberFormView extends ModularState<MemberFormBloc> {
               );
               formBloc.onStateSelected(found, isMarathi: isMarathi);
             }
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDistrictField(
-    BuildContext context,
-    MemberFormBloc formBloc,
-    bool isMarathi,
-  ) {
-    return ValueListenableBuilder<StateInfo>(
-      valueListenable: formBloc.selectedState,
-      builder: (context, state, _) {
-        return ValueListenableBuilder<DistrictInfo?>(
-          valueListenable: formBloc.selectedDistrict,
-          builder: (context, district, _) {
-            final districtItems = state.districts.map((d) {
-              final label = isMarathi ? d.nameMr : '${d.nameEn} (${d.code})';
-              return AppDropdownItem<String>(
-                value: d.code,
-                label: label,
-                searchKey: '${d.nameMr} ${d.nameEn} ${d.code}',
-              );
-            }).toList();
-
-            return AppSearchableDropdown<String>(
-              key: ValueKey('reg_dist_${state.code}_${district?.code}'),
-              value: district?.code,
-              labelText: isMarathi ? 'जिल्हा' : 'District',
-              searchHint: isMarathi ? 'जिल्हा शोधा...' : 'Search district...',
-              isRequired: true,
-              validator: (val) {
-                if (state.districts.isNotEmpty && (val == null || val.trim().isEmpty)) {
-                  return isMarathi ? 'कृपया जिल्हा निवडा' : 'Please select district';
-                }
-                return null;
-              },
-              prefixIcon: const Icon(Icons.location_city_outlined, color: AppColors.gold, size: 18),
-              items: districtItems,
-              onChanged: (code) {
-                if (code != null) {
-                  final found = state.districts.firstWhere(
-                    (d) => d.code == code,
-                    orElse: () => state.districts.first,
-                  );
-                  formBloc.onDistrictSelected(found, isMarathi: isMarathi);
-                }
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildTalukaField(
-    BuildContext context,
-    MemberFormBloc formBloc,
-    bool isMarathi,
-  ) {
-    return ValueListenableBuilder<DistrictInfo?>(
-      valueListenable: formBloc.selectedDistrict,
-      builder: (context, district, _) {
-        return ValueListenableBuilder<TalukaInfo?>(
-          valueListenable: formBloc.selectedTaluka,
-          builder: (context, taluka, _) {
-            final talukas = district?.talukas ?? [];
-            final talukaItems = talukas.map((t) {
-              final label = isMarathi ? t.nameMr : t.nameEn;
-              return AppDropdownItem<String>(
-                value: t.nameEn,
-                label: label,
-                searchKey: '${t.nameMr} ${t.nameEn}',
-              );
-            }).toList();
-
-            return AppSearchableDropdown<String>(
-              key: ValueKey('reg_tal_${district?.code}_${taluka?.nameEn}'),
-              value: taluka?.nameEn,
-              labelText: isMarathi ? 'तालुका / शहर' : 'Taluka / City',
-              searchHint: isMarathi ? 'तालुका शोधा...' : 'Search taluka...',
-              isRequired: true,
-              enabled: talukas.isNotEmpty,
-              validator: (val) {
-                if (talukas.isNotEmpty && (val == null || val.trim().isEmpty)) {
-                  return isMarathi ? 'कृपया तालुका निवडा' : 'Please select taluka';
-                }
-                return null;
-              },
-              prefixIcon: const Icon(Icons.holiday_village_outlined, color: AppColors.gold, size: 18),
-              items: talukaItems,
-              onChanged: (nameEn) {
-                if (nameEn != null && talukas.isNotEmpty) {
-                  final found = talukas.firstWhere(
-                    (t) => t.nameEn == nameEn,
-                    orElse: () => talukas.first,
-                  );
-                  formBloc.onTalukaSelected(found, isMarathi: isMarathi);
-                }
-              },
-            );
           },
         );
       },

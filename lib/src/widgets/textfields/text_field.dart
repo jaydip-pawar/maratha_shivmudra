@@ -496,10 +496,12 @@ class MarathiPhoneticInputFormatter extends TextInputFormatter {
 
   String _latinBuffer = '';
   int _lastWordStart = -1;
+  int _lastTransliteratedLength = 0;
 
   void reset() {
     _latinBuffer = '';
     _lastWordStart = -1;
+    _lastTransliteratedLength = 0;
   }
 
   @override
@@ -513,6 +515,7 @@ class MarathiPhoneticInputFormatter extends TextInputFormatter {
     }
 
     if (newValue.text == oldValue.text) {
+      reset();
       return newValue;
     }
 
@@ -543,27 +546,27 @@ class MarathiPhoneticInputFormatter extends TextInputFormatter {
         return newValue;
       }
 
-      // Latin letter typed
-      if (_lastWordStart < 0 || _lastWordStart > cursorPos - 1) {
-        int idx = cursorPos - 2;
-        while (idx >= 0 && oldValue.text[idx] != ' ') {
-          idx--;
-        }
-        _lastWordStart = idx + 1;
-        _latinBuffer = '';
+      // Check if we are continuing the current Latin word sequence
+      final isContinuingWord = _lastWordStart >= 0 &&
+          _latinBuffer.isNotEmpty &&
+          _lastWordStart <= oldValue.text.length &&
+          cursorPos - 1 == _lastWordStart + _lastTransliteratedLength;
+
+      if (isContinuingWord) {
+        _latinBuffer += newChar.toLowerCase();
+      } else {
+        _lastWordStart = cursorPos - 1;
+        _latinBuffer = newChar.toLowerCase();
+        _lastTransliteratedLength = 0;
       }
 
-      _latinBuffer += newChar.toLowerCase();
       final mrWord = BilingualHelper.transliterateToMarathi(_latinBuffer);
+      final before = oldValue.text.substring(0, _lastWordStart);
+      final wordEnd = (_lastWordStart + _lastTransliteratedLength)
+          .clamp(0, oldValue.text.length);
+      final after = oldValue.text.substring(wordEnd);
 
-      final before = _lastWordStart <= oldValue.text.length
-          ? oldValue.text.substring(0, _lastWordStart)
-          : '';
-      final oldCursor = oldValue.selection.baseOffset;
-      final after = oldCursor >= 0 && oldCursor <= oldValue.text.length
-          ? oldValue.text.substring(oldCursor)
-          : '';
-
+      _lastTransliteratedLength = mrWord.length;
       final newText = before + mrWord + after;
       final newCursor = (before + mrWord).length;
 
@@ -583,20 +586,29 @@ class MarathiPhoneticInputFormatter extends TextInputFormatter {
 
     // Case 2: Single backspace
     if (isSingleCharDeletion) {
-      if (_latinBuffer.isNotEmpty) {
+      if (_latinBuffer.isNotEmpty && _lastWordStart >= 0) {
         _latinBuffer = _latinBuffer.substring(0, _latinBuffer.length - 1);
-        if (_latinBuffer.isNotEmpty && _lastWordStart >= 0) {
+        final before = oldValue.text.substring(
+          0,
+          _lastWordStart.clamp(0, oldValue.text.length),
+        );
+        final wordEnd = (_lastWordStart + _lastTransliteratedLength)
+            .clamp(0, oldValue.text.length);
+        final after = oldValue.text.substring(wordEnd);
+
+        if (_latinBuffer.isNotEmpty) {
           final mrWord = BilingualHelper.transliterateToMarathi(_latinBuffer);
-          final before = oldValue.text.substring(
-            0,
-            _lastWordStart.clamp(0, oldValue.text.length),
-          );
-          final cursorInOld = oldValue.selection.baseOffset;
-          final after = cursorInOld >= 0 && cursorInOld <= oldValue.text.length
-              ? oldValue.text.substring(cursorInOld)
-              : '';
+          _lastTransliteratedLength = mrWord.length;
           final newText = before + mrWord + after;
           final newCursor = (before + mrWord).length;
+          return TextEditingValue(
+            text: newText,
+            selection: TextSelection.collapsed(offset: newCursor),
+          );
+        } else {
+          reset();
+          final newText = before + after;
+          final newCursor = before.length;
           return TextEditingValue(
             text: newText,
             selection: TextSelection.collapsed(offset: newCursor),

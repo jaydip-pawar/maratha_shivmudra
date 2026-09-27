@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -14,8 +15,10 @@ import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/widgets/dropdown/app_searchable_dropdown.dart';
 import 'package:maratha_shivmudra/src/widgets/dropdown/geo_address_fields.dart';
+import 'package:maratha_shivmudra/src/widgets/feedback/app_floating_toast.dart';
 import 'package:maratha_shivmudra/src/widgets/id_card/member_id_card_widget.dart';
 import 'package:maratha_shivmudra/src/widgets/keyboard/marathi_virtual_keyboard.dart';
+import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
 
 class ProfileContentView extends StatefulWidget {
   final MemberProfile initialProfile;
@@ -54,28 +57,41 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   final _firstNameMrController = TextEditingController();
   final _middleNameMrController = TextEditingController();
   final _lastNameMrController = TextEditingController();
+  final _firstNameMrFocusNode = FocusNode();
+  final _middleNameMrFocusNode = FocusNode();
+  final _lastNameMrFocusNode = FocusNode();
   final _dobController = TextEditingController();
-  String _selectedGender = 'Male';
-  String _selectedLiving = 'स्वतंत्र घर / स्वतःचे घर (Own House)';
+  String _selectedGender = '';
+  String _selectedLiving = '';
   final _livingOtherController = TextEditingController();
   final _emailController = TextEditingController();
 
   // Controllers - Current Address
   String _selectedState = 'Maharashtra';
-  String _selectedDistrict = 'Pune';
+  String _selectedDistrict = '';
   String _selectedTaluka = '';
+  String _selectedTalukaMr = '';
   final _villageController = TextEditingController();
+  final _villageMrController = TextEditingController();
+  final _villageMrFocusNode = FocusNode();
   final _pincodeController = TextEditingController();
   final _addressController = TextEditingController();
+  final _addressMrController = TextEditingController();
+  final _addressMrFocusNode = FocusNode();
 
   // Controllers - Native Village Address
-  bool _isNativeAddressSame = true;
-  String _selectedNativeState = 'Maharashtra';
-  String _selectedNativeDistrict = 'Satara';
+  bool _isNativeAddressSame = false;
+  String _selectedNativeState = '';
+  String _selectedNativeDistrict = '';
   String _selectedNativeTaluka = '';
+  String _selectedNativeTalukaMr = '';
   final _nativeVillageController = TextEditingController();
+  final _nativeVillageMrController = TextEditingController();
+  final _nativeVillageMrFocusNode = FocusNode();
   final _nativePincodeController = TextEditingController();
   final _nativeAddressController = TextEditingController();
+  final _nativeAddressMrController = TextEditingController();
+  final _nativeAddressMrFocusNode = FocusNode();
 
   // Controllers - Emergency & Blood Group
   String _selectedBloodGroup = '';
@@ -83,7 +99,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   final _emergencyPhoneController = TextEditingController();
 
   // Controllers - Occupation
-  String _selectedProfession = 'शेती (Farmer)';
+  String _selectedProfession = '';
   final _professionOtherController = TextEditingController();
   final _jobDesignationController = TextEditingController();
   final _jobCompanyController = TextEditingController();
@@ -105,6 +121,26 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   bool? _isAssociatedWithNgo;
   final _ngoNameController = TextEditingController();
   final _ngoRoleController = TextEditingController();
+
+  // Debounce timers for live transliteration
+  final Map<String, Timer> _debounceTimers = {};
+
+  void _debounceLiveTransliterate({
+    required String key,
+    required String text,
+    required TextEditingController targetController,
+    required TextEditingController sourceController,
+  }) {
+    _debounceTimers[key]?.cancel();
+    if (text.trim().isEmpty) return;
+    _debounceTimers[key] = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      final live = await BilingualHelper.transliterateLive(text);
+      if (mounted && sourceController.text.trim() == text.trim()) {
+        targetController.text = live;
+      }
+    });
+  }
 
   // Controllers - Organ Donation
   bool _isOrganDonorPledged = false;
@@ -172,17 +208,28 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     _firstNameMrController.dispose();
     _middleNameMrController.dispose();
     _lastNameMrController.dispose();
+    _firstNameMrFocusNode.dispose();
+    _middleNameMrFocusNode.dispose();
+    _lastNameMrFocusNode.dispose();
     _dobController.dispose();
     _livingOtherController.dispose();
     _emailController.dispose();
 
     _villageController.dispose();
+    _villageMrController.dispose();
+    _villageMrFocusNode.dispose();
     _pincodeController.dispose();
     _addressController.dispose();
+    _addressMrController.dispose();
+    _addressMrFocusNode.dispose();
 
     _nativeVillageController.dispose();
+    _nativeVillageMrController.dispose();
+    _nativeVillageMrFocusNode.dispose();
     _nativePincodeController.dispose();
     _nativeAddressController.dispose();
+    _nativeAddressMrController.dispose();
+    _nativeAddressMrFocusNode.dispose();
 
     _emergencyNameController.dispose();
     _emergencyPhoneController.dispose();
@@ -201,6 +248,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     _politicalRoleController.dispose();
     _ngoNameController.dispose();
     _ngoRoleController.dispose();
+    for (final timer in _debounceTimers.values) {
+      timer.cancel();
+    }
+    _debounceTimers.clear();
     super.dispose();
   }
 
@@ -213,7 +264,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     _middleNameMrController.text = p.middleNameMr;
     _lastNameMrController.text = p.lastNameMr;
     _dobController.text = p.dateOfBirth;
-    _selectedGender = const ['Male', 'Female', 'Other'].contains(p.gender) ? p.gender : 'Male';
+    _selectedGender = BilingualHelper.normalizeGenderToEn(p.gender);
     if (_livingOptions.contains(p.living) && p.living != 'इतर (Other)') {
       _selectedLiving = p.living;
       _livingOtherController.text = '';
@@ -221,33 +272,93 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       _selectedLiving = 'इतर (Other)';
       _livingOtherController.text = p.living == 'इतर (Other)' ? '' : p.living;
     } else {
-      _selectedLiving = 'स्वतंत्र घर / स्वतःचे घर (Own House)';
+      _selectedLiving = '';
       _livingOtherController.text = '';
     }
     _emailController.text = p.email;
 
     // 2. Current Address
     _selectedState = p.state.isNotEmpty ? p.state : 'Maharashtra';
-    _selectedDistrict = p.districtEn.isNotEmpty ? p.districtEn : 'Pune';
+    _selectedDistrict = p.districtEn.isNotEmpty ? p.districtEn : p.district;
     final talukas = _getTalukas(_selectedDistrict);
-    _selectedTaluka = talukas.any((t) => t.nameEn == p.subDistrict)
-        ? p.subDistrict
-        : (talukas.isNotEmpty ? talukas.first.nameEn : '');
-    _villageController.text = p.village.isNotEmpty ? p.village : p.city;
+    final matchedTaluka = talukas.firstWhere(
+      (t) =>
+          t.nameEn.toLowerCase() == p.subDistrict.toLowerCase() ||
+          t.nameMr == p.subDistrict ||
+          (p.subDistrictMr.isNotEmpty && t.nameMr == p.subDistrictMr),
+      orElse: () => TalukaInfo(nameEn: p.subDistrict, nameMr: p.subDistrictMr),
+    );
+    _selectedTaluka = matchedTaluka.nameEn;
+    _selectedTalukaMr = matchedTaluka.nameMr;
+
+    final villageEn = p.village.isNotEmpty ? p.village : p.city;
+    if (p.villageMr.isNotEmpty) {
+      _villageMrController.text = p.villageMr;
+      _villageController.text = villageEn;
+    } else if (BilingualHelper.isDevanagari(villageEn)) {
+      _villageMrController.text = villageEn;
+      _villageController.text = '';
+    } else {
+      _villageController.text = villageEn;
+      _villageMrController.text = villageEn.isNotEmpty ? BilingualHelper.transliterateToMarathi(villageEn) : '';
+    }
     _pincodeController.text = p.pincode;
-    _addressController.text = p.address;
+
+    final addressEn = p.address;
+    if (p.addressMr.isNotEmpty) {
+      _addressMrController.text = p.addressMr;
+      _addressController.text = addressEn;
+    } else if (BilingualHelper.isDevanagari(addressEn)) {
+      _addressMrController.text = addressEn;
+      _addressController.text = '';
+    } else {
+      _addressController.text = addressEn;
+      _addressMrController.text = addressEn.isNotEmpty ? BilingualHelper.transliterateToMarathi(addressEn) : '';
+    }
 
     // 3. Native Village Address
     _isNativeAddressSame = p.isNativeAddressSameAsCurrent;
-    _selectedNativeState = p.nativeState.isNotEmpty ? p.nativeState : 'Maharashtra';
-    _selectedNativeDistrict = p.nativeDistrict.isNotEmpty ? p.nativeDistrict : 'Satara';
-    final talukasNative = _getTalukas(_selectedNativeDistrict);
-    _selectedNativeTaluka = talukasNative.any((t) => t.nameEn == p.nativeTaluka)
-        ? p.nativeTaluka
-        : (talukasNative.isNotEmpty ? talukasNative.first.nameEn : '');
-    _nativeVillageController.text = p.nativeVillage;
+    _selectedNativeState = p.nativeState;
+    _selectedNativeDistrict = p.nativeDistrict;
+    if (p.nativeTaluka.isEmpty && p.nativeTalukaMr.isEmpty) {
+      _selectedNativeTaluka = '';
+      _selectedNativeTalukaMr = '';
+    } else {
+      final talukasNative = _selectedNativeDistrict.isNotEmpty ? _getTalukas(_selectedNativeDistrict) : <TalukaInfo>[];
+      final matchedNativeTaluka = talukasNative.firstWhere(
+        (t) =>
+            t.nameEn.toLowerCase() == p.nativeTaluka.toLowerCase() ||
+            t.nameMr == p.nativeTaluka ||
+            (p.nativeTalukaMr.isNotEmpty && t.nameMr == p.nativeTalukaMr),
+        orElse: () => TalukaInfo(nameEn: p.nativeTaluka, nameMr: p.nativeTalukaMr),
+      );
+      _selectedNativeTaluka = matchedNativeTaluka.nameEn;
+      _selectedNativeTalukaMr = matchedNativeTaluka.nameMr;
+    }
+    final nativeVillageEn = p.nativeVillage;
+    if (p.nativeVillageMr.isNotEmpty) {
+      _nativeVillageMrController.text = p.nativeVillageMr;
+      _nativeVillageController.text = nativeVillageEn;
+    } else if (BilingualHelper.isDevanagari(nativeVillageEn)) {
+      _nativeVillageMrController.text = nativeVillageEn;
+      _nativeVillageController.text = '';
+    } else {
+      _nativeVillageController.text = nativeVillageEn;
+      _nativeVillageMrController.text = nativeVillageEn.isNotEmpty ? BilingualHelper.transliterateToMarathi(nativeVillageEn) : '';
+    }
     _nativePincodeController.text = p.nativePincode;
-    _nativeAddressController.text = p.nativeAddress;
+
+    final nativeAddressEn = p.nativeAddress;
+    if (p.nativeAddressMr.isNotEmpty) {
+      _nativeAddressMrController.text = p.nativeAddressMr;
+      _nativeAddressController.text = nativeAddressEn;
+    } else if (BilingualHelper.isDevanagari(nativeAddressEn)) {
+      _nativeAddressMrController.text = nativeAddressEn;
+      _nativeAddressController.text = '';
+    } else {
+      _nativeAddressController.text = nativeAddressEn;
+      _nativeAddressMrController.text = nativeAddressEn.isNotEmpty ? BilingualHelper.transliterateToMarathi(nativeAddressEn) : '';
+    }
 
     // 4. Emergency & Blood
     _selectedBloodGroup = p.bloodGroup;
@@ -266,7 +377,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       _selectedProfession = 'इतर (Other)';
       _professionOtherController.text = p.profession == 'इतर (Other)' ? '' : p.profession;
     } else {
-      _selectedProfession = 'शेती (Farmer)';
+      _selectedProfession = '';
       _professionOtherController.text = '';
     }
     _jobDesignationController.text = p.jobDesignation;
@@ -300,11 +411,11 @@ class _ProfileContentViewState extends State<ProfileContentView> {
 
     // 6. Political & NGO
     _isPoliticallyActive = p.isPoliticallyActive;
-    _politicalPartyController.text = p.politicalParty;
-    _politicalRoleController.text = p.politicalRole;
+    _politicalPartyController.text = (p.isPoliticallyActive == true) ? p.politicalParty : '';
+    _politicalRoleController.text = (p.isPoliticallyActive == true) ? p.politicalRole : '';
     _isAssociatedWithNgo = p.isAssociatedWithNgo;
-    _ngoNameController.text = p.ngoName;
-    _ngoRoleController.text = p.ngoRole;
+    _ngoNameController.text = (p.isAssociatedWithNgo == true) ? p.ngoName : '';
+    _ngoRoleController.text = (p.isAssociatedWithNgo == true) ? p.ngoRole : '';
 
     // 7. Organ Donation
     _isOrganDonorPledged = p.isOrganDonorPledged;
@@ -312,9 +423,10 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   }
 
   List<TalukaInfo> _getTalukas(String districtEn) {
+    if (districtEn.trim().isEmpty) return const [];
     final dist = DistrictConstants.districts.firstWhere(
-      (d) => d.nameEn == districtEn,
-      orElse: () => DistrictConstants.districts.first,
+      (d) => d.nameEn.toLowerCase() == districtEn.toLowerCase() || d.code.toLowerCase() == districtEn.toLowerCase(),
+      orElse: () => const DistrictInfo(code: '', nameEn: '', nameMr: '', talukas: []),
     );
     return dist.talukas;
   }
@@ -384,12 +496,17 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           _isSaving = false;
         });
         widget.onProfileUpdated?.call();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'फोटो यशस्वीरित्या सेव्ह झाला!' : 'फोटो सेव्ह करताना अडचण आली.'),
-            backgroundColor: success ? AppColors.saffron : Colors.red,
-          ),
-        );
+        if (success) {
+          AppFloatingToast.showSuccess(
+            context,
+            'फोटो यशस्वीरित्या सेव्ह झाला!',
+          );
+        } else {
+          AppFloatingToast.showError(
+            context,
+            'फोटो सेव्ह करताना अडचण आली.',
+          );
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _isSaving = false);
@@ -501,41 +618,145 @@ class _ProfileContentViewState extends State<ProfileContentView> {
   }
 
   MemberProfile _buildUpdatedProfile() {
-    final stateObj = GeoConstants.states.firstWhere(
-      (s) =>
-          s.nameEn.toLowerCase() == _selectedState.toLowerCase() ||
-          s.code.toLowerCase() == _selectedState.toLowerCase() ||
-          s.nameMr == _selectedState,
-      orElse: () => GeoConstants.defaultState,
-    );
+    final stateObj = GeoConstants.findState(_selectedState);
 
-    final distObj = stateObj.districts.firstWhere(
-      (d) =>
-          d.nameEn.toLowerCase() == _selectedDistrict.toLowerCase() ||
-          d.code.toLowerCase() == _selectedDistrict.toLowerCase() ||
-          d.nameMr == _selectedDistrict,
-      orElse: () => stateObj.districts.isNotEmpty
-          ? stateObj.districts.first
-          : GeoConstants.defaultState.districts.first,
-    );
+    final DistrictInfo? distObj = (_selectedDistrict.trim().isNotEmpty && stateObj != null)
+        ? stateObj.districts.firstWhere(
+            (d) =>
+                d.nameEn.toLowerCase() == _selectedDistrict.toLowerCase() ||
+                d.code.toLowerCase() == _selectedDistrict.toLowerCase() ||
+                d.nameMr == _selectedDistrict,
+            orElse: () => DistrictInfo(
+              code: '',
+              nameEn: _selectedDistrict,
+              nameMr: _selectedDistrict,
+            ),
+          )
+        : null;
 
-    final nativeStateObj = GeoConstants.states.firstWhere(
-      (s) =>
-          s.nameEn.toLowerCase() == _selectedNativeState.toLowerCase() ||
-          s.code.toLowerCase() == _selectedNativeState.toLowerCase() ||
-          s.nameMr == _selectedNativeState,
-      orElse: () => GeoConstants.defaultState,
-    );
+    final StateInfo? nativeStateObj = _isNativeAddressSame
+        ? null
+        : (_selectedNativeState.trim().isNotEmpty ? GeoConstants.findState(_selectedNativeState) : null);
 
-    final nativeDistObj = nativeStateObj.districts.firstWhere(
-      (d) =>
-          d.nameEn.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
-          d.code.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
-          d.nameMr == _selectedNativeDistrict,
-      orElse: () => nativeStateObj.districts.isNotEmpty
-          ? nativeStateObj.districts.first
-          : GeoConstants.defaultState.districts.first,
-    );
+    final DistrictInfo? nativeDistObj = _isNativeAddressSame
+        ? null
+        : ((_selectedNativeDistrict.trim().isNotEmpty && nativeStateObj != null)
+            ? nativeStateObj.districts.firstWhere(
+                (d) =>
+                    d.nameEn.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
+                    d.code.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
+                    d.nameMr == _selectedNativeDistrict,
+                orElse: () => DistrictInfo(
+                  code: '',
+                  nameEn: _selectedNativeDistrict,
+                  nameMr: _selectedNativeDistrict,
+                ),
+              )
+            : (_selectedNativeDistrict.trim().isNotEmpty
+                ? DistrictConstants.districts.firstWhere(
+                    (d) =>
+                        d.nameEn.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
+                        d.code.toLowerCase() == _selectedNativeDistrict.toLowerCase() ||
+                        d.nameMr == _selectedNativeDistrict,
+                    orElse: () => DistrictInfo(
+                      code: '',
+                      nameEn: _selectedNativeDistrict,
+                      nameMr: _selectedNativeDistrict,
+                    ),
+                  )
+                : null));
+
+    final TalukaInfo? talukaObj = (distObj != null && (_selectedTaluka.trim().isNotEmpty || _selectedTalukaMr.trim().isNotEmpty))
+        ? distObj.talukas.firstWhere(
+            (t) =>
+                t.nameEn.toLowerCase() == _selectedTaluka.toLowerCase() ||
+                t.nameMr == _selectedTaluka ||
+                (_selectedTalukaMr.isNotEmpty && t.nameMr == _selectedTalukaMr),
+            orElse: () => TalukaInfo(
+              nameEn: _selectedTaluka,
+              nameMr: _selectedTalukaMr.isNotEmpty ? _selectedTalukaMr : _selectedTaluka,
+            ),
+          )
+        : null;
+
+    final TalukaInfo? nativeTalukaObj = _isNativeAddressSame
+        ? null
+        : ((nativeDistObj != null && (_selectedNativeTaluka.trim().isNotEmpty || _selectedNativeTalukaMr.trim().isNotEmpty))
+            ? nativeDistObj.talukas.firstWhere(
+                (t) =>
+                    t.nameEn.toLowerCase() == _selectedNativeTaluka.toLowerCase() ||
+                    t.nameMr == _selectedNativeTaluka ||
+                    (_selectedNativeTalukaMr.isNotEmpty && t.nameMr == _selectedNativeTalukaMr),
+                orElse: () => TalukaInfo(
+                  nameEn: _selectedNativeTaluka,
+                  nameMr: _selectedNativeTalukaMr.isNotEmpty ? _selectedNativeTalukaMr : _selectedNativeTaluka,
+                ),
+              )
+            : null);
+
+    final safeStateMr = (stateObj != null && stateObj.nameMr.isNotEmpty && (distObj == null || stateObj.nameMr != distObj.nameMr))
+        ? stateObj.nameMr
+        : (stateObj?.nameMr ?? '');
+    final safeTalukaMr = (talukaObj != null && talukaObj.nameMr.isNotEmpty &&
+            (distObj == null || talukaObj.nameMr != distObj.nameMr || talukaObj.nameEn.toLowerCase() == distObj.nameEn.toLowerCase()))
+        ? talukaObj.nameMr
+        : (distObj != null && _selectedTaluka.trim().isNotEmpty
+            ? distObj.talukas.firstWhere(
+                (t) => t.nameEn.toLowerCase() == talukaObj?.nameEn.toLowerCase(),
+                orElse: () => talukaObj ?? const TalukaInfo(nameEn: '', nameMr: ''),
+              ).nameMr
+            : '');
+
+    final safeNativeStateMr = (nativeStateObj != null && nativeStateObj.nameMr.isNotEmpty && (nativeDistObj == null || nativeStateObj.nameMr != nativeDistObj.nameMr))
+        ? nativeStateObj.nameMr
+        : (nativeStateObj?.nameMr ?? '');
+    final safeNativeTalukaMr = (nativeTalukaObj != null && nativeTalukaObj.nameMr.isNotEmpty &&
+            (nativeDistObj == null || nativeTalukaObj.nameMr != nativeDistObj.nameMr || nativeTalukaObj.nameEn.toLowerCase() == nativeDistObj.nameEn.toLowerCase()))
+        ? nativeTalukaObj.nameMr
+        : (nativeDistObj != null && _selectedNativeTaluka.trim().isNotEmpty
+            ? nativeDistObj.talukas.firstWhere(
+                (t) => t.nameEn.toLowerCase() == nativeTalukaObj?.nameEn.toLowerCase(),
+                orElse: () => nativeTalukaObj ?? const TalukaInfo(nameEn: '', nameMr: ''),
+              ).nameMr
+            : '');
+
+    final enteredVillage = _villageController.text.trim();
+    final enteredVillageMr = _villageMrController.text.trim();
+    final enteredAddress = _addressController.text.trim();
+    final enteredAddressMr = _addressMrController.text.trim();
+
+    final villageEnVal = enteredVillage.isNotEmpty
+        ? enteredVillage
+        : (enteredVillageMr.isNotEmpty && !BilingualHelper.isDevanagari(enteredVillageMr) ? enteredVillageMr : '');
+    final villageMrVal = enteredVillageMr.isNotEmpty
+        ? enteredVillageMr
+        : (enteredVillage.isNotEmpty ? BilingualHelper.transliterateToMarathi(enteredVillage) : '');
+
+    final addressEnVal = enteredAddress.isNotEmpty
+        ? enteredAddress
+        : (enteredAddressMr.isNotEmpty && !BilingualHelper.isDevanagari(enteredAddressMr) ? enteredAddressMr : '');
+    final addressMrVal = enteredAddressMr.isNotEmpty
+        ? enteredAddressMr
+        : (enteredAddress.isNotEmpty ? BilingualHelper.transliterateToMarathi(enteredAddress) : '');
+
+    final enteredNativeVillage = _nativeVillageController.text.trim();
+    final enteredNativeVillageMr = _nativeVillageMrController.text.trim();
+    final enteredNativeAddress = _nativeAddressController.text.trim();
+    final enteredNativeAddressMr = _nativeAddressMrController.text.trim();
+
+    final nativeVillageEnVal = enteredNativeVillage.isNotEmpty
+        ? enteredNativeVillage
+        : (enteredNativeVillageMr.isNotEmpty && !BilingualHelper.isDevanagari(enteredNativeVillageMr) ? enteredNativeVillageMr : '');
+    final nativeVillageMrVal = enteredNativeVillageMr.isNotEmpty
+        ? enteredNativeVillageMr
+        : (enteredNativeVillage.isNotEmpty ? BilingualHelper.transliterateToMarathi(enteredNativeVillage) : '');
+
+    final nativeAddressEnVal = enteredNativeAddress.isNotEmpty
+        ? enteredNativeAddress
+        : (enteredNativeAddressMr.isNotEmpty && !BilingualHelper.isDevanagari(enteredNativeAddressMr) ? enteredNativeAddressMr : '');
+    final nativeAddressMrVal = enteredNativeAddressMr.isNotEmpty
+        ? enteredNativeAddressMr
+        : (enteredNativeAddress.isNotEmpty ? BilingualHelper.transliterateToMarathi(enteredNativeAddress) : '');
 
     return _profile.copyWith(
       firstName: _firstNameController.text.trim(),
@@ -547,32 +768,51 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       fullNameEnOverride: '${_firstNameController.text.trim()} ${_middleNameController.text.trim()} ${_lastNameController.text.trim()}'.trim(),
       fullNameMrOverride: '${_firstNameMrController.text.trim()} ${_middleNameMrController.text.trim()} ${_lastNameMrController.text.trim()}'.trim(),
       dateOfBirth: _dobController.text.trim(),
-      gender: _selectedGender,
+      gender: BilingualHelper.normalizeGenderToEn(_selectedGender),
       living: (_selectedLiving == 'इतर (Other)' && _livingOtherController.text.trim().isNotEmpty)
           ? _livingOtherController.text.trim()
           : _selectedLiving,
       email: _emailController.text.trim(),
 
-      state: stateObj.nameEn,
-      stateCode: stateObj.code,
-      district: distObj.nameEn,
-      districtEn: distObj.nameEn,
-      districtMr: distObj.nameMr,
-      districtCode: distObj.code,
-      subDistrict: _selectedTaluka,
-      village: _villageController.text.trim(),
-      city: _villageController.text.trim(),
+      state: stateObj?.nameEn ?? _selectedState,
+      stateMr: safeStateMr,
+      stateCode: stateObj?.code ?? '',
+      district: distObj?.nameEn ?? _selectedDistrict,
+      districtEn: distObj?.nameEn ?? _selectedDistrict,
+      districtMr: distObj?.nameMr ?? '',
+      districtCode: distObj?.code ?? '',
+      subDistrict: talukaObj?.nameEn ?? _selectedTaluka,
+      subDistrictMr: safeTalukaMr,
+      village: villageEnVal,
+      villageMr: villageMrVal,
+      city: villageEnVal,
       pincode: _pincodeController.text.trim(),
-      address: _addressController.text.trim(),
+      address: addressEnVal,
+      addressMr: addressMrVal,
 
       isNativeAddressSameAsCurrent: _isNativeAddressSame,
-      nativeState: nativeStateObj.nameEn,
-      nativeStateCode: nativeStateObj.code,
-      nativeDistrict: nativeDistObj.nameEn,
-      nativeTaluka: _selectedNativeTaluka,
-      nativeVillage: _nativeVillageController.text.trim(),
-      nativePincode: _nativePincodeController.text.trim(),
-      nativeAddress: _nativeAddressController.text.trim(),
+      nativeState: _isNativeAddressSame
+          ? ''
+          : (_selectedNativeState.trim().isNotEmpty ? (nativeStateObj?.nameEn ?? _selectedNativeState) : ''),
+      nativeStateMr: _isNativeAddressSame
+          ? ''
+          : (_selectedNativeState.trim().isNotEmpty ? safeNativeStateMr : ''),
+      nativeStateCode: _isNativeAddressSame
+          ? ''
+          : (_selectedNativeState.trim().isNotEmpty ? (nativeStateObj?.code ?? _selectedNativeState) : ''),
+      nativeDistrict: _isNativeAddressSame ? '' : (nativeDistObj?.nameEn ?? _selectedNativeDistrict),
+      nativeDistrictMr: _isNativeAddressSame ? '' : (nativeDistObj?.nameMr ?? ''),
+      nativeTaluka: _isNativeAddressSame
+          ? ''
+          : (_selectedNativeTaluka.trim().isNotEmpty ? (nativeTalukaObj?.nameEn ?? _selectedNativeTaluka) : ''),
+      nativeTalukaMr: _isNativeAddressSame
+          ? ''
+          : ((_selectedNativeTaluka.trim().isNotEmpty || _selectedNativeTalukaMr.trim().isNotEmpty) ? safeNativeTalukaMr : ''),
+      nativeVillage: _isNativeAddressSame ? '' : nativeVillageEnVal,
+      nativeVillageMr: _isNativeAddressSame ? '' : nativeVillageMrVal,
+      nativePincode: _isNativeAddressSame ? '' : _nativePincodeController.text.trim(),
+      nativeAddress: _isNativeAddressSame ? '' : nativeAddressEnVal,
+      nativeAddressMr: _isNativeAddressSame ? '' : nativeAddressMrVal,
 
       bloodGroup: _selectedBloodGroup,
       emergencyContactName: _emergencyNameController.text.trim(),
@@ -598,11 +838,11 @@ class _ProfileContentViewState extends State<ProfileContentView> {
       willingToRelocate: _willingToRelocate,
 
       isPoliticallyActive: _isPoliticallyActive,
-      politicalParty: _politicalPartyController.text.trim(),
-      politicalRole: _politicalRoleController.text.trim(),
+      politicalParty: (_isPoliticallyActive == true) ? _politicalPartyController.text.trim() : '',
+      politicalRole: (_isPoliticallyActive == true) ? _politicalRoleController.text.trim() : '',
       isAssociatedWithNgo: _isAssociatedWithNgo,
-      ngoName: _ngoNameController.text.trim(),
-      ngoRole: _ngoRoleController.text.trim(),
+      ngoName: (_isAssociatedWithNgo == true) ? _ngoNameController.text.trim() : '',
+      ngoRole: (_isAssociatedWithNgo == true) ? _ngoRoleController.text.trim() : '',
 
       isOrganDonorPledged: _isOrganDonorPledged,
       hasOrganDonationConsentAnswered: _hasOrganDonationConsentAnswered,
@@ -615,23 +855,50 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         if (_firstNameController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया पहिले नाव (इंग्रजी) प्रविष्ट करा.' : 'Please enter First Name (English).';
         }
+        if (!RegExp(r'^[a-zA-Z]+$').hasMatch(_firstNameController.text.trim())) {
+          return isMarathi ? 'पहिले नाव: फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'First Name: Only English letters are allowed';
+        }
         if (_middleNameController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया मधले नाव (इंग्रजी) प्रविष्ट करा.' : 'Please enter Middle Name (English).';
+        }
+        if (!RegExp(r'^[a-zA-Z]+$').hasMatch(_middleNameController.text.trim())) {
+          return isMarathi ? 'मधले नाव: फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Middle Name: Only English letters are allowed';
         }
         if (_lastNameController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया आडनाव (इंग्रजी) प्रविष्ट करा.' : 'Please enter Last Name (English).';
         }
+        if (!RegExp(r'^[a-zA-Z]+$').hasMatch(_lastNameController.text.trim())) {
+          return isMarathi ? 'आडनाव: फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Last Name: Only English letters are allowed';
+        }
         if (_firstNameMrController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया पहिले नाव (मराठी) प्रविष्ट करा.' : 'Please enter First Name (Marathi).';
+        }
+        if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(_firstNameMrController.text.trim()) ||
+            !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(_firstNameMrController.text.trim())) {
+          return isMarathi ? 'पहिले नाव: फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)' : 'First Name: Only Marathi letters are allowed (no numbers or symbols)';
         }
         if (_middleNameMrController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया मधले नाव (मराठी) प्रविष्ट करा.' : 'Please enter Middle Name (Marathi).';
         }
+        if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(_middleNameMrController.text.trim()) ||
+            !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(_middleNameMrController.text.trim())) {
+          return isMarathi ? 'मधले नाव: फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)' : 'Middle Name: Only Marathi letters are allowed (no numbers or symbols)';
+        }
         if (_lastNameMrController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया आडनाव (मराठी) प्रविष्ट करा.' : 'Please enter Last Name (Marathi).';
         }
+        if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(_lastNameMrController.text.trim()) ||
+            !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(_lastNameMrController.text.trim())) {
+          return isMarathi ? 'आडनाव: फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)' : 'Last Name: Only Marathi letters are allowed (no numbers or symbols)';
+        }
         if (_dobController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया जन्मतारीख निवडा.' : 'Please select Date of Birth.';
+        }
+        if (_selectedGender.trim().isEmpty) {
+          return isMarathi ? 'कृपया लिंग निवडा.' : 'Please select Gender.';
+        }
+        if (_selectedLiving.trim().isEmpty) {
+          return isMarathi ? 'कृपया निवास प्रकार निवडा.' : 'Please select Residence / Living type.';
         }
         if (_selectedLiving == 'इतर (Other)' && _livingOtherController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया आपला निवास प्रकार लिहा.' : 'Please specify your residence/living type.';
@@ -642,26 +909,75 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         if (_selectedTaluka.trim().isEmpty) {
           return isMarathi ? 'कृपया तालुका निवडा.' : 'Please select Taluka.';
         }
-        if (_villageController.text.trim().isEmpty) {
-          return isMarathi ? 'कृपया गाव किंवा शहराचे नाव प्रविष्ट करा.' : 'Please enter Village or City.';
+        final curEn = _villageController.text.trim();
+        final curMr = _villageMrController.text.trim();
+        if (curMr.isNotEmpty && curEn.isEmpty) {
+          return isMarathi ? 'कृपया गाव/शहर इंग्रजीत प्रविष्ट करा' : 'Please enter village/city in English';
+        }
+        if (curEn.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(curEn)) {
+          return isMarathi ? 'गाव/शहर: फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Village/City: Only English letters are allowed';
+        }
+        if (curEn.isNotEmpty && curMr.isEmpty) {
+          return isMarathi ? 'कृपया गाव/शहर मराठीत प्रविष्ट करा' : 'Please enter village/city in Marathi';
+        }
+        if (curMr.isNotEmpty &&
+            (RegExp(r'[0-9\u0966-\u096F]').hasMatch(curMr) ||
+                !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]+$').hasMatch(curMr))) {
+          return isMarathi ? 'गाव/शहर: फक्त मराठी अक्षरे अनुमत आहेत (संख्या नाहीत)' : 'Village/City: Only Marathi letters are allowed (no numbers)';
         }
         if (_pincodeController.text.trim().isEmpty) {
           return isMarathi ? 'कृपया पिनकोड प्रविष्ट करा.' : 'Please enter Pincode.';
         }
+        if (_pincodeController.text.trim().length != 6) {
+          return isMarathi ? 'पिनकोड ६ अंकांचा असावा.' : 'Pincode must be 6 digits.';
+        }
         if (_addressController.text.trim().isEmpty) {
-          return isMarathi ? 'कृपया संपूर्ण पत्ता प्रविष्ट करा.' : 'Please enter Full Address.';
+          return isMarathi ? 'कृपया पत्ता इंग्रजीत प्रविष्ट करा' : 'Please enter address in English';
+        }
+        if (_addressMrController.text.trim().isEmpty) {
+          return isMarathi ? 'कृपया पत्ता मराठीत प्रविष्ट करा' : 'Please enter address in Marathi';
         }
         return null;
 
       case 'native_address':
         if (!_isNativeAddressSame) {
-          if (_nativeVillageController.text.trim().isEmpty) {
-            return isMarathi ? 'कृपया मूळ गावाचे नाव प्रविष्ट करा.' : 'Please enter Native Village Name.';
+          if (_selectedNativeState.trim().isEmpty) {
+            return isMarathi ? 'कृपया मूळ राज्य निवडा' : 'Please select native state';
+          }
+          if (_selectedNativeDistrict.trim().isEmpty) {
+            return isMarathi ? 'कृपया मूळ जिल्हा निवडा' : 'Please select native district';
+          }
+          if (_selectedNativeTaluka.trim().isEmpty && _selectedNativeTalukaMr.trim().isEmpty) {
+            return isMarathi ? 'कृपया मूळ तालुका निवडा' : 'Please select native taluka';
+          }
+          final natEn = _nativeVillageController.text.trim();
+          final natMr = _nativeVillageMrController.text.trim();
+          if (natEn.isEmpty) {
+            return isMarathi ? 'कृपया मूळ गाव इंग्रजीत प्रविष्ट करा' : 'Please enter native village in English';
+          }
+          if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(natEn)) {
+            return isMarathi ? 'मूळ गाव: फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Native Village: Only English letters are allowed';
+          }
+          if (natMr.isEmpty) {
+            return isMarathi ? 'कृपया मूळ गाव मराठीत प्रविष्ट करा' : 'Please enter native village in Marathi';
+          }
+          if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(natMr) ||
+              !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]+$').hasMatch(natMr)) {
+            return isMarathi ? 'मूळ गाव: फक्त मराठी अक्षरे अनुमत आहेत (संख्या नाहीत)' : 'Native Village: Only Marathi letters are allowed (no numbers)';
+          }
+          if (_nativePincodeController.text.trim().isEmpty) {
+            return isMarathi ? 'कृपया मूळ पिनकोड प्रविष्ट करा.' : 'Please enter native pincode.';
+          }
+          if (_nativePincodeController.text.trim().length != 6) {
+            return isMarathi ? 'मूळ पिनकोड ६ अंकांचा असावा.' : 'Native Pincode must be 6 digits.';
           }
         }
         return null;
 
       case 'occupation':
+        if (_selectedProfession.trim().isEmpty) {
+          return isMarathi ? 'कृपया व्यवसाय / नोकरी निवडा.' : 'Please select Profession / Occupation.';
+        }
         if (_selectedProfession.contains('नोकरी')) {
           if (_jobDesignationController.text.trim().isEmpty) {
             return isMarathi ? 'कृपया नोकरीतील पद / हुद्दा प्रविष्ट करा.' : 'Please enter Job Designation.';
@@ -699,21 +1015,45 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         }
         return null;
 
+      case 'social':
+        if (_isPoliticallyActive == true) {
+          if (_politicalPartyController.text.trim().isEmpty) {
+            return isMarathi
+                ? 'कृपया राजकीय पक्ष / संघटनेचे नाव प्रविष्ट करा.'
+                : 'Please enter Party / Organization Name.';
+          }
+          if (_politicalRoleController.text.trim().isEmpty) {
+            return isMarathi
+                ? 'कृपया पद / जबाबदारी प्रविष्ट करा.'
+                : 'Please enter Post / Designation.';
+          }
+        }
+        if (_isAssociatedWithNgo == true) {
+          if (_ngoNameController.text.trim().isEmpty) {
+            return isMarathi
+                ? 'कृपया सामाजिक संस्थेचे नाव प्रविष्ट करा.'
+                : 'Please enter NGO / Organization Name.';
+          }
+          if (_ngoRoleController.text.trim().isEmpty) {
+            return isMarathi
+                ? 'कृपया पद / कार्य प्रविष्ट करा.'
+                : 'Please enter Designation / Role.';
+          }
+        }
+        return null;
+
       default:
         return null;
     }
   }
 
   Future<void> _saveSection(String sectionId) async {
-    final isMarathi = Localizations.localeOf(context).languageCode == 'mr';
+    final isMarathi = appLocaleNotifier.value.languageCode == 'mr';
     final error = _validateSection(sectionId, isMarathi);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: AppColors.errorColor,
-          duration: const Duration(seconds: 3),
-        ),
+      AppFloatingToast.showError(
+        context,
+        error,
       );
       return;
     }
@@ -733,27 +1073,21 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         }
       });
       widget.onProfileUpdated?.call();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isMarathi ? 'माहिती यशस्वीरित्या जतन झाली!' : 'Information updated successfully!'),
-          backgroundColor: AppColors.saffron,
-          duration: const Duration(seconds: 2),
-        ),
+      AppFloatingToast.showSuccess(
+        context,
+        isMarathi ? 'माहिती यशस्वीरित्या जतन झाली!' : 'Information updated successfully!',
       );
     }
   }
 
   Future<void> _saveAllSections() async {
-    final isMarathi = Localizations.localeOf(context).languageCode == 'mr';
+    final isMarathi = appLocaleNotifier.value.languageCode == 'mr';
     for (final sec in _editingSectionIds) {
       final error = _validateSection(sec, isMarathi);
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorColor,
-            duration: const Duration(seconds: 3),
-          ),
+        AppFloatingToast.showError(
+          context,
+          error,
         );
         return;
       }
@@ -774,12 +1108,9 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         }
       });
       widget.onProfileUpdated?.call();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isMarathi ? 'सर्व माहिती यशस्वीरित्या जतन झाली!' : 'All information updated successfully!'),
-          backgroundColor: AppColors.saffron,
-          duration: const Duration(seconds: 2),
-        ),
+      AppFloatingToast.showSuccess(
+        context,
+        isMarathi ? 'सर्व माहिती यशस्वीरित्या जतन झाली!' : 'All information updated successfully!',
       );
     }
   }
@@ -1447,7 +1778,13 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           isCompact: isCompact,
         ),
         _buildDetailRow(isMarathi ? 'जन्मतारीख (DOB)' : 'Date of Birth', _profile.dateOfBirth.isNotEmpty ? _profile.dateOfBirth : '-', isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'लिंग (Gender)' : 'Gender', _profile.gender.isNotEmpty ? _profile.gender : '-', isCompact: isCompact),
+        _buildDetailRow(
+          isMarathi ? 'लिंग (Gender)' : 'Gender',
+          _profile.gender.isNotEmpty
+              ? _profile.getLocalizedGender(isMarathi: isMarathi)
+              : '-',
+          isCompact: isCompact,
+        ),
         _buildDetailRow(isMarathi ? 'मोबाईल नंबर' : 'Mobile Number', _profile.phone, isCompact: isCompact),
         _buildDetailRow(isMarathi ? 'ईमेल (Email)' : 'Email', _profile.email.isNotEmpty ? _profile.email : '-', isCompact: isCompact),
         _buildDetailRow(isMarathi ? 'सद्यस्थिती (Living)' : 'Residence', _profile.living.isNotEmpty ? _profile.living : '-', isCompact: isCompact),
@@ -1461,40 +1798,94 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         // English Names
         _buildResponsiveTriple(
           isDesktop: isDesktop,
-          child1: _buildInput(
-            isMarathi ? 'पहिले नाव (इंग्रजी)' : 'First Name (En)',
-            _firstNameController,
+          child1: _buildTextField(
+            context,
+            label: '${isMarathi ? "पहिले नाव" : "First Name"} (English)',
+            controller: _firstNameController,
             isCompulsory: true,
-            onChanged: (val) async {
+            icon: Icons.person_outline,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+              CapitalizeFirstLetterFormatter(),
+            ],
+            textCapitalization: TextCapitalization.words,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया तुमचे पहिले नाव इंग्रजीत प्रविष्ट करा' : 'Please enter your first name in English';
+              }
+              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value.trim())) {
+                return isMarathi ? 'फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Only English letters are allowed';
+              }
+              return null;
+            },
+            onChanged: (val) {
               _firstNameMrController.text = BilingualHelper.transliterateToMarathi(val);
-              final live = await BilingualHelper.transliterateLive(val);
-              if (mounted && _firstNameController.text.trim() == val.trim()) {
-                _firstNameMrController.text = live;
-              }
+              _debounceLiveTransliterate(
+                key: 'first_name',
+                text: val,
+                targetController: _firstNameMrController,
+                sourceController: _firstNameController,
+              );
             },
           ),
-          child2: _buildInput(
-            isMarathi ? 'मधले नाव (इंग्रजी)' : 'Middle Name (En)',
-            _middleNameController,
+          child2: _buildTextField(
+            context,
+            label: '${isMarathi ? "मधले नाव" : "Middle Name"} (English)',
+            controller: _middleNameController,
             isCompulsory: true,
-            onChanged: (val) async {
+            icon: Icons.person_outline,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+              CapitalizeFirstLetterFormatter(),
+            ],
+            textCapitalization: TextCapitalization.words,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया मधले नाव इंग्रजीत प्रविष्ट करा' : 'Please enter middle name in English';
+              }
+              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value.trim())) {
+                return isMarathi ? 'फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Only English letters are allowed';
+              }
+              return null;
+            },
+            onChanged: (val) {
               _middleNameMrController.text = BilingualHelper.transliterateToMarathi(val);
-              final live = await BilingualHelper.transliterateLive(val);
-              if (mounted && _middleNameController.text.trim() == val.trim()) {
-                _middleNameMrController.text = live;
-              }
+              _debounceLiveTransliterate(
+                key: 'middle_name',
+                text: val,
+                targetController: _middleNameMrController,
+                sourceController: _middleNameController,
+              );
             },
           ),
-          child3: _buildInput(
-            isMarathi ? 'आडनाव (इंग्रजी)' : 'Last Name (En)',
-            _lastNameController,
+          child3: _buildTextField(
+            context,
+            label: '${isMarathi ? "आडनाव" : "Last Name"} (English)',
+            controller: _lastNameController,
             isCompulsory: true,
-            onChanged: (val) async {
-              _lastNameMrController.text = BilingualHelper.transliterateToMarathi(val);
-              final live = await BilingualHelper.transliterateLive(val);
-              if (mounted && _lastNameController.text.trim() == val.trim()) {
-                _lastNameMrController.text = live;
+            icon: Icons.person_outline,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+              CapitalizeFirstLetterFormatter(),
+            ],
+            textCapitalization: TextCapitalization.words,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया आडनाव इंग्रजीत प्रविष्ट करा' : 'Please enter your last name in English';
               }
+              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value.trim())) {
+                return isMarathi ? 'फक्त इंग्रजी अक्षरे अनुमत आहेत' : 'Only English letters are allowed';
+              }
+              return null;
+            },
+            onChanged: (val) {
+              _lastNameMrController.text = BilingualHelper.transliterateToMarathi(val);
+              _debounceLiveTransliterate(
+                key: 'last_name',
+                text: val,
+                targetController: _lastNameMrController,
+                sourceController: _lastNameController,
+              );
             },
           ),
         ),
@@ -1503,23 +1894,107 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         // Marathi Names
         _buildResponsiveTriple(
           isDesktop: isDesktop,
-          child1: _buildInput(
-            isMarathi ? 'पहिले नाव (मराठी)' : 'First Name (Mr)',
-            _firstNameMrController,
+          child1: _buildTextField(
+            context,
+            label: '${isMarathi ? "पहिले नाव" : "First Name"} (मराठी)',
+            controller: _firstNameMrController,
+            focusNode: _firstNameMrFocusNode,
             isCompulsory: true,
-            keyboardTitle: 'पहिले नाव',
+            icon: Icons.badge_outlined,
+            suffixIcon: Icons.keyboard_alt_outlined,
+            onSuffixTap: () => MarathiVirtualKeyboard.show(
+              context,
+              controller: _firstNameMrController,
+              focusNode: _firstNameMrFocusNode,
+              title: '${isMarathi ? "पहिले नाव" : "First Name"} (मराठी)',
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+              ],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+            ],
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया तुमचे पहिले नाव मराठीत तपासा' : 'Please enter first name in Marathi';
+              }
+              final trimmed = value.trim();
+              if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(trimmed) ||
+                  !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(trimmed)) {
+                return isMarathi
+                    ? 'फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)'
+                    : 'Only Marathi letters are allowed (no numbers or symbols)';
+              }
+              return null;
+            },
           ),
-          child2: _buildInput(
-            isMarathi ? 'मधले नाव (मराठी)' : 'Middle Name (Mr)',
-            _middleNameMrController,
+          child2: _buildTextField(
+            context,
+            label: '${isMarathi ? "मधले नाव" : "Middle Name"} (मराठी)',
+            controller: _middleNameMrController,
+            focusNode: _middleNameMrFocusNode,
             isCompulsory: true,
-            keyboardTitle: 'मधले नाव',
+            icon: Icons.badge_outlined,
+            suffixIcon: Icons.keyboard_alt_outlined,
+            onSuffixTap: () => MarathiVirtualKeyboard.show(
+              context,
+              controller: _middleNameMrController,
+              focusNode: _middleNameMrFocusNode,
+              title: '${isMarathi ? "मधले नाव" : "Middle Name"} (मराठी)',
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+              ],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+            ],
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया मधले नाव मराठीत तपासा' : 'Please enter middle name in Marathi';
+              }
+              final trimmed = value.trim();
+              if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(trimmed) ||
+                  !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(trimmed)) {
+                return isMarathi
+                    ? 'फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)'
+                    : 'Only Marathi letters are allowed (no numbers or symbols)';
+              }
+              return null;
+            },
           ),
-          child3: _buildInput(
-            isMarathi ? 'आडनाव (मराठी)' : 'Last Name (Mr)',
-            _lastNameMrController,
+          child3: _buildTextField(
+            context,
+            label: '${isMarathi ? "आडनाव" : "Last Name"} (मराठी)',
+            controller: _lastNameMrController,
+            focusNode: _lastNameMrFocusNode,
             isCompulsory: true,
-            keyboardTitle: 'आडनाव',
+            icon: Icons.badge_outlined,
+            suffixIcon: Icons.keyboard_alt_outlined,
+            onSuffixTap: () => MarathiVirtualKeyboard.show(
+              context,
+              controller: _lastNameMrController,
+              focusNode: _lastNameMrFocusNode,
+              title: '${isMarathi ? "आडनाव" : "Last Name"} (मराठी)',
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+              ],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D]')),
+            ],
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया आडनाव मराठीत तपासा' : 'Please enter last name in Marathi';
+              }
+              final trimmed = value.trim();
+              if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(trimmed) ||
+                  !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D]+$').hasMatch(trimmed)) {
+                return isMarathi
+                    ? 'फक्त मराठी अक्षरे अनुमत आहेत (संख्या किंवा चिन्हे नाहीत)'
+                    : 'Only Marathi letters are allowed (no numbers or symbols)';
+              }
+              return null;
+            },
           ),
         ),
         const SizedBox(height: 10),
@@ -1543,14 +2018,26 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           ),
           child2: AppSearchableDropdown<String>(
             key: ValueKey('gender_$_selectedGender'),
-            value: const ['Male', 'Female', 'Other'].contains(_selectedGender) ? _selectedGender : 'Male',
+            value: const ['Male', 'Female', 'Other'].contains(_selectedGender) ? _selectedGender : null,
             labelText: isMarathi ? 'लिंग *' : 'Gender *',
             searchHint: isMarathi ? 'लिंग निवडा...' : 'Select gender...',
             prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.gold, size: 18),
             items: [
-              AppDropdownItem(value: 'Male', label: isMarathi ? 'पुरुष (Male)' : 'Male', searchKey: 'Male पुरुष'),
-              AppDropdownItem(value: 'Female', label: isMarathi ? 'स्त्री (Female)' : 'Female', searchKey: 'Female स्त्री'),
-              AppDropdownItem(value: 'Other', label: isMarathi ? 'इतर (Other)' : 'Other', searchKey: 'Other इतर'),
+              AppDropdownItem(
+                value: 'Male',
+                label: isMarathi ? 'पुरुष' : 'Male',
+                searchKey: 'Male पुरुष',
+              ),
+              AppDropdownItem(
+                value: 'Female',
+                label: isMarathi ? 'स्त्री' : 'Female',
+                searchKey: 'Female स्त्री',
+              ),
+              AppDropdownItem(
+                value: 'Other',
+                label: isMarathi ? 'इतर' : 'Other',
+                searchKey: 'Other इतर',
+              ),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _selectedGender = val);
@@ -1564,7 +2051,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           isDesktop: isDesktop,
           child1: AppSearchableDropdown<String>(
             key: ValueKey('living_$_selectedLiving'),
-            value: _livingOptions.contains(_selectedLiving) ? _selectedLiving : _livingOptions.first,
+            value: _livingOptions.contains(_selectedLiving) ? _selectedLiving : null,
             labelText: isMarathi ? 'सद्यस्थिती (निवास प्रकार) *' : 'Residence / Living *',
             searchHint: isMarathi ? 'निवास प्रकार शोधा...' : 'Search living type...',
             prefixIcon: const Icon(Icons.home_outlined, color: AppColors.gold, size: 18),
@@ -1605,20 +2092,53 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     final stateInfo = GeoConstants.findState(_profile.state.isNotEmpty ? _profile.state : _profile.stateCode);
     final stateDisplay = stateInfo != null
         ? (isMarathi ? stateInfo.nameMr : stateInfo.nameEn)
-        : (_profile.state.isNotEmpty ? _profile.state : (isMarathi ? 'महाराष्ट्र' : 'Maharashtra'));
+        : (isMarathi
+            ? (_profile.stateMr.isNotEmpty ? _profile.stateMr : 'महाराष्ट्र')
+            : (_profile.state.isNotEmpty ? _profile.state : 'Maharashtra'));
 
-    final distName = _profile.districtMr.isNotEmpty && isMarathi
-        ? _profile.districtMr
-        : (_profile.districtEn.isNotEmpty ? _profile.districtEn : (_profile.district.isNotEmpty ? _profile.district : '-'));
+    final distName = isMarathi
+        ? (_profile.districtMr.isNotEmpty ? _profile.districtMr : (_profile.districtEn.isNotEmpty ? _profile.districtEn : _profile.district))
+        : (_profile.districtEn.isNotEmpty ? _profile.districtEn : (_profile.district.isNotEmpty ? _profile.district : (_profile.districtMr.isNotEmpty ? _profile.districtMr : '-')));
+
+    final distObj = stateInfo?.districts.firstWhere(
+      (d) =>
+          d.code.toLowerCase() == _profile.districtCode.toLowerCase() ||
+          d.nameEn.toLowerCase() == _profile.districtEn.toLowerCase() ||
+          d.nameEn.toLowerCase() == _profile.district.toLowerCase() ||
+          d.nameMr == _profile.districtMr,
+      orElse: () => stateInfo.districts.isNotEmpty ? stateInfo.districts.first : GeoConstants.defaultState.districts.first,
+    );
+
+    final talukaObj = distObj?.talukas.firstWhere(
+      (t) =>
+          t.nameEn.toLowerCase() == _profile.subDistrict.toLowerCase() ||
+          t.nameMr == _profile.subDistrict ||
+          (_profile.subDistrictMr.isNotEmpty && t.nameMr == _profile.subDistrictMr),
+      orElse: () => TalukaInfo(
+        nameEn: _profile.subDistrict,
+        nameMr: _profile.subDistrictMr.isNotEmpty ? _profile.subDistrictMr : _profile.subDistrict,
+      ),
+    );
+
+    final talukaDisplay = isMarathi
+        ? (talukaObj?.nameMr ?? (_profile.subDistrictMr.isNotEmpty ? _profile.subDistrictMr : _profile.subDistrict))
+        : (talukaObj?.nameEn ?? (_profile.subDistrict.isNotEmpty ? _profile.subDistrict : '-'));
+
+    final villageEn = _profile.village.isNotEmpty ? _profile.village : _profile.city;
+    final villageMr = _profile.villageMr;
+    final addressEn = _profile.address;
+    final addressMr = _profile.addressMr;
 
     return Column(
       children: [
-        _buildDetailRow(isMarathi ? 'राज्य' : 'State', stateDisplay, isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'जिल्हा' : 'District', distName, isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'तालुका' : 'Taluka', _profile.subDistrict.isNotEmpty ? _profile.subDistrict : '-', isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'गाव / शहर' : 'Village/City', _profile.village.isNotEmpty ? _profile.village : (_profile.city.isNotEmpty ? _profile.city : '-'), isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'राज्य' : 'State', stateDisplay.isNotEmpty ? stateDisplay : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'जिल्हा' : 'District', distName.isNotEmpty ? distName : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'तालुका' : 'Taluka', talukaDisplay.isNotEmpty ? talukaDisplay : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'गाव / शहर (इंग्रजी)' : 'Village / City (En)', villageEn.isNotEmpty ? villageEn : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'गाव / शहर (मराठी)' : 'Village / City (Mr)', villageMr.isNotEmpty ? villageMr : '-', isCompact: isCompact),
         _buildDetailRow(isMarathi ? 'पिनकोड' : 'Pincode', _profile.pincode.isNotEmpty ? _profile.pincode : '-', isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'संपूर्ण पत्ता' : 'Full Address', _profile.address.isNotEmpty ? _profile.address : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'संपूर्ण पत्ता (इंग्रजी)' : 'Full Address (En)', addressEn.isNotEmpty ? addressEn : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'संपूर्ण पत्ता (मराठी)' : 'Full Address (Mr)', addressMr.isNotEmpty ? addressMr : '-', isCompact: isCompact),
       ],
     );
   }
@@ -1635,31 +2155,167 @@ class _ProfileContentViewState extends State<ProfileContentView> {
           initialTaluka: _selectedTaluka,
           onChanged: (state, district, taluka) {
             setState(() {
-              _selectedState = state.code;
+              _selectedState = state?.code ?? '';
               _selectedDistrict = district?.code ?? '';
               _selectedTaluka = taluka?.nameEn ?? '';
+              _selectedTalukaMr = taluka?.nameMr ?? '';
             });
           },
         ),
         const SizedBox(height: 10),
         _buildResponsivePair(
           isDesktop: isDesktop,
-          child1: _buildInput(
-            isMarathi ? 'गाव / शहर नाव' : 'Village / City',
-            _villageController,
-            keyboardTitle: 'गाव/शहर',
+          child1: _buildTextField(
+            context,
+            label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (English)',
+            controller: _villageController,
+            isCompulsory: false,
+            icon: Icons.holiday_village_outlined,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              CapitalizeFirstLetterFormatter(),
+            ],
+            textCapitalization: TextCapitalization.words,
+            validator: (value) {
+              final en = value?.trim() ?? '';
+              final mr = _villageMrController.text.trim();
+              if (mr.isNotEmpty && en.isEmpty) {
+                return isMarathi
+                    ? 'कृपया गाव/शहर इंग्रजीत प्रविष्ट करा'
+                    : 'Please enter village/city in English';
+              }
+              if (en.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(en)) {
+                return isMarathi
+                    ? 'फक्त इंग्रजी अक्षरे अनुमत आहेत'
+                    : 'Only English letters are allowed';
+              }
+              return null;
+            },
+            onChanged: (val) {
+              _villageMrController.text = BilingualHelper.transliterateToMarathi(val);
+              _debounceLiveTransliterate(
+                key: 'village',
+                text: val,
+                targetController: _villageMrController,
+                sourceController: _villageController,
+              );
+            },
           ),
-          child2: _buildInput(
-            isMarathi ? 'पिनकोड' : 'Pincode',
-            _pincodeController,
-            keyboardTitle: 'पिनकोड',
+          child2: _buildTextField(
+            context,
+            label: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (मराठी)',
+            controller: _villageMrController,
+            focusNode: _villageMrFocusNode,
+            isCompulsory: false,
+            icon: Icons.holiday_village_outlined,
+            suffixIcon: Icons.keyboard_alt_outlined,
+            onSuffixTap: () => MarathiVirtualKeyboard.show(
+              context,
+              controller: _villageMrController,
+              focusNode: _villageMrFocusNode,
+              title: '${isMarathi ? "गाव / शहर / परिसर" : "Village / City / Locality"} (मराठी)',
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
+              ],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
+            ],
+            validator: (value) {
+              final mr = value?.trim() ?? '';
+              final en = _villageController.text.trim();
+              if (en.isNotEmpty && mr.isEmpty) {
+                return isMarathi
+                    ? 'कृपया गाव/शहर मराठीत प्रविष्ट करा'
+                    : 'Please enter village/city in Marathi';
+              }
+              if (mr.isNotEmpty &&
+                  (RegExp(r'[0-9\u0966-\u096F]').hasMatch(mr) ||
+                      !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]+$').hasMatch(mr))) {
+                return isMarathi
+                    ? 'फक्त मराठी अक्षरे अनुमत आहेत (संख्या नाहीत)'
+                    : 'Only Marathi letters are allowed (no numbers)';
+              }
+              return null;
+            },
           ),
         ),
         const SizedBox(height: 10),
-        _buildInput(
-          isMarathi ? 'संपूर्ण पत्ता (घर क्र., गल्ली, परिसर)' : 'Full Address Line',
-          _addressController,
-          keyboardTitle: 'पत्ता',
+        _buildTextField(
+          context,
+          label: isMarathi ? 'पिनकोड (६ अंक)' : 'Pincode (6 digits)',
+          controller: _pincodeController,
+          isCompulsory: true,
+          icon: Icons.pin_drop_outlined,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
+          ],
+          errorMessage: isMarathi ? 'कृपया पिनकोड प्रविष्ट करा' : 'Please enter pincode',
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return isMarathi ? 'कृपया पिनकोड प्रविष्ट करा' : 'Please enter pincode';
+            }
+            if (value.trim().length != 6) {
+              return isMarathi ? 'पिनकोड ६ अंकांचा असावा' : 'Pincode must be 6 digits';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 10),
+        _buildResponsivePair(
+          isDesktop: isDesktop,
+          child1: _buildTextField(
+            context,
+            label: '${isMarathi ? "पत्ता" : "Address"} (English)',
+            controller: _addressController,
+            isCompulsory: true,
+            icon: Icons.home_outlined,
+            errorMessage: isMarathi ? 'कृपया पत्ता इंग्रजीत प्रविष्ट करा' : 'Please enter address in English',
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया पत्ता इंग्रजीत प्रविष्ट करा' : 'Please enter address in English';
+              }
+              return null;
+            },
+            onChanged: (val) {
+              _addressMrController.text = BilingualHelper.transliterateToMarathi(val);
+              _debounceLiveTransliterate(
+                key: 'address',
+                text: val,
+                targetController: _addressMrController,
+                sourceController: _addressController,
+              );
+            },
+          ),
+          child2: _buildTextField(
+            context,
+            label: '${isMarathi ? "पत्ता" : "Address"} (मराठी)',
+            controller: _addressMrController,
+            focusNode: _addressMrFocusNode,
+            isCompulsory: true,
+            icon: Icons.home_outlined,
+            suffixIcon: Icons.keyboard_alt_outlined,
+            onSuffixTap: () => MarathiVirtualKeyboard.show(
+              context,
+              controller: _addressMrController,
+              focusNode: _addressMrFocusNode,
+              title: '${isMarathi ? "पत्ता" : "Address"} (मराठी)',
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u097F\u200C\u200D0-9a-zA-Z\s,./#\-_()]')),
+              ],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u097F\u200C\u200D0-9a-zA-Z\s,./#\-_()]')),
+            ],
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया पत्ता मराठीत प्रविष्ट करा' : 'Please enter address in Marathi';
+              }
+              return null;
+            },
+          ),
         ),
       ],
     );
@@ -1695,20 +2351,78 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     final nativeStateInfo = GeoConstants.findState(_profile.nativeState.isNotEmpty ? _profile.nativeState : _profile.nativeStateCode);
     final nativeStateDisplay = nativeStateInfo != null
         ? (isMarathi ? nativeStateInfo.nameMr : nativeStateInfo.nameEn)
-        : (_profile.nativeState.isNotEmpty ? _profile.nativeState : '-');
+        : (isMarathi
+            ? (_profile.nativeStateMr.isNotEmpty ? _profile.nativeStateMr : (_profile.nativeState.isNotEmpty ? _profile.nativeState : '-'))
+            : (_profile.nativeState.isNotEmpty ? _profile.nativeState : '-'));
 
-    final nativeDist = _profile.nativeDistrict.isNotEmpty
-        ? (isMarathi ? (DistrictConstants.getNameMr(_profile.nativeDistrict).isNotEmpty ? DistrictConstants.getNameMr(_profile.nativeDistrict) : _profile.nativeDistrict) : _profile.nativeDistrict)
-        : '-';
+    final nativeDistObj = (_profile.nativeDistrict.isNotEmpty || _profile.nativeDistrictMr.isNotEmpty)
+        ? (nativeStateInfo?.districts.firstWhere(
+            (d) =>
+                d.code.toLowerCase() == _profile.nativeDistrict.toLowerCase() ||
+                d.nameEn.toLowerCase() == _profile.nativeDistrict.toLowerCase() ||
+                d.nameMr == _profile.nativeDistrict ||
+                (_profile.nativeDistrictMr.isNotEmpty && d.nameMr == _profile.nativeDistrictMr),
+            orElse: () => DistrictInfo(
+              code: '',
+              nameEn: _profile.nativeDistrict,
+              nameMr: _profile.nativeDistrictMr.isNotEmpty ? _profile.nativeDistrictMr : _profile.nativeDistrict,
+            ),
+          ) ?? (DistrictConstants.districts.firstWhere(
+            (d) =>
+                d.code.toLowerCase() == _profile.nativeDistrict.toLowerCase() ||
+                d.nameEn.toLowerCase() == _profile.nativeDistrict.toLowerCase() ||
+                d.nameMr == _profile.nativeDistrict ||
+                (_profile.nativeDistrictMr.isNotEmpty && d.nameMr == _profile.nativeDistrictMr),
+            orElse: () => DistrictInfo(
+              code: '',
+              nameEn: _profile.nativeDistrict,
+              nameMr: _profile.nativeDistrictMr.isNotEmpty ? _profile.nativeDistrictMr : _profile.nativeDistrict,
+            ),
+          )))
+        : null;
+
+    final nativeDistName = (_profile.nativeDistrict.isEmpty && _profile.nativeDistrictMr.isEmpty)
+        ? '-'
+        : (isMarathi
+            ? (_profile.nativeDistrictMr.isNotEmpty
+                ? _profile.nativeDistrictMr
+                : (nativeDistObj?.nameMr ?? (_profile.nativeDistrict.isNotEmpty ? DistrictConstants.getNameMr(_profile.nativeDistrict) : '-')))
+            : (_profile.nativeDistrict.isNotEmpty ? _profile.nativeDistrict : (nativeDistObj?.nameEn ?? '-')));
+
+    final nativeTalukaObj = (_profile.nativeTaluka.isNotEmpty || _profile.nativeTalukaMr.isNotEmpty)
+        ? nativeDistObj?.talukas.firstWhere(
+            (t) =>
+                t.nameEn.toLowerCase() == _profile.nativeTaluka.toLowerCase() ||
+                t.nameMr == _profile.nativeTaluka ||
+                (_profile.nativeTalukaMr.isNotEmpty && t.nameMr == _profile.nativeTalukaMr),
+            orElse: () => TalukaInfo(
+              nameEn: _profile.nativeTaluka,
+              nameMr: _profile.nativeTalukaMr.isNotEmpty ? _profile.nativeTalukaMr : _profile.nativeTaluka,
+            ),
+          )
+        : null;
+
+    final nativeTalukaDisplay = (_profile.nativeTaluka.isEmpty && _profile.nativeTalukaMr.isEmpty)
+        ? '-'
+        : (isMarathi
+            ? (nativeTalukaObj?.nameMr ?? (_profile.nativeTalukaMr.isNotEmpty ? _profile.nativeTalukaMr : _profile.nativeTaluka))
+            : (nativeTalukaObj?.nameEn ?? (_profile.nativeTaluka.isNotEmpty ? _profile.nativeTaluka : '-')));
+
+    final nativeVillageEn = _profile.nativeVillage;
+    final nativeVillageMr = _profile.nativeVillageMr;
+    final nativeAddressEn = _profile.nativeAddress;
+    final nativeAddressMr = _profile.nativeAddressMr;
 
     return Column(
       children: [
-        _buildDetailRow(isMarathi ? 'मूळ राज्य' : 'Native State', nativeStateDisplay, isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'मूळ जिल्हा' : 'Native District', nativeDist, isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'मूळ तालुका' : 'Native Taluka', _profile.nativeTaluka.isNotEmpty ? _profile.nativeTaluka : '-', isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'मूळ गाव' : 'Native Village', _profile.nativeVillage.isNotEmpty ? _profile.nativeVillage : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ राज्य' : 'Native State', nativeStateDisplay.isNotEmpty ? nativeStateDisplay : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ जिल्हा' : 'Native District', nativeDistName.isNotEmpty ? nativeDistName : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ तालुका' : 'Native Taluka', nativeTalukaDisplay.isNotEmpty ? nativeTalukaDisplay : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ गाव (इंग्रजी)' : 'Native Village (En)', nativeVillageEn.isNotEmpty ? nativeVillageEn : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ गाव (मराठी)' : 'Native Village (Mr)', nativeVillageMr.isNotEmpty ? nativeVillageMr : '-', isCompact: isCompact),
         _buildDetailRow(isMarathi ? 'मूळ पिनकोड' : 'Native Pincode', _profile.nativePincode.isNotEmpty ? _profile.nativePincode : '-', isCompact: isCompact),
-        _buildDetailRow(isMarathi ? 'मूळ संपूर्ण पत्ता' : 'Native Address', _profile.nativeAddress.isNotEmpty ? _profile.nativeAddress : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ संपूर्ण पत्ता (इंग्रजी)' : 'Native Full Address (En)', nativeAddressEn.isNotEmpty ? nativeAddressEn : '-', isCompact: isCompact),
+        _buildDetailRow(isMarathi ? 'मूळ संपूर्ण पत्ता (मराठी)' : 'Native Full Address (Mr)', nativeAddressMr.isNotEmpty ? nativeAddressMr : '-', isCompact: isCompact),
       ],
     );
   }
@@ -1717,15 +2431,18 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CheckboxListTile(
-          value: _isNativeAddressSame,
-          contentPadding: EdgeInsets.zero,
-          activeColor: AppColors.saffron,
-          title: Text(
-            isMarathi ? 'सध्याचा पत्ता हाच मूळ गाव पत्ता आहे' : 'Current address is same as native address',
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+        Material(
+          color: Colors.transparent,
+          child: CheckboxListTile(
+            value: _isNativeAddressSame,
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppColors.saffron,
+            title: Text(
+              isMarathi ? 'सध्याचा पत्ता हाच मूळ गाव पत्ता आहे' : 'Current address is same as native address',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            onChanged: (val) => setState(() => _isNativeAddressSame = val ?? true),
           ),
-          onChanged: (val) => setState(() => _isNativeAddressSame = val ?? true),
         ),
         if (!_isNativeAddressSame) ...[
           const SizedBox(height: 10),
@@ -1733,6 +2450,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             keyPrefix: 'nat_geo',
             isMarathi: isMarathi,
             isDesktop: isDesktop,
+            isRequired: true,
+            defaultToMaharashtra: false,
             initialState: _selectedNativeState,
             initialDistrict: _selectedNativeDistrict,
             initialTaluka: _selectedNativeTaluka,
@@ -1741,31 +2460,153 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             talukaLabel: isMarathi ? 'मूळ तालुका / शहर' : 'Native Taluka / City',
             onChanged: (state, district, taluka) {
               setState(() {
-                _selectedNativeState = state.code;
+                _selectedNativeState = state?.code ?? '';
                 _selectedNativeDistrict = district?.code ?? '';
                 _selectedNativeTaluka = taluka?.nameEn ?? '';
+                _selectedNativeTalukaMr = taluka?.nameMr ?? '';
               });
             },
           ),
           const SizedBox(height: 10),
           _buildResponsivePair(
             isDesktop: isDesktop,
-            child1: _buildInput(
-              isMarathi ? 'मूळ गाव / वाडी नाव' : 'Native Village Name',
-              _nativeVillageController,
-              keyboardTitle: 'मूळ गाव',
+            child1: _buildTextField(
+              context,
+              label: '${isMarathi ? "मूळ गाव / वाडी" : "Native Village"} (English)',
+              controller: _nativeVillageController,
+              isCompulsory: true,
+              icon: Icons.holiday_village_outlined,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                CapitalizeFirstLetterFormatter(),
+              ],
+              textCapitalization: TextCapitalization.words,
+              errorMessage: isMarathi ? 'कृपया मूळ गाव इंग्रजीत प्रविष्ट करा' : 'Please enter native village in English',
+              validator: (value) {
+                final en = value?.trim() ?? '';
+                if (en.isEmpty) {
+                  return isMarathi
+                      ? 'कृपया मूळ गाव इंग्रजीत प्रविष्ट करा'
+                      : 'Please enter native village in English';
+                }
+                if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(en)) {
+                  return isMarathi
+                      ? 'फक्त इंग्रजी अक्षरे अनुमत आहेत'
+                      : 'Only English letters are allowed';
+                }
+                return null;
+              },
+              onChanged: (val) {
+                _nativeVillageMrController.text = BilingualHelper.transliterateToMarathi(val);
+                _debounceLiveTransliterate(
+                  key: 'native_village',
+                  text: val,
+                  targetController: _nativeVillageMrController,
+                  sourceController: _nativeVillageController,
+                );
+              },
             ),
-            child2: _buildInput(
-              isMarathi ? 'पिनकोड' : 'Pincode',
-              _nativePincodeController,
-              keyboardTitle: 'पिनकोड',
+            child2: _buildTextField(
+              context,
+              label: '${isMarathi ? "मूळ गाव / वाडी" : "Native Village"} (मराठी)',
+              controller: _nativeVillageMrController,
+              focusNode: _nativeVillageMrFocusNode,
+              isCompulsory: true,
+              icon: Icons.holiday_village_outlined,
+              suffixIcon: Icons.keyboard_alt_outlined,
+              onSuffixTap: () => MarathiVirtualKeyboard.show(
+                context,
+                controller: _nativeVillageMrController,
+                focusNode: _nativeVillageMrFocusNode,
+                title: isMarathi ? 'मूळ गाव / वाडी' : 'Native Village',
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
+                ],
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]')),
+              ],
+              errorMessage: isMarathi ? 'कृपया मूळ गाव मराठीत प्रविष्ट करा' : 'Please enter native village in Marathi',
+              validator: (value) {
+                final mr = value?.trim() ?? '';
+                if (mr.isEmpty) {
+                  return isMarathi
+                      ? 'कृपया मूळ गाव मराठीत प्रविष्ट करा'
+                      : 'Please enter native village in Marathi';
+                }
+                if (RegExp(r'[0-9\u0966-\u096F]').hasMatch(mr) ||
+                    !RegExp(r'^[\u0900-\u0963\u0971-\u097F\u200C\u200D\s]+$').hasMatch(mr)) {
+                  return isMarathi
+                      ? 'फक्त मराठी अक्षरे अनुमत आहेत (संख्या नाहीत)'
+                      : 'Only Marathi letters are allowed (no numbers)';
+                }
+                return null;
+              },
             ),
           ),
           const SizedBox(height: 10),
-          _buildInput(
-            isMarathi ? 'मूळ संपूर्ण पत्ता' : 'Native Full Address',
-            _nativeAddressController,
-            keyboardTitle: 'मूळ पत्ता',
+          _buildTextField(
+            context,
+            label: isMarathi ? 'पिनकोड (६ अंक)' : 'Pincode (6 digits)',
+            controller: _nativePincodeController,
+            isCompulsory: true,
+            icon: Icons.pin_drop_outlined,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
+            errorMessage: isMarathi ? 'कृपया मूळ पिनकोड प्रविष्ट करा' : 'Please enter native pincode',
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return isMarathi ? 'कृपया मूळ पिनकोड प्रविष्ट करा' : 'Please enter native pincode';
+              }
+              if (value.trim().length != 6) {
+                return isMarathi ? 'पिनकोड ६ अंकांचा असावा' : 'Pincode must be 6 digits';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 10),
+          _buildResponsivePair(
+            isDesktop: isDesktop,
+            child1: _buildTextField(
+              context,
+              label: '${isMarathi ? "मूळ संपूर्ण पत्ता" : "Native Full Address"} (English)',
+              controller: _nativeAddressController,
+              isCompulsory: false,
+              icon: Icons.home_outlined,
+              onChanged: (val) {
+                _nativeAddressMrController.text = BilingualHelper.transliterateToMarathi(val);
+                _debounceLiveTransliterate(
+                  key: 'native_address',
+                  text: val,
+                  targetController: _nativeAddressMrController,
+                  sourceController: _nativeAddressController,
+                );
+              },
+            ),
+            child2: _buildTextField(
+              context,
+              label: '${isMarathi ? "मूळ संपूर्ण पत्ता" : "Native Full Address"} (मराठी)',
+              controller: _nativeAddressMrController,
+              focusNode: _nativeAddressMrFocusNode,
+              isCompulsory: false,
+              icon: Icons.home_outlined,
+              suffixIcon: Icons.keyboard_alt_outlined,
+              onSuffixTap: () => MarathiVirtualKeyboard.show(
+                context,
+                controller: _nativeAddressMrController,
+                focusNode: _nativeAddressMrFocusNode,
+                title: isMarathi ? 'मूळ पत्ता (मराठी)' : 'Native Address (Marathi)',
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u097F\u200C\u200D0-9a-zA-Z\s,./#\-_()]')),
+                ],
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\u0900-\u097F\u200C\u200D0-9a-zA-Z\s,./#\-_()]')),
+              ],
+            ),
           ),
         ],
       ],
@@ -1840,7 +2681,7 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         // Profession Dropdown
         AppSearchableDropdown<String>(
           key: ValueKey('prof_$_selectedProfession'),
-          value: _selectedProfession,
+          value: _professionOptions.contains(_selectedProfession) ? _selectedProfession : null,
           labelText: isMarathi ? 'व्यवसाय / कार्यक्षेत्र निवडा' : 'Select Profession / Occupation',
           searchHint: isMarathi ? 'व्यवसाय शोधा...' : 'Search profession...',
           prefixIcon: const Icon(Icons.work_outline_rounded, color: AppColors.gold, size: 18),
@@ -2012,15 +2853,18 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             keyboardTitle: 'कौशल्ये',
           ),
           const SizedBox(height: 4),
-          CheckboxListTile(
-            value: _willingToRelocate,
-            contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.saffron,
-            title: Text(
-              isMarathi ? 'कामासाठी दुसऱ्या शहरात स्थलांतरास तयार आहात का?' : 'Willing to relocate for work?',
-              style: const TextStyle(color: Colors.white, fontSize: 11),
+          Material(
+            color: Colors.transparent,
+            child: CheckboxListTile(
+              value: _willingToRelocate,
+              contentPadding: EdgeInsets.zero,
+              activeColor: AppColors.saffron,
+              title: Text(
+                isMarathi ? 'कामासाठी दुसऱ्या शहरात स्थलांतरास तयार आहात का?' : 'Willing to relocate for work?',
+                style: const TextStyle(color: Colors.white, fontSize: 11),
+              ),
+              onChanged: (val) => setState(() => _willingToRelocate = val ?? true),
             ),
-            onChanged: (val) => setState(() => _willingToRelocate = val ?? true),
           ),
         ] else if (_selectedProfession.contains('इतर') || _selectedProfession.contains('Other')) ...[
           _buildInput(
@@ -2160,7 +3004,11 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                   selectedColor: AppColors.saffron,
                   backgroundColor: AppColors.darkBgHeroTop,
                   labelStyle: TextStyle(color: _isPoliticallyActive == false ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
-                  onSelected: (_) => setState(() => _isPoliticallyActive = false),
+                  onSelected: (_) => setState(() {
+                    _isPoliticallyActive = false;
+                    _politicalPartyController.clear();
+                    _politicalRoleController.clear();
+                  }),
                 ),
               ],
             ),
@@ -2173,12 +3021,36 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             child1: _buildInput(
               isMarathi ? 'राजकीय पक्ष / संघटना नाव' : 'Party / Organization Name',
               _politicalPartyController,
+              isCompulsory: true,
               keyboardTitle: 'पक्ष नाव',
+              errorMessage: isMarathi
+                  ? 'कृपया राजकीय पक्ष / संघटनेचे नाव प्रविष्ट करा'
+                  : 'Please enter Party / Organization Name',
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return isMarathi
+                      ? 'कृपया राजकीय पक्ष / संघटनेचे नाव प्रविष्ट करा'
+                      : 'Please enter Party / Organization Name';
+                }
+                return null;
+              },
             ),
             child2: _buildInput(
               isMarathi ? 'सध्याचे पद / जबाबदारी' : 'Post / Designation',
               _politicalRoleController,
+              isCompulsory: true,
               keyboardTitle: 'पद / जबाबदारी',
+              errorMessage: isMarathi
+                  ? 'कृपया पद / जबाबदारी प्रविष्ट करा'
+                  : 'Please enter Post / Designation',
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return isMarathi
+                      ? 'कृपया पद / जबाबदारी प्रविष्ट करा'
+                      : 'Please enter Post / Designation';
+                }
+                return null;
+              },
             ),
           ),
         ],
@@ -2213,7 +3085,11 @@ class _ProfileContentViewState extends State<ProfileContentView> {
                   selectedColor: AppColors.saffron,
                   backgroundColor: AppColors.darkBgHeroTop,
                   labelStyle: TextStyle(color: _isAssociatedWithNgo == false ? Colors.white : AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
-                  onSelected: (_) => setState(() => _isAssociatedWithNgo = false),
+                  onSelected: (_) => setState(() {
+                    _isAssociatedWithNgo = false;
+                    _ngoNameController.clear();
+                    _ngoRoleController.clear();
+                  }),
                 ),
               ],
             ),
@@ -2226,12 +3102,36 @@ class _ProfileContentViewState extends State<ProfileContentView> {
             child1: _buildInput(
               isMarathi ? 'सामाजिक संस्थेचे नाव' : 'NGO / Organization Name',
               _ngoNameController,
+              isCompulsory: true,
               keyboardTitle: 'संस्थेचे नाव',
+              errorMessage: isMarathi
+                  ? 'कृपया सामाजिक संस्थेचे नाव प्रविष्ट करा'
+                  : 'Please enter NGO / Organization Name',
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return isMarathi
+                      ? 'कृपया सामाजिक संस्थेचे नाव प्रविष्ट करा'
+                      : 'Please enter NGO / Organization Name';
+                }
+                return null;
+              },
             ),
             child2: _buildInput(
               isMarathi ? 'संस्थेतील पद / कार्य' : 'Designation / Role',
               _ngoRoleController,
+              isCompulsory: true,
               keyboardTitle: 'पद / कार्य',
+              errorMessage: isMarathi
+                  ? 'कृपया पद / कार्य प्रविष्ट करा'
+                  : 'Please enter Designation / Role',
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return isMarathi
+                      ? 'कृपया पद / कार्य प्रविष्ट करा'
+                      : 'Please enter Designation / Role';
+                }
+                return null;
+              },
             ),
           ),
         ],
@@ -2454,9 +3354,59 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     );
   }
 
+  Widget _buildTextField(
+    BuildContext context, {
+    required String label,
+    required TextEditingController controller,
+    FocusNode? focusNode,
+    bool isCompulsory = false,
+    IconData? icon,
+    IconData? suffixIcon,
+    VoidCallback? onSuffixTap,
+    VoidCallback? onTap,
+    bool readOnly = false,
+    bool absorbPointer = false,
+    String? Function(String?)? validator,
+    String? errorMessage,
+    String? hintText,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    ValueChanged<String>? onChanged,
+  }) {
+    return CustomTextField(
+      labelText: label,
+      hintText: hintText,
+      controller: controller,
+      focusNode: focusNode,
+      isCompulsory: isCompulsory,
+      prefixIconData: icon,
+      suffixIconData: suffixIcon,
+      onSuffixTap: onSuffixTap,
+      onTap: onTap,
+      readOnly: readOnly,
+      absorbPointer: absorbPointer,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      textCapitalization: textCapitalization,
+      onChanged: onChanged,
+      validator: validator ??
+          (value) {
+            if (isCompulsory) {
+              if (value == null || value.isEmpty) {
+                return errorMessage ?? '$label cannot be empty';
+              }
+              return null;
+            }
+            return null;
+          },
+    );
+  }
+
   Widget _buildInput(
     String label,
     TextEditingController controller, {
+    FocusNode? focusNode,
     ValueChanged<String>? onChanged,
     bool showKeyboardIcon = true,
     String? keyboardTitle,
@@ -2467,6 +3417,8 @@ class _ProfileContentViewState extends State<ProfileContentView> {
     bool isCompulsory = false,
     String? Function(String?)? validator,
     String? errorMessage,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     final cleanLabel = label.replaceAll('*', '').trim();
     final requiresStar = isCompulsory || label.contains('*');
@@ -2494,6 +3446,9 @@ class _ProfileContentViewState extends State<ProfileContentView> {
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
+          inputFormatters: inputFormatters,
+          textCapitalization: textCapitalization,
           readOnly: readOnly,
           onTap: () {
             if (MarathiVirtualKeyboard.isOpen) {

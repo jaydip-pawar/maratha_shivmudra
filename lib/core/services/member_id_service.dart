@@ -23,7 +23,9 @@ class MemberIdService {
 
       // Check if user already has an assigned Member ID
       if (memberSnap.exists) {
-        final existingId = memberSnap.data()?['member_id'] as String?;
+        final data = memberSnap.data();
+        final mem = data?['membership'] is Map ? data!['membership'] as Map : null;
+        final existingId = (mem?['member_id'] ?? data?['member_id']) as String?;
         if (existingId != null &&
             existingId.trim().isNotEmpty &&
             existingId != 'PENDING') {
@@ -57,13 +59,17 @@ class MemberIdService {
 
       // Save to member document
       await memberRef.set({
-        'member_id': memberId,
-        'district_code': districtCode,
-        'district_en': district.nameEn,
-        'district_mr': district.nameMr,
-        'serial_number': newSerial,
-        'card_issued_date': now,
-        'is_card_issued': true,
+        'residence': {
+          'district_code': districtCode,
+          'district_en': district.nameEn,
+          'district_mr': district.nameMr,
+        },
+        'membership': {
+          'member_id': memberId,
+          'serial_number': newSerial,
+          'card_issued_date': now,
+          'is_card_issued': true,
+        },
         'updated_at': now,
       }, SetOptions(merge: true));
 
@@ -125,14 +131,18 @@ class MemberIdService {
 
       // Update members/{phone}
       await _db.collection('members').doc(cleanPhone).set({
-        'member_id': specialId,
-        'role_type': roleType,
-        'designation': designation,
-        'district_code': districtCode,
-        'district_en': district.nameEn,
-        'district_mr': district.nameMr,
-        'is_card_issued': true,
-        'card_issued_date': now,
+        'residence': {
+          'district_code': districtCode,
+          'district_en': district.nameEn,
+          'district_mr': district.nameMr,
+        },
+        'membership': {
+          'member_id': specialId,
+          'role_type': roleType,
+          'designation': designation,
+          'is_card_issued': true,
+          'card_issued_date': now,
+        },
         'updated_at': now,
       }, SetOptions(merge: true));
 
@@ -147,11 +157,19 @@ class MemberIdService {
   Future<Map<String, dynamic>?> verifyMemberId(String memberId) async {
     try {
       final cleanId = memberId.trim().toUpperCase();
-      final query = await _db
+      QuerySnapshot<Map<String, dynamic>> query = await _db
           .collection('members')
-          .where('member_id', isEqualTo: cleanId)
+          .where('membership.member_id', isEqualTo: cleanId)
           .limit(1)
           .get();
+
+      if (query.docs.isEmpty) {
+        query = await _db
+            .collection('members')
+            .where('member_id', isEqualTo: cleanId)
+            .limit(1)
+            .get();
+      }
 
       if (query.docs.isEmpty) return null;
       return query.docs.first.data();

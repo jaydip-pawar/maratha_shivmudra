@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:domain/domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:maratha_shivmudra/core/base/bloc/bloc_base/bloc_base.dart';
@@ -10,6 +11,7 @@ import 'package:maratha_shivmudra/core/base/bloc/state/base_state.dart';
 import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/mixins/get_it_helper_mixin.dart';
 import 'package:maratha_shivmudra/core/services/user_session_service.dart';
+import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -78,17 +80,32 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
     final referralId = Uri.base.queryParameters['ref'];
     final memberRef = db.collection('members').doc(phoneNumber!);
     final memberSnap = await memberRef.get();
+    final data = memberSnap.data();
+    final mem = data?['membership'] is Map ? data!['membership'] as Map : null;
     final isFormFilled =
-        memberSnap.exists && (memberSnap.data()?['is_registered'] == true);
+        memberSnap.exists && (mem?['is_registered'] == true || data?['is_registered'] == true);
 
     if (!memberSnap.exists) {
+      final tokens = BilingualHelper.generateSearchTokens(
+        nameEn: '',
+        nameMr: '',
+        phone: phoneNumber,
+        memberId: 'PENDING',
+      );
       await memberRef.set({
-        'phone': phoneNumber,
-        'referral_id': referralId ?? 'NONE',
-        'is_registered': false,
-        'is_profile_complete': false,
-        'is_card_issued': false,
-        'is_valid': true,
+        'membership': {
+          'phone': phoneNumber,
+          'referral_id': referralId ?? 'NONE',
+          'role_type': 'member',
+          'designation': '',
+          'member_id': 'PENDING',
+          'is_registered': false,
+          'is_profile_complete': false,
+          'is_card_issued': false,
+          'is_promoted': false,
+          'is_valid': true,
+        },
+        'search_tokens': tokens,
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -103,7 +120,8 @@ class AuthBloc extends BlocBase<AuthEvent, AuthState> with GetItHelperMixin {
   }
 
   /// Set to true to skip real 2Factor SMS OTP gateway calls during testing/development to avoid incurring charges.
-  static const bool skipOtpForTesting = false;
+  /// Automatically disabled/skipped in debug mode.
+  static const bool skipOtpForTesting = kDebugMode;
 
   Future<bool> initiateOtp() async {
     try {

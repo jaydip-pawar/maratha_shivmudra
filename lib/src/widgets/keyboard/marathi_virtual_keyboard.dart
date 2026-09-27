@@ -10,10 +10,15 @@ import 'package:maratha_shivmudra/core/utils/extensions.dart';
 import 'package:maratha_shivmudra/core/utils/responsive.dart';
 
 class _MatraDefinition {
-  const _MatraDefinition({required this.sign, required this.name});
+  const _MatraDefinition({
+    required this.sign,
+    required this.name,
+    this.isModifier = false,
+  });
 
   final String sign;
   final String name;
+  final bool isModifier;
 }
 
 const List<_MatraDefinition> _allMatras = [
@@ -26,13 +31,27 @@ const List<_MatraDefinition> _allMatras = [
   _MatraDefinition(sign: 'ै', name: 'दोन मात्रे (ै)'),
   _MatraDefinition(sign: 'ो', name: 'एक काना एक मात्रा (ो)'),
   _MatraDefinition(sign: 'ौ', name: 'एक काना दोन मात्रे (ौ)'),
-  _MatraDefinition(sign: 'ं', name: 'अनुस्वार (ं)'),
-  _MatraDefinition(sign: 'ः', name: 'विसर्ग (ः)'),
+  _MatraDefinition(sign: 'ः', name: 'विसर्ग (ः)', isModifier: true),
   _MatraDefinition(sign: 'ृ', name: 'ऋकार (ृ)'),
   _MatraDefinition(sign: 'ॅ', name: 'चंद्र (ॅ)'),
   _MatraDefinition(sign: 'ॉ', name: 'काना चंद्र (ॉ)'),
   _MatraDefinition(sign: '्', name: 'हलंत / जोडाक्षर (्)'),
 ];
+
+class _ActiveCluster {
+  const _ActiveCluster({
+    required this.baseConsonant,
+    this.vowelMatra,
+    this.modifier,
+  });
+
+  final String baseConsonant;
+  final String? vowelMatra;
+  final String? modifier;
+
+  String get fullSyllable => '$baseConsonant${vowelMatra ?? ''}${modifier ?? ''}';
+  String get syllableWithoutModifier => '$baseConsonant${vowelMatra ?? ''}';
+}
 
 class _KeyboardPopEntry implements PopEntry<Object?> {
   _KeyboardPopEntry(this.onPop);
@@ -346,6 +365,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     'स',
     'ह',
     'ळ',
+    'ऱ',
     'क्ष',
     'ज्ञ',
     'श्र',
@@ -397,9 +417,9 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     '>',
     '{',
     '}',
-    '[',
-    ']',
+    'ॐ',
     '₹',
+    'ऽ',
   ];
 
   KeyEvent? _lastProcessedEvent;
@@ -574,7 +594,11 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         char == ';') {
       _latinBuffer = '';
       _lastWordStart = -1;
-      _insertChar(char);
+      if (char == '.' && !_allowsChar('.') && _allowsChar('\u0902')) {
+        _applyMatra('\u0902');
+      } else {
+        _insertChar(char);
+      }
       return true;
     }
 
@@ -711,8 +735,8 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     return true;
   }
 
-  /// Finds the active Devanagari base consonant / conjunct preceding cursor.
-  String? _getActiveBase() {
+  /// Finds the active Devanagari cluster preceding cursor (base consonant, vowel matra, modifier).
+  _ActiveCluster? _getActiveCluster() {
     final text = widget.controller.text;
     var selection = widget.controller.selection;
     if (!selection.isCollapsed || selection.start < 0) {
@@ -723,32 +747,64 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
 
     final before = text.substring(0, cursorPos);
     int idx = before.length - 1;
-    while (idx >= 0 && _isMatraOrModifier(before.codeUnitAt(idx))) {
+
+    String? modifier;
+    if (idx >= 0 &&
+        (before[idx] == '\u0902' ||
+            before[idx] == '\u0901' ||
+            before[idx] == '\u0903')) {
+      modifier = before[idx];
       idx--;
     }
+
+    String? vowelMatra;
+    if (idx >= 0) {
+      final code = before.codeUnitAt(idx);
+      if ((code >= 0x093E && code <= 0x094D) ||
+          code == 0x0962 ||
+          code == 0x0963) {
+        vowelMatra = before[idx];
+        idx--;
+      }
+    }
+
     if (idx < 0) return null;
 
     final baseText = before.substring(0, idx + 1);
 
     const conjuncts = ['क्ष', 'ज्ञ', 'श्र', 'त्र'];
     for (final c in conjuncts) {
-      if (baseText.endsWith(c)) return c;
+      if (baseText.endsWith(c)) {
+        return _ActiveCluster(
+          baseConsonant: c,
+          vowelMatra: vowelMatra,
+          modifier: modifier,
+        );
+      }
     }
 
     final code = baseText.codeUnitAt(baseText.length - 1);
     if ((code >= 0x0904 && code <= 0x0939) ||
-        (code >= 0x0958 && code <= 0x095F)) {
-      return baseText[baseText.length - 1];
+        (code >= 0x0958 && code <= 0x095F) ||
+        code == 0x0931) {
+      return _ActiveCluster(
+        baseConsonant: baseText[baseText.length - 1],
+        vowelMatra: vowelMatra,
+        modifier: modifier,
+      );
     }
     return null;
   }
+
 
   bool _isMatraOrModifier(int code) {
     return (code >= 0x093E && code <= 0x094D) ||
         code == 0x0901 ||
         code == 0x0902 ||
         code == 0x0903 ||
-        code == 0x093C;
+        code == 0x093C ||
+        code == 0x0962 ||
+        code == 0x0963;
   }
 
   void _vibrate() {
@@ -800,6 +856,15 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     }
     final cursorPos = selection.start >= 0 ? selection.start : text.length;
 
+    if (sign == '.') {
+      if (!_allowsChar('.') && _allowsChar('\u0902')) {
+        _applyMatra('\u0902');
+      } else {
+        _insertChar('.');
+      }
+      return;
+    }
+
     if (cursorPos == 0) {
       _insertChar(sign);
       return;
@@ -808,48 +873,87 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     final before = text.substring(0, cursorPos);
     final after = text.substring(cursorPos);
 
-    if (sign == '\u0902') {
-      if (before.endsWith('\u0902')) {
-        final newBefore = before.substring(0, before.length - 1);
+    // Modifier signs: Anusvara (ं), Chandrabindu (ँ), Visarga (ः)
+    final isModifierSign =
+        sign == '\u0902' || sign == '\u0901' || sign == '\u0903';
+
+    if (isModifierSign) {
+      // If exact same modifier is already at the end, toggle it off
+      if (before.endsWith(sign)) {
+        final newBefore = before.substring(0, before.length - sign.length);
         _updateControllerValue(TextEditingValue(
           text: newBefore + after,
           selection: TextSelection.collapsed(offset: newBefore.length),
         ));
         return;
       }
-      _insertChar(sign);
-      return;
-    }
 
-    if (sign == '\u0903') {
-      if (before.endsWith('\u0903')) {
-        final newBefore = before.substring(0, before.length - 1);
+      // If another modifier is present at the end, replace it
+      if (before.endsWith('\u0902') ||
+          before.endsWith('\u0901') ||
+          before.endsWith('\u0903')) {
+        final newBefore = before.substring(0, before.length - 1) + sign;
         _updateControllerValue(TextEditingValue(
           text: newBefore + after,
           selection: TextSelection.collapsed(offset: newBefore.length),
         ));
         return;
       }
+
+      // Otherwise append modifier to current consonant or syllable (e.g. "डो" + "ं" -> "डों")
       _insertChar(sign);
       return;
     }
 
-    final hasTrailingAnusvara = before.endsWith('\u0902');
-    final working = hasTrailingAnusvara
-        ? before.substring(0, before.length - 1)
-        : before;
+    // Applying a vowel matra (e.g. ा, ि, ी, ु, ू, े, ै, ो, ौ, ृ, ॅ, ॉ, ्):
+    String? trailingModifier;
+    String working = before;
+    if (before.endsWith('\u0902') ||
+        before.endsWith('\u0901') ||
+        before.endsWith('\u0903')) {
+      trailingModifier = before.substring(before.length - 1);
+      working = before.substring(0, before.length - 1);
+    }
 
     if (working.isNotEmpty) {
       final lastCode = working.codeUnitAt(working.length - 1);
-      final isVowelMatra = lastCode >= 0x093E && lastCode <= 0x094D;
+      final isVowelMatra = (lastCode >= 0x093E && lastCode <= 0x094D) ||
+          lastCode == 0x0962 ||
+          lastCode == 0x0963;
+
       if (isVowelMatra) {
+        // Toggle off if tapping same vowel matra and no modifier
+        if (working.endsWith(sign) && trailingModifier == null) {
+          final newWorking =
+              working.substring(0, working.length - sign.length);
+          _updateControllerValue(TextEditingValue(
+            text: newWorking + after,
+            selection: TextSelection.collapsed(offset: newWorking.length),
+          ));
+          return;
+        }
+
+        // Replace existing vowel matra with new matra, preserving trailing modifier
         final replaced = working.substring(0, working.length - 1) + sign;
-        final finalBefore = hasTrailingAnusvara ? '$replaced\u0902' : replaced;
+        final finalBefore = trailingModifier != null
+            ? '$replaced$trailingModifier'
+            : replaced;
         _updateControllerValue(TextEditingValue(
           text: finalBefore + after,
           selection: TextSelection.collapsed(offset: finalBefore.length),
         ));
         return;
+      } else {
+        // Working ends with a consonant (e.g. 'ड') and has a trailing modifier (e.g. 'ं')
+        // User had "डं" and clicked "ो" -> canonical Devanagari is "ड" + "ो" + "ं" = "डों"!
+        if (trailingModifier != null) {
+          final finalBefore = '$working$sign$trailingModifier';
+          _updateControllerValue(TextEditingValue(
+            text: finalBefore + after,
+            selection: TextSelection.collapsed(offset: finalBefore.length),
+          ));
+          return;
+        }
       }
     }
 
@@ -894,7 +998,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
-    final activeBase = _getActiveBase();
+    final activeCluster = _getActiveCluster();
 
     final keyboardBody = GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -940,7 +1044,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
             // height to prevent layout shift. Shows empty sign (◌ा) initially
             // and replaces with active character (का) when typed.
             if (!_isSymbolsMode)
-              _buildDynamicSignsRow(activeBase, isMobile: isMobile),
+              _buildDynamicSignsRow(activeCluster, isMobile: isMobile),
 
             // Normal Marathi vs ?123 Symbols Keyboard
             if (_isSymbolsMode)
@@ -966,7 +1070,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
 
   /// Dynamic Kanamatra / Chinhe Bar: Expands across 100% width with ZERO scroll.
   /// Kept always active at fixed height to prevent jarring height shifts.
-  Widget _buildDynamicSignsRow(String? activeBase, {bool isMobile = false}) {
+  Widget _buildDynamicSignsRow(_ActiveCluster? cluster, {bool isMobile = false}) {
     final chipHeight = isMobile ? 26.0 : 34.0;
     final fontSize = isMobile ? 11.5 : 13.0;
 
@@ -977,16 +1081,28 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         color: const Color(0xFF261414),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: activeBase != null
+          color: cluster != null
               ? AppColors.gold.withValues(alpha: 0.6)
               : AppColors.gold.withValues(alpha: 0.25),
         ),
       ),
       child: Row(
         children: _allMatras.map((matra) {
-          final displayChar = activeBase != null
-              ? '$activeBase${matra.sign}'
-              : '\u25CC${matra.sign}';
+          String displayChar;
+          bool isSelected = false;
+
+          if (cluster == null) {
+            displayChar = '\u25CC${matra.sign}';
+          } else if (matra.isModifier) {
+            // Modifiers (Visarga 'ः'):
+            displayChar = '${cluster.syllableWithoutModifier}${matra.sign}';
+            isSelected = cluster.modifier == matra.sign;
+          } else {
+            // Vowel matras (ा, ि, ी, ु, ू, े, ै, ो, ौ, ृ, ॅ, ॉ, ्):
+            displayChar = '${cluster.baseConsonant}${matra.sign}';
+            isSelected = cluster.vowelMatra == matra.sign;
+          }
+
           return Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: isMobile ? 0.5 : 1),
@@ -995,7 +1111,8 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                 displayChar,
                 height: chipHeight,
                 fontSize: fontSize,
-                isActive: activeBase != null,
+                isActive: cluster != null,
+                isSelected: isSelected,
               ),
             ),
           );
@@ -1010,6 +1127,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     double height = 34,
     double fontSize = 13,
     bool isActive = false,
+    bool isSelected = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1022,14 +1140,19 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
           child: Container(
             height: height,
             decoration: BoxDecoration(
-              color: isActive
-                  ? AppColors.gold.withValues(alpha: 0.16)
-                  : const Color(0xFF1E1111),
+              color: isSelected
+                  ? AppColors.gold.withValues(alpha: 0.38)
+                  : (isActive
+                      ? AppColors.gold.withValues(alpha: 0.16)
+                      : const Color(0xFF1E1111)),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: isActive
-                    ? AppColors.gold.withValues(alpha: 0.45)
-                    : AppColors.gold.withValues(alpha: 0.2),
+                color: isSelected
+                    ? AppColors.gold
+                    : (isActive
+                        ? AppColors.gold.withValues(alpha: 0.45)
+                        : AppColors.gold.withValues(alpha: 0.2)),
+                width: isSelected ? 1.5 : 1.0,
               ),
             ),
             child: Center(
@@ -1039,7 +1162,9 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                   fontFamily: AppTypography.fontFamily,
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: isActive ? AppColors.goldLight : AppColors.textMuted,
+                  color: isSelected
+                      ? Colors.white
+                      : (isActive ? AppColors.goldLight : AppColors.textMuted),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.clip,
@@ -1192,6 +1317,9 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     double? height,
     double? fontSize,
     Color? color,
+    Color? textColor,
+    Color? borderColor,
+    VoidCallback? onTap,
   }) {
     final effectiveHeight = height ?? (isMobile ? 32.0 : 38.0);
     final effectiveFontSize = fontSize ??
@@ -1203,7 +1331,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
       color: Colors.transparent,
       child: InkWell(
         canRequestFocus: false,
-        onTap: () => _insertChar(char),
+        onTap: onTap ?? () => _insertChar(char),
         borderRadius: BorderRadius.circular(5),
         child: Container(
           height: effectiveHeight,
@@ -1213,9 +1341,10 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                 (isSwar ? const Color(0xFF281813) : AppColors.darkSurface),
             borderRadius: BorderRadius.circular(5),
             border: Border.all(
-              color: isSwar
-                  ? AppColors.saffron.withValues(alpha: 0.45)
-                  : AppColors.darkBorder,
+              color: borderColor ??
+                  (isSwar
+                      ? AppColors.saffron.withValues(alpha: 0.45)
+                      : AppColors.darkBorder),
             ),
           ),
           child: Center(
@@ -1225,7 +1354,8 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
                 fontFamily: AppTypography.fontFamily,
                 fontSize: effectiveFontSize,
                 fontWeight: FontWeight.bold,
-                color: isSwar ? AppColors.saffronLight : Colors.white,
+                color: textColor ??
+                    (isSwar ? AppColors.saffronLight : Colors.white),
               ),
             ),
           ),
@@ -1266,8 +1396,8 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
     final rowHeight = isMobile ? 32.0 : 38.0;
     final allowDigits = _allowsDigits;
     final allowComma = _allowsChar(',');
-    final allowDot = _allowsChar('.');
     final allowSpace = _allowsChar(' ');
+    final allowAnusvara = _allowsChar('\u0902');
 
     return Row(
       children: [
@@ -1309,7 +1439,7 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         // Spacebar
         if (allowSpace)
           Expanded(
-            flex: allowDigits ? 6 : 8,
+            flex: allowDigits ? 5 : 6,
             child: _buildSpecialActionButton(
               label: 'स्पेस',
               height: rowHeight,
@@ -1320,9 +1450,31 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
         else
           const Spacer(flex: 2),
 
-        if (allowDot) ...[
+        // Dedicated Anusvara Key (ं - अनुस्वार / बिंदू / टिंब)
+        // Prominently accessible in normal Marathi mode right beside Space!
+        if (allowAnusvara && !_isSymbolsMode) ...[
           SizedBox(width: gap),
-          // Dot (.) in opening keyboard
+          Expanded(
+            flex: 2,
+            child: Tooltip(
+              message: 'अनुस्वार / बिंदू (ं)',
+              child: _buildKeyButton(
+                'ं',
+                isMobile: isMobile,
+                height: rowHeight,
+                fontSize: isMobile ? 17 : 19,
+                color: const Color(0xFF351A14),
+                textColor: AppColors.goldLight,
+                borderColor: AppColors.gold.withValues(alpha: 0.65),
+                onTap: () => _applyMatra('\u0902'),
+              ),
+            ),
+          ),
+        ],
+
+        // Dot (.) kept in below line
+        if (_allowsChar('.') || _allowsChar('\u0902')) ...[
+          SizedBox(width: gap),
           Expanded(
             child: _buildKeyButton(
               '.',
@@ -1330,6 +1482,13 @@ class _MarathiVirtualKeyboardState extends State<MarathiVirtualKeyboard> {
               height: rowHeight,
               fontSize: isMobile ? 15 : 16,
               color: AppColors.darkSurface,
+              onTap: () {
+                if (!_allowsChar('.') && _allowsChar('\u0902')) {
+                  _applyMatra('\u0902');
+                } else {
+                  _insertChar('.');
+                }
+              },
             ),
           ),
         ],

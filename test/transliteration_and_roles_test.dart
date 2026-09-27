@@ -1,7 +1,9 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maratha_shivmudra/core/constants/district_constants.dart';
 import 'package:maratha_shivmudra/core/constants/organization_roles.dart';
 import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
+import 'package:maratha_shivmudra/src/widgets/textfields/text_field.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -110,6 +112,114 @@ void main() {
 
       // Surat (Gujarat) member -> NOT in Maharashtra
       expect(isDocInMaharashtra({'state_code': 'GJ', 'district_code': 'GJ-SUR', 'district_en': 'Surat', 'state': 'Gujarat'}), isFalse);
+    });
+  });
+
+  group('Gender Localization & DB Normalization', () {
+    test('DB stores canonical English and Frontend localizes to Marathi correctly', () {
+      // Normalization to DB (English)
+      expect(BilingualHelper.normalizeGenderToEn('Male'), 'Male');
+      expect(BilingualHelper.normalizeGenderToEn('female'), 'Female');
+      expect(BilingualHelper.normalizeGenderToEn('Other'), 'Other');
+      expect(BilingualHelper.normalizeGenderToEn('पुरुष'), 'Male');
+      expect(BilingualHelper.normalizeGenderToEn('स्त्री'), 'Female');
+      expect(BilingualHelper.normalizeGenderToEn('इतर'), 'Other');
+      expect(BilingualHelper.normalizeGenderToEn('पुरुष (Male)'), 'Male');
+      expect(BilingualHelper.normalizeGenderToEn(''), '');
+      expect(BilingualHelper.normalizeGenderToEn(null), '');
+
+      // Localization to Marathi
+      expect(BilingualHelper.localizeGender('Male', isMarathi: true), 'पुरुष');
+      expect(BilingualHelper.localizeGender('Female', isMarathi: true), 'स्त्री');
+      expect(BilingualHelper.localizeGender('Other', isMarathi: true), 'इतर');
+      expect(BilingualHelper.localizeGender('पुरुष', isMarathi: true), 'पुरुष');
+      expect(BilingualHelper.localizeGender('स्त्री', isMarathi: true), 'स्त्री');
+
+      // Localization to English
+      expect(BilingualHelper.localizeGender('Male', isMarathi: false), 'Male');
+      expect(BilingualHelper.localizeGender('Female', isMarathi: false), 'Female');
+      expect(BilingualHelper.localizeGender('Other', isMarathi: false), 'Other');
+      expect(BilingualHelper.localizeGender('पुरुष', isMarathi: false), 'Male');
+      expect(BilingualHelper.localizeGender('स्त्री', isMarathi: false), 'Female');
+    });
+  });
+
+  group('MarathiPhoneticInputFormatter Pre-filled Text Editing', () {
+    test('Typing in an already filled textfield does NOT clear existing text', () {
+      final formatter = MarathiPhoneticInputFormatter();
+
+      // Field starts with existing Marathi text "राहुल" (length 5)
+      var current = const TextEditingValue(
+        text: 'राहुल',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+
+      // User types 'k' at the end of "राहुल"
+      var next = const TextEditingValue(
+        text: 'राहुलk',
+        selection: TextSelection.collapsed(offset: 6),
+      );
+      current = formatter.formatEditUpdate(current, next);
+
+      // Must append transliterated "क" to "राहुल" -> "राहुलक", NOT clear to "क"
+      expect(current.text, 'राहुलक');
+      expect(current.selection.baseOffset, 6);
+
+      // User types 'i' -> "राहुलki" -> "राहुलकि"
+      next = const TextEditingValue(
+        text: 'राहुलकi',
+        selection: TextSelection.collapsed(offset: 7),
+      );
+      current = formatter.formatEditUpdate(current, next);
+
+      expect(current.text, 'राहुलकि');
+      expect(current.selection.baseOffset, 7);
+    });
+
+    test('Typing in the middle of pre-filled text preserves both prefix and suffix', () {
+      final formatter = MarathiPhoneticInputFormatter();
+
+      // Field starts with "पुणे शहर"
+      var current = const TextEditingValue(
+        text: 'पुणे शहर',
+        selection: TextSelection.collapsed(offset: 4), // right after 'पुणे'
+      );
+
+      // User types 'k' at offset 4
+      var next = const TextEditingValue(
+        text: 'पुणेk शहर',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+      current = formatter.formatEditUpdate(current, next);
+
+      expect(current.text, 'पुणेक शहर');
+
+      // User types 'i' -> "पुणेki शहर" -> "पुणेकि शहर"
+      next = const TextEditingValue(
+        text: 'पुणेकi शहर',
+        selection: TextSelection.collapsed(offset: 6),
+      );
+      current = formatter.formatEditUpdate(current, next);
+
+      expect(current.text, 'पुणेकि शहर');
+    });
+
+    test('Single character backspace removes only the last typed character', () {
+      final formatter = MarathiPhoneticInputFormatter();
+
+      var current = const TextEditingValue(
+        text: 'पुणेक',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+
+      // Backspace 'क' from "पुणेक"
+      var next = const TextEditingValue(
+        text: 'पुणे',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      current = formatter.formatEditUpdate(current, next);
+
+      expect(current.text, 'पुणे');
     });
   });
 }

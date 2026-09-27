@@ -149,17 +149,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   String _getDocStateCode(Map<String, dynamic> data) {
-    final stateCode = (data['state_code'] as String? ?? '').trim().toUpperCase();
+    final res = data['residence'] is Map ? data['residence'] as Map : null;
+    final stateCode = ((res?['state_code'] ?? data['state_code']) as String? ?? '').trim().toUpperCase();
     if (stateCode.isNotEmpty) return stateCode;
 
-    final state = (data['state'] as String? ?? '').trim().toLowerCase();
+    final state = ((res?['state_en'] ?? data['state']) as String? ?? '').trim().toLowerCase();
     if (state == 'maharashtra' || state == 'महाराष्ट्र') return 'MH';
     if (state == 'karnataka' || state == 'कर्नाटक') return 'KA';
     if (state == 'gujarat' || state == 'गुजरात') return 'GJ';
     if (state == 'goa' || state == 'गोवा') return 'GA';
     if (state == 'madhya pradesh' || state == 'मध्य प्रदेश') return 'MP';
 
-    final dCode = (data['district_code'] as String? ?? '').trim().toUpperCase();
+    final dCode = ((res?['district_code'] ?? data['district_code']) as String? ?? '').trim().toUpperCase();
     if (dCode.startsWith('KA-') || dCode == 'KA-BEL') return 'KA';
     if (dCode.startsWith('GJ-') || dCode == 'GJ-SUR') return 'GJ';
     if (dCode.contains('-')) {
@@ -167,7 +168,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       if (GeoConstants.states.any((s) => s.code == prefix)) return prefix;
     }
 
-    final dist = (data['district_en'] as String? ?? data['district'] as String? ?? '').trim().toLowerCase();
+    final dist = ((res?['district_en'] ?? data['district_en'] ?? data['district']) as String? ?? '').trim().toLowerCase();
     if (dist.contains('belgaum') || dist.contains('belagavi')) return 'KA';
     if (dist.contains('surat')) return 'GJ';
 
@@ -188,7 +189,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   String _getDocDistrictEn(Map<String, dynamic> data) {
-    final dCode = (data['district_code'] as String? ?? '').trim().toUpperCase();
+    final res = data['residence'] is Map ? data['residence'] as Map : null;
+    final dCode = ((res?['district_code'] ?? data['district_code']) as String? ?? '').trim().toUpperCase();
     if (dCode.isNotEmpty) {
       for (final s in GeoConstants.states) {
         for (final d in s.districts) {
@@ -196,7 +198,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         }
       }
     }
-    final rawDistrict = (data['district_en'] as String? ?? data['district'] as String? ?? '').trim();
+    final rawDistrict = ((res?['district_en'] ?? data['district_en'] ?? data['district']) as String? ?? '').trim();
     if (rawDistrict.isNotEmpty) {
       final normalized = rawDistrict.toLowerCase();
       for (final s in GeoConstants.states) {
@@ -222,12 +224,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   String _getDocTaluka(Map<String, dynamic> data) {
-    final sub = (data['sub_district'] as String? ?? '').trim();
-    if (sub.isNotEmpty) return sub;
-    final subMr = (data['sub_district_mr'] as String? ?? '').trim();
-    if (subMr.isNotEmpty) return subMr;
-    final tEn = (data['taluka_en'] as String? ?? data['taluka'] as String? ?? '').trim();
+    final res = data['residence'] is Map ? data['residence'] as Map : null;
+    final tEn = ((res?['taluka_en'] ?? data['taluka_en'] ?? data['sub_district'] ?? data['taluka']) as String? ?? '').trim();
     if (tEn.isNotEmpty) return tEn;
+    final tMr = ((res?['taluka_mr'] ?? data['taluka_mr'] ?? data['sub_district_mr']) as String? ?? '').trim();
+    if (tMr.isNotEmpty) return tMr;
     return '';
   }
 
@@ -315,14 +316,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             stream: FirebaseFirestore.instance.collection('members').snapshots(),
             builder: (context, snapshot) {
               final rawDocs = snapshot.data?.docs ?? [];
-              final registeredDocs = rawDocs.where((d) => d.data()['is_registered'] == true).toList();
+              final registeredDocs = rawDocs.where((d) {
+                final data = d.data();
+                return data['membership']?['is_registered'] == true || data['is_registered'] == true;
+              }).toList();
 
               final int totalRegistered = registeredDocs.isNotEmpty ? registeredDocs.length : rawRegistered;
 
               final issued = registeredDocs.where((d) {
                 final data = d.data();
-                return data['is_card_issued'] == true ||
-                    (data['member_id'] != null && data['member_id'] != 'PENDING');
+                final mem = data['membership'] is Map ? data['membership'] as Map : null;
+                final mId = mem?['member_id'] ?? data['member_id'];
+                return mem?['is_card_issued'] == true ||
+                    data['is_card_issued'] == true ||
+                    (mId != null && mId != 'PENDING');
               }).length;
               final pending = totalRegistered - issued;
 
@@ -374,27 +381,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               // 5. Live Search Query
               if (_overviewSearchQuery.isNotEmpty) {
                 filteredOverviewDocs = filteredOverviewDocs.where((doc) {
-                  final data = doc.data();
-                  final nameEn = (data['full_name_en'] as String? ?? data['name'] as String? ?? '').toLowerCase();
-                  final nameMr = (data['full_name_mr'] as String? ?? data['name_mr'] as String? ?? '').toLowerCase();
-                  final phone = (data['phone'] as String? ?? '').toLowerCase();
-                  final mId = (data['member_id'] as String? ?? '').toLowerCase();
-                  final taluka = (data['sub_district'] as String? ?? '').toLowerCase();
-                  final dist = (data['district_en'] as String? ?? data['district'] as String? ?? '').toLowerCase();
-                  final distMr = (data['district_mr'] as String? ?? '').toLowerCase();
-                  final village = (data['village'] as String? ?? data['city_or_village'] as String? ?? data['city'] as String? ?? '').toLowerCase();
-                  final address = (data['address'] as String? ?? '').toLowerCase();
-                  final blood = (data['blood_group'] as String? ?? '').toLowerCase();
-                  return nameEn.contains(_overviewSearchQuery) ||
-                      nameMr.contains(_overviewSearchQuery) ||
-                      phone.contains(_overviewSearchQuery) ||
-                      mId.contains(_overviewSearchQuery) ||
-                      taluka.contains(_overviewSearchQuery) ||
-                      dist.contains(_overviewSearchQuery) ||
-                      distMr.contains(_overviewSearchQuery) ||
-                      village.contains(_overviewSearchQuery) ||
-                      address.contains(_overviewSearchQuery) ||
-                      blood.contains(_overviewSearchQuery);
+                  final p = MemberProfile.fromFirestore(doc.id, doc.data());
+                  return p.fullNameEn.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.fullNameMr.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.phone.toLowerCase().contains(_overviewSearchQuery) ||
+                      (p.memberId ?? '').toLowerCase().contains(_overviewSearchQuery) ||
+                      p.subDistrict.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.districtEn.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.districtMr.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.village.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.villageMr.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.address.toLowerCase().contains(_overviewSearchQuery) ||
+                      p.bloodGroup.toLowerCase().contains(_overviewSearchQuery);
                 }).toList();
               }
 
@@ -2867,7 +2865,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         '👤 वैयक्तिक तपशील (Personal Details)',
                         [
                           _buildDetailRow('जन्मतारीख (DOB)', profile.dateOfBirth.isNotEmpty ? profile.dateOfBirth : '-', icon: Icons.cake_rounded),
-                          _buildDetailRow('लिंग (Gender)', profile.gender.isNotEmpty ? profile.gender : '-', icon: Icons.person_rounded),
+                          _buildDetailRow('लिंग (Gender)', profile.gender.isNotEmpty ? profile.getLocalizedGender(isMarathi: true) : '-', icon: Icons.person_rounded),
                           _buildDetailRow('रक्तगट (Blood Group)', profile.bloodGroup.isNotEmpty ? profile.bloodGroup : '-', icon: Icons.bloodtype_rounded, valueColor: Colors.redAccent),
                           _buildDetailRow('सद्यस्थिती (Living)', profile.living.isNotEmpty ? profile.living : '-', icon: Icons.home_work_rounded),
                           _buildDetailRow(
@@ -3306,14 +3304,33 @@ class _AppointOfficialDialogState extends State<_AppointOfficialDialog> {
 
   Future<void> _loadPromotedCandidates() async {
     try {
-      final snap = await FirebaseFirestore.instance
+      QuerySnapshot<Map<String, dynamic>> snap = await FirebaseFirestore.instance
           .collection('members')
-          .where('is_promoted', isEqualTo: true)
+          .where('membership.is_promoted', isEqualTo: true)
           .limit(100)
           .get();
 
+      if (snap.docs.isEmpty) {
+        snap = await FirebaseFirestore.instance
+            .collection('members')
+            .where('is_promoted', isEqualTo: true)
+            .limit(100)
+            .get();
+      }
+
       if (mounted) {
-        final list = snap.docs.map((d) => d.data()).toList();
+        final list = snap.docs.map((d) {
+          final p = MemberProfile.fromFirestore(d.id, d.data());
+          return {
+            'phone': p.phone,
+            'name': p.fullNameEn,
+            'name_mr': p.fullNameMr,
+            'district': p.districtEn,
+            'member_id': p.memberId ?? 'PENDING',
+            'photo_url': p.photoUrl,
+            ...d.data(),
+          };
+        }).toList();
         if (widget.initialCandidate != null) {
           final phone = widget.initialCandidate!['phone'];
           if (!list.any((m) => m['phone'] == phone)) {

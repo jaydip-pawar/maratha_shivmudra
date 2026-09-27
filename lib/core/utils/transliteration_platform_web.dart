@@ -15,8 +15,26 @@ Future<List<String>> fetchPlatformWebJsonp(String word) async {
 
   void cleanup() {
     try {
-      web.window.delete(cbName.toJS);
+      // In JSONP, NEVER delete the callback immediately upon completion or timeout!
+      // If a network response arrives late, calling an undefined function throws `ReferenceError`.
+      // Instead, replace it with a no-op function so late executions do nothing harmlessly.
+      final noop = (() {}).toJS;
+      try {
+        globalContext.setProperty(cbName.toJS, noop);
+      } catch (_) {}
+      try {
+        web.window.setProperty(cbName.toJS, noop);
+      } catch (_) {}
+
       scriptEl?.remove();
+
+      // Delay actual removal of the global callback by 60 seconds
+      Future.delayed(const Duration(seconds: 60), () {
+        try {
+          globalContext.delete(cbName.toJS);
+          web.window.delete(cbName.toJS);
+        } catch (_) {}
+      });
     } catch (_) {}
   }
 
@@ -49,6 +67,7 @@ Future<List<String>> fetchPlatformWebJsonp(String word) async {
   }).toJS;
 
   try {
+    globalContext.setProperty(cbName.toJS, jsCallback);
     web.window.setProperty(cbName.toJS, jsCallback);
 
     final script = web.document.createElement('script') as web.HTMLScriptElement;
@@ -67,7 +86,7 @@ Future<List<String>> fetchPlatformWebJsonp(String word) async {
     web.document.head?.appendChild(script);
 
     // Timeout safety
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (!completer.isCompleted) {
         completer.complete([]);
         cleanup();
@@ -76,6 +95,7 @@ Future<List<String>> fetchPlatformWebJsonp(String word) async {
   } catch (_) {
     if (!completer.isCompleted) {
       completer.complete([]);
+      cleanup();
     }
   }
 

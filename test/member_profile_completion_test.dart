@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:maratha_shivmudra/core/constants/district_constants.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 
 void main() {
@@ -19,7 +20,7 @@ void main() {
 
       final profile = MemberProfile.fromFirestore('9876543210', legacyData);
       expect(profile.fullNameMr, equals('दिनेश पवार'));
-      expect(profile.isNativeAddressSameAsCurrent, isTrue);
+      expect(profile.isNativeAddressSameAsCurrent, isFalse);
       expect(profile.isOrganDonorPledged, isFalse);
       expect(profile.hasOrganDonationConsentAnswered, isFalse);
       expect(profile.cropsProduced, isEmpty);
@@ -174,19 +175,18 @@ void main() {
       );
 
       final map = original.toFirestore();
-      expect(map['blood_group'], equals('AB+'));
-      expect(map['emergency_contact_name'], equals('अनिता पवार'));
-      expect(map['emergency_contact_phone'], equals('9822001133'));
-      expect(map['is_native_address_same'], isFalse);
-      expect(map['native_district'], equals('सांगली'));
-      expect(map['is_politically_active'], isTrue);
-      expect(map['political_party'], equals('राष्ट्रवादी'));
-      expect(map['is_associated_with_ngo'], isTrue);
-      expect(map['ngo_name'], equals('मराठा क्रांती मोर्चा'));
-      expect(map['is_organ_donor_pledged'], isTrue);
-      expect(map['has_organ_donation_answered'], isTrue);
-      expect(map['business_type'], equals('ऑटोमोबाईल सर्व्हिसिंग'));
-      expect(map['crops_produced'], equals(['ऊस', 'सोयाबीन']));
+      expect(map['emergency']['blood_group'], equals('AB+'));
+      expect(map['emergency']['contact_name'], equals('अनिता पवार'));
+      expect(map['emergency']['contact_phone'], equals('9822001133'));
+      expect(map['native_place']['is_same_as_current'], isFalse);
+      expect(map['native_place']['district'], equals('सांगली'));
+      expect(map['affiliations']['is_politically_active'], isTrue);
+      expect(map['affiliations']['political_party'], equals('राष्ट्रवादी'));
+      expect(map['affiliations']['is_associated_with_ngo'], isTrue);
+      expect(map['affiliations']['ngo_name'], equals('मराठा क्रांती मोर्चा'));
+      expect(map['pledges']['is_organ_donor_pledged'], isTrue);
+      expect(map['pledges']['has_answered_organ_donation'], isTrue);
+      expect(map['occupation']['business_details']['business_type'], equals('ऑटोमोबाईल सर्व्हिसिंग'));
 
       final restored = MemberProfile.fromFirestore(original.phone, map);
       expect(restored.bloodGroup, equals(original.bloodGroup));
@@ -197,6 +197,163 @@ void main() {
       expect(restored.isOrganDonorPledged, equals(original.isOrganDonorPledged));
       expect(restored.businessType, equals(original.businessType));
       expect(restored.cropsProduced, equals(original.cropsProduced));
+    });
+
+    test('Bilingual geo resolution resolves Thane -> Kalyan correctly and repairs legacy taluka_mr mismatch', () {
+      final docData = {
+        'personal': {
+          'first_name_en': 'Jaydip',
+          'first_name_mr': 'जयदीप',
+          'last_name_en': 'Pawar',
+          'last_name_mr': 'पवार',
+          'full_name_en': 'Jaydip Balaso Pawar',
+          'full_name_mr': 'जयदीप बालासो पवार',
+        },
+        'residence': {
+          'address_en': 'Near Station, Dombivali West',
+          'address_mr': 'स्टेशन जवळ, डोंबिवली पश्चिम',
+          'village_en': 'Dombivli',
+          'village_mr': 'डोंबिवली',
+          'taluka_en': 'Kalyan',
+          'taluka_mr': 'ठाणे', // previously erroneously saved as district name
+          'district_en': 'Thane',
+          'district_mr': 'ठाणे',
+          'district_code': 'THANE',
+          'state_en': 'Maharashtra',
+          'state_mr': 'ठाणे', // previously erroneously saved as district name
+          'state_code': 'MH',
+          'pincode': '421202',
+        },
+      };
+
+      final profile = MemberProfile.fromFirestore('8691955046', docData);
+      expect(profile.subDistrict, equals('Kalyan'));
+      // Verifies the bug is fixed and resolved to 'कल्याण' instead of 'ठाणे'
+      expect(profile.subDistrictMr, equals('कल्याण'));
+      expect(profile.districtEn, equals('Thane'));
+      expect(profile.districtMr, equals('ठाणे'));
+      expect(profile.state, equals('Maharashtra'));
+      expect(profile.stateMr, equals('महाराष्ट्र'));
+      expect(profile.village, equals('Dombivli'));
+      expect(profile.villageMr, equals('डोंबिवली'));
+
+      final firestoreMap = profile.toFirestore();
+      final residence = firestoreMap['residence'] as Map<String, dynamic>;
+      expect(residence['taluka_en'], equals('Kalyan'));
+      expect(residence['taluka_mr'], equals('कल्याण'));
+      expect(residence['district_en'], equals('Thane'));
+      expect(residence['district_mr'], equals('ठाणे'));
+      expect(residence['state_en'], equals('Maharashtra'));
+      expect(residence['state_mr'], equals('महाराष्ट्र'));
+    });
+
+    test('Native place state and taluka are NOT defaulted when user provides only district', () {
+      final profile = MemberProfile(
+        phone: '8691955046',
+        nativeDistrict: 'Ahilyanagar',
+        nativeState: '',
+        nativeTaluka: '',
+        isNativeAddressSameAsCurrent: false,
+      );
+
+      final map = profile.toFirestore();
+      final nativePlace = map['native_place'] as Map<String, dynamic>;
+      expect(nativePlace['is_same_as_current'], isFalse);
+      expect(nativePlace['district'], equals('Ahilyanagar'));
+      expect(nativePlace['district_en'], equals('Ahilyanagar'));
+      expect(nativePlace['state'], equals(''), reason: 'State must not default to Maharashtra');
+      expect(nativePlace['state_en'], equals(''), reason: 'State EN must not default to Maharashtra');
+      expect(nativePlace['taluka'], equals(''), reason: 'Taluka must not default to first taluka');
+      expect(nativePlace['taluka_en'], equals(''), reason: 'Taluka EN must not default to first taluka');
+    });
+
+    test('When isNativeAddressSameAsCurrent is true, native_place writes empty strings so Firestore merge clears stale values', () {
+      final profile = MemberProfile(
+        phone: '8691955046',
+        state: 'Maharashtra',
+        district: 'Thane',
+        subDistrict: 'Kalyan',
+        isNativeAddressSameAsCurrent: true,
+      );
+
+      final map = profile.toFirestore();
+      final nativePlace = map['native_place'] as Map<String, dynamic>;
+      expect(nativePlace['is_same_as_current'], isTrue);
+      expect(nativePlace['state'], equals(''));
+      expect(nativePlace['taluka'], equals(''));
+      expect(nativePlace['district'], equals(''));
+    });
+
+    test('DistrictConstants and GeoConstants do NOT default empty district to Pune or PUN', () {
+      expect(DistrictConstants.getCode(''), equals(''));
+      expect(DistrictConstants.getCode(null), equals(''));
+      expect(DistrictConstants.getNameEn(''), equals(''));
+      expect(DistrictConstants.getNameMr(''), equals(''));
+      expect(DistrictConstants.getNameEn(null), equals(''));
+      expect(DistrictConstants.getNameMr(null), equals(''));
+      expect(GeoConstants.getDistrictByCode('').code, equals(''));
+      expect(GeoConstants.getDistrictNameEn(''), equals(''));
+      expect(GeoConstants.getDistrictNameMr(''), equals(''));
+      expect(DistrictConstants.getByCode('').code, equals(''));
+    });
+
+    test('When user explicitly provides native state and taluka, they are preserved accurately', () {
+      final profile = MemberProfile(
+        phone: '8691955046',
+        nativeState: 'Maharashtra',
+        nativeDistrict: 'Pune',
+        nativeTaluka: 'Haveli',
+        isNativeAddressSameAsCurrent: false,
+      );
+
+      final map = profile.toFirestore();
+      final nativePlace = map['native_place'] as Map<String, dynamic>;
+      expect(nativePlace['is_same_as_current'], isFalse);
+      expect(nativePlace['state'], equals('Maharashtra'));
+      expect(nativePlace['district'], equals('Pune'));
+      expect(nativePlace['taluka'], equals('Haveli'));
+    });
+
+    test('When political active or NGO active is false, associated fields are cleared and empty in toFirestore and fromFirestore', () {
+      final profile = MemberProfile(
+        phone: '8691955046',
+        isPoliticallyActive: false,
+        politicalParty: 'Old Party',
+        politicalRole: 'Old Role',
+        isAssociatedWithNgo: false,
+        ngoName: 'Old NGO',
+        ngoRole: 'Old Role',
+      );
+
+      final map = profile.toFirestore();
+      expect(map['affiliations']['is_politically_active'], isFalse);
+      expect(map['affiliations']['political_party'], equals(''));
+      expect(map['affiliations']['political_role'], equals(''));
+      expect(map['affiliations']['is_associated_with_ngo'], isFalse);
+      expect(map['affiliations']['ngo_name'], equals(''));
+      expect(map['affiliations']['ngo_role'], equals(''));
+
+      // Test fromFirestore with legacy or previously filled data where flag is now false
+      final legacyData = {
+        'affiliations': {
+          'is_politically_active': false,
+          'political_party': 'Old Party',
+          'political_role': 'Old Role',
+          'is_associated_with_ngo': false,
+          'ngo_name': 'Old NGO',
+          'ngo_role': 'Old Role',
+        },
+        'political_party': 'Old Party Root',
+        'political_role': 'Old Role Root',
+      };
+
+      final parsed = MemberProfile.fromFirestore('8691955046', legacyData);
+      expect(parsed.isPoliticallyActive, isFalse);
+      expect(parsed.politicalParty, equals(''));
+      expect(parsed.politicalRole, equals(''));
+      expect(parsed.isAssociatedWithNgo, isFalse);
+      expect(parsed.ngoName, equals(''));
+      expect(parsed.ngoRole, equals(''));
     });
   });
 }

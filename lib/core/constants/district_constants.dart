@@ -6,7 +6,7 @@ abstract class DistrictConstants {
   static List<DistrictInfo> get districts => GeoConstants.defaultState.districts;
 
   static String getCode(String? rawDistrict) {
-    if (rawDistrict == null || rawDistrict.trim().isEmpty) return 'PUN';
+    if (rawDistrict == null || rawDistrict.trim().isEmpty) return '';
     final normalized = rawDistrict.trim().toLowerCase();
 
     // Check across all states in India
@@ -41,20 +41,27 @@ abstract class DistrictConstants {
       return 'GJ-SUR';
     }
 
-    return 'PUN';
+    return '';
   }
 
   static DistrictInfo getByCode(String code) {
+    if (code.trim().isEmpty) {
+      return const DistrictInfo(code: '', nameEn: '', nameMr: '', talukas: []);
+    }
     return GeoConstants.getDistrictByCode(code);
   }
 
   static String getNameEn(String? rawDistrict) {
+    if (rawDistrict == null || rawDistrict.trim().isEmpty) return '';
     final code = getCode(rawDistrict);
+    if (code.isEmpty) return '';
     return getByCode(code).nameEn;
   }
 
   static String getNameMr(String? rawDistrict) {
+    if (rawDistrict == null || rawDistrict.trim().isEmpty) return '';
     final code = getCode(rawDistrict);
+    if (code.isEmpty) return '';
     return getByCode(code).nameMr;
   }
 }

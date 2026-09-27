@@ -10,8 +10,11 @@ class GoogleTransliterationClient {
     if (word.trim().isEmpty) return [];
 
     if (kIsWeb) {
-      final webList = await fetchPlatformWebJsonp(word.trim());
-      if (webList.isNotEmpty) return webList;
+      try {
+        final webList = await fetchPlatformWebJsonp(word.trim());
+        if (webList.isNotEmpty) return webList;
+      } catch (_) {}
+      return [];
     }
 
     return _fetchHttp(word.trim());

@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:maratha_shivmudra/core/constants/district_constants.dart';
+import 'package:maratha_shivmudra/core/constants/geo_constants.dart';
+import 'package:maratha_shivmudra/core/utils/bilingual_helper.dart';
 
 class MemberProfile {
   final String phone;
@@ -18,12 +21,14 @@ class MemberProfile {
   final String village;
   final String villageMr;
   final String state;
+  final String stateMr;
   final String stateCode;
   final String district;
   final String districtCode;
   final String districtEn;
   final String districtMr;
   final String subDistrict;
+  final String subDistrictMr;
   final String pincode;
   final String email;
   final String living;
@@ -36,11 +41,16 @@ class MemberProfile {
   // Native Village Address (मूळ गाव पत्ता)
   final bool isNativeAddressSameAsCurrent;
   final String nativeAddress;
+  final String nativeAddressMr;
   final String nativeState;
+  final String nativeStateMr;
   final String nativeStateCode;
   final String nativeDistrict;
+  final String nativeDistrictMr;
   final String nativeTaluka;
+  final String nativeTalukaMr;
   final String nativeVillage;
+  final String nativeVillageMr;
   final String nativePincode;
 
   // Political Status (राजकीय क्षेत्रात सक्रिय आहात का?)
@@ -103,19 +113,21 @@ class MemberProfile {
     this.fullNameEnOverride = '',
     this.fullNameMrOverride = '',
     this.dateOfBirth = '',
-    this.gender = 'Male',
+    this.gender = '',
     this.address = '',
     this.addressMr = '',
     this.city = '',
     this.village = '',
     this.villageMr = '',
-    this.state = 'Maharashtra',
-    this.stateCode = 'MH',
-    this.district = 'Pune',
-    this.districtCode = 'PUN',
-    this.districtEn = 'Pune',
-    this.districtMr = 'पुणे',
+    this.state = '',
+    this.stateMr = '',
+    this.stateCode = '',
+    this.district = '',
+    this.districtCode = '',
+    this.districtEn = '',
+    this.districtMr = '',
     this.subDistrict = '',
+    this.subDistrictMr = '',
     this.pincode = '',
     this.email = '',
     this.living = '',
@@ -124,13 +136,18 @@ class MemberProfile {
     this.bloodGroup = '',
     this.emergencyContactName = '',
     this.emergencyContactPhone = '',
-    this.isNativeAddressSameAsCurrent = true,
+    this.isNativeAddressSameAsCurrent = false,
     this.nativeAddress = '',
-    this.nativeState = 'Maharashtra',
-    this.nativeStateCode = 'MH',
+    this.nativeAddressMr = '',
+    this.nativeState = '',
+    this.nativeStateMr = '',
+    this.nativeStateCode = '',
     this.nativeDistrict = '',
+    this.nativeDistrictMr = '',
     this.nativeTaluka = '',
+    this.nativeTalukaMr = '',
     this.nativeVillage = '',
+    this.nativeVillageMr = '',
     this.nativePincode = '',
     this.isPoliticallyActive,
     this.politicalParty = '',
@@ -194,6 +211,10 @@ class MemberProfile {
     final parts = [firstName, middleName, lastName].where((s) => s.trim().isNotEmpty).join(' ');
     if (parts.isNotEmpty) return parts;
     return 'सदस्य';
+  }
+
+  String getLocalizedGender({bool isMarathi = true}) {
+    return BilingualHelper.localizeGender(gender, isMarathi: isMarathi);
   }
 
   /// Calculate completion percentage (0.0 to 1.0)
@@ -328,111 +349,342 @@ class MemberProfile {
   }
 
   factory MemberProfile.fromFirestore(String phone, Map<String, dynamic> data) {
-    final distEn = data['district_en'] as String? ?? data['district'] as String? ?? 'Pune';
-    final distMr = data['district_mr'] as String? ?? 'पुणे';
-    final distCode = data['district_code'] as String? ?? 'PUN';
+    // Nested sections extractors (supports both new nested maps and legacy flat documents)
+    Map<String, dynamic> getSection(String key) {
+      final val = data[key];
+      if (val is Map<String, dynamic>) return val;
+      if (val is Map) return Map<String, dynamic>.from(val);
+      return const <String, dynamic>{};
+    }
 
-    final isIssued = data['is_card_issued'] as bool? ??
-        (data['member_id'] != null &&
-            data['member_id'] != 'PENDING' &&
-            data['member_id'].toString().trim().isNotEmpty);
+    final personal = getSection('personal');
+    final residence = getSection('residence');
+    final nativePlace = getSection('native_place');
+    final occupation = getSection('occupation');
+    final emergency = getSection('emergency');
+    final affiliations = getSection('affiliations');
+    final pledges = getSection('pledges');
+    final official = getSection('official');
+    final media = getSection('media');
+    final membership = getSection('membership');
+
+    final jobDetails = getSectionFrom(occupation, 'job_details');
+    final businessDetails = getSectionFrom(occupation, 'business_details');
+    final studentDetails = getSectionFrom(occupation, 'student_details');
+    final farmingDetails = getSectionFrom(occupation, 'farming_details');
+    final unemployedDetails = getSectionFrom(occupation, 'unemployed_details');
+
+    String distEn = residence['district_en'] as String? ??
+        data['district_en'] as String? ??
+        data['district'] as String? ??
+        '';
+    String distMr = residence['district_mr'] as String? ??
+        data['district_mr'] as String? ??
+        '';
+    String distCode = residence['district_code'] as String? ??
+        data['district_code'] as String? ??
+        '';
+
+    if (distEn.isEmpty && distMr.isNotEmpty) {
+      distEn = DistrictConstants.getNameEn(distMr);
+      if (distCode.isEmpty) distCode = DistrictConstants.getCode(distMr);
+    } else if (distMr.isEmpty && distEn.isNotEmpty) {
+      distMr = DistrictConstants.getNameMr(distEn);
+      if (distCode.isEmpty) distCode = DistrictConstants.getCode(distEn);
+    }
+
+    final rawStateEn = residence['state_en'] as String? ?? data['state_en'] as String? ?? data['state'] as String? ?? '';
+    final rawStateCode = residence['state_code'] as String? ?? data['state_code'] as String? ?? '';
+    final stateInfo = GeoConstants.findState(rawStateEn.isNotEmpty ? rawStateEn : rawStateCode);
+    final stateEn = rawStateEn.isNotEmpty ? rawStateEn : (stateInfo?.nameEn ?? '');
+    String rawStateMr = residence['state_mr'] as String? ?? data['state_mr'] as String? ?? '';
+    if ((rawStateMr.isEmpty || (rawStateMr == distMr && distEn.toLowerCase() != rawStateEn.toLowerCase())) && stateInfo != null && rawStateEn.isNotEmpty) {
+      rawStateMr = stateInfo.nameMr;
+    }
+
+    final rawTalukaEn = residence['taluka_en'] as String? ??
+        data['taluka_en'] as String? ??
+        data['sub_district'] as String? ??
+        data['subDistrict'] as String? ??
+        data['taluka'] as String? ??
+        '';
+
+    final matchedTaluka = (distEn.isNotEmpty && stateInfo != null)
+        ? stateInfo.districts
+            .firstWhere(
+              (d) => d.code.toLowerCase() == distCode.toLowerCase() || d.nameEn.toLowerCase() == distEn.toLowerCase() || d.nameMr == distMr,
+              orElse: () => DistrictInfo(code: distCode, nameEn: distEn, nameMr: distMr),
+            )
+            .talukas
+            .firstWhere(
+              (t) => t.nameEn.toLowerCase() == rawTalukaEn.toLowerCase() || t.nameMr == rawTalukaEn,
+              orElse: () => TalukaInfo(nameEn: rawTalukaEn, nameMr: rawTalukaEn),
+            )
+        : TalukaInfo(nameEn: rawTalukaEn, nameMr: rawTalukaEn);
+
+    String rawTalukaMr = residence['taluka_mr'] as String? ?? data['taluka_mr'] as String? ?? '';
+    if ((rawTalukaMr.isEmpty || (rawTalukaMr == distMr && rawTalukaEn.toLowerCase() != distEn.toLowerCase())) && rawTalukaEn.isNotEmpty) {
+      rawTalukaMr = matchedTaluka.nameMr;
+    }
+
+    final rawNativeStateEn = nativePlace['state_en'] as String? ?? nativePlace['state'] as String? ?? data['native_state'] as String? ?? '';
+    final rawNativeStateCode = nativePlace['state_code'] as String? ?? data['native_state_code'] as String? ?? '';
+    final nativeStateInfo = GeoConstants.findState(rawNativeStateEn.isNotEmpty ? rawNativeStateEn : rawNativeStateCode);
+    final nativeStateEn = rawNativeStateEn.isNotEmpty ? rawNativeStateEn : (nativeStateInfo?.nameEn ?? '');
+
+    final nativeDistEn = nativePlace['district_en'] as String? ?? nativePlace['district'] as String? ?? data['native_district'] as String? ?? '';
+    final nativeDistMr = nativePlace['district_mr'] as String? ?? data['native_district_mr'] as String? ?? (nativeDistEn.isNotEmpty ? DistrictConstants.getNameMr(nativeDistEn) : '');
+
+    String rawNativeStateMr = nativePlace['state_mr'] as String? ?? data['native_state_mr'] as String? ?? '';
+    if ((rawNativeStateMr.isEmpty || (rawNativeStateMr == nativeDistMr && nativeDistEn.toLowerCase() != rawNativeStateEn.toLowerCase())) && nativeStateInfo != null && rawNativeStateEn.isNotEmpty) {
+      rawNativeStateMr = nativeStateInfo.nameMr;
+    }
+    final nativeStateMr = rawNativeStateMr.isNotEmpty ? rawNativeStateMr : (nativeStateInfo?.nameMr ?? '');
+
+    final rawNativeTalukaEn = nativePlace['taluka_en'] as String? ?? nativePlace['taluka'] as String? ?? data['native_taluka'] as String? ?? '';
+    final matchedNativeTaluka = (nativeDistEn.isNotEmpty && nativeStateInfo != null)
+        ? nativeStateInfo.districts
+            .firstWhere(
+              (d) => d.nameEn.toLowerCase() == nativeDistEn.toLowerCase() || d.nameMr == nativeDistEn || d.nameMr == nativeDistMr,
+              orElse: () => DistrictInfo(code: '', nameEn: nativeDistEn, nameMr: nativeDistMr),
+            )
+            .talukas
+            .firstWhere(
+              (t) => t.nameEn.toLowerCase() == rawNativeTalukaEn.toLowerCase() || t.nameMr == rawNativeTalukaEn,
+              orElse: () => TalukaInfo(nameEn: rawNativeTalukaEn, nameMr: rawNativeTalukaEn),
+            )
+        : TalukaInfo(nameEn: rawNativeTalukaEn, nameMr: rawNativeTalukaEn);
+    String rawNativeTalukaMr = nativePlace['taluka_mr'] as String? ?? data['native_taluka_mr'] as String? ?? '';
+    if ((rawNativeTalukaMr.isEmpty || (rawNativeTalukaMr == nativeDistMr && rawNativeTalukaEn.toLowerCase() != nativeDistEn.toLowerCase())) && rawNativeTalukaEn.isNotEmpty) {
+      rawNativeTalukaMr = matchedNativeTaluka.nameMr;
+    }
+    final nativeTalukaMr = rawNativeTalukaMr;
+
+    final nativeVillageEn = nativePlace['village_en'] as String? ?? nativePlace['village'] as String? ?? data['native_village'] as String? ?? '';
+    final nativeVillageMr = nativePlace['village_mr'] as String? ?? data['native_village_mr'] as String? ?? '';
+
+    final nativeAddressEn = nativePlace['address_en'] as String? ?? nativePlace['address'] as String? ?? data['native_address'] as String? ?? '';
+    final nativeAddressMr = nativePlace['address_mr'] as String? ?? data['native_address_mr'] as String? ?? '';
+
+    final memId = membership['member_id'] as String? ?? data['member_id'] as String?;
+    final isIssued = membership['is_card_issued'] as bool? ??
+        data['is_card_issued'] as bool? ??
+        (memId != null &&
+            memId != 'PENDING' &&
+            memId.toString().trim().isNotEmpty);
 
     List<String> parsedCrops = [];
-    if (data['crops_produced'] != null) {
-      if (data['crops_produced'] is List) {
-        parsedCrops = (data['crops_produced'] as List).map((e) => e.toString()).toList();
-      } else if (data['crops_produced'] is String && (data['crops_produced'] as String).isNotEmpty) {
-        parsedCrops = (data['crops_produced'] as String).split(',').map((s) => s.trim()).toList();
+    final rawCrops = farmingDetails['crops_produced'] ?? data['crops_produced'];
+    if (rawCrops != null) {
+      if (rawCrops is List) {
+        parsedCrops = rawCrops.map((e) => e.toString()).toList();
+      } else if (rawCrops is String && rawCrops.isNotEmpty) {
+        parsedCrops = rawCrops.split(',').map((s) => s.trim()).toList();
       }
     }
 
     return MemberProfile(
       phone: phone,
-      firstName: data['first_name_en'] as String? ?? data['first_name'] as String? ?? data['firstName'] as String? ?? '',
-      middleName: data['middle_name_en'] as String? ?? data['middle_name'] as String? ?? data['middleName'] as String? ?? '',
-      lastName: data['last_name_en'] as String? ?? data['last_name'] as String? ?? data['lastName'] as String? ?? '',
-      firstNameMr: data['first_name_mr'] as String? ?? data['firstName_mr'] as String? ?? '',
-      middleNameMr: data['middle_name_mr'] as String? ?? '',
-      lastNameMr: data['last_name_mr'] as String? ?? data['lastName_mr'] as String? ?? '',
-      fullNameEnOverride: data['full_name_en'] as String? ?? data['name'] as String? ?? '',
-      fullNameMrOverride: data['full_name_mr'] as String? ?? data['name_mr'] as String? ?? '',
-      dateOfBirth: data['date_of_birth'] as String? ?? data['dateOfBirth'] as String? ?? '',
-      gender: data['gender'] as String? ?? 'Male',
-      address: data['address'] as String? ?? '',
-      addressMr: data['address_mr'] as String? ?? data['addressMr'] as String? ?? '',
-      city: data['city'] as String? ?? '',
-      village: data['village'] as String? ?? '',
-      villageMr: data['village_mr'] as String? ?? '',
-      state: data['state'] as String? ?? 'Maharashtra',
-      stateCode: data['state_code'] as String? ?? 'MH',
+      firstName: personal['first_name_en'] as String? ??
+          data['first_name_en'] as String? ??
+          data['first_name'] as String? ??
+          data['firstName'] as String? ??
+          '',
+      middleName: personal['middle_name_en'] as String? ??
+          data['middle_name_en'] as String? ??
+          data['middle_name'] as String? ??
+          data['middleName'] as String? ??
+          '',
+      lastName: personal['last_name_en'] as String? ??
+          data['last_name_en'] as String? ??
+          data['last_name'] as String? ??
+          data['lastName'] as String? ??
+          '',
+      firstNameMr: personal['first_name_mr'] as String? ??
+          data['first_name_mr'] as String? ??
+          data['firstName_mr'] as String? ??
+          '',
+      middleNameMr: personal['middle_name_mr'] as String? ??
+          data['middle_name_mr'] as String? ??
+          '',
+      lastNameMr: personal['last_name_mr'] as String? ??
+          data['last_name_mr'] as String? ??
+          data['lastName_mr'] as String? ??
+          '',
+      fullNameEnOverride: personal['full_name_en'] as String? ??
+          data['full_name_en'] as String? ??
+          data['name'] as String? ??
+          '',
+      fullNameMrOverride: personal['full_name_mr'] as String? ??
+          data['full_name_mr'] as String? ??
+          data['name_mr'] as String? ??
+          '',
+      dateOfBirth: personal['date_of_birth'] as String? ??
+          data['date_of_birth'] as String? ??
+          data['dateOfBirth'] as String? ??
+          '',
+      gender: BilingualHelper.normalizeGenderToEn(
+          personal['gender'] as String? ?? data['gender'] as String? ?? ''),
+      address: residence['address_en'] as String? ??
+          data['address'] as String? ??
+          '',
+      addressMr: residence['address_mr'] as String? ??
+          data['address_mr'] as String? ??
+          data['addressMr'] as String? ??
+          '',
+      city: residence['village_en'] as String? ??
+          data['city'] as String? ??
+          '',
+      village: residence['village_en'] as String? ??
+          data['village'] as String? ??
+          '',
+      villageMr: residence['village_mr'] as String? ??
+          data['village_mr'] as String? ??
+          '',
+      state: stateEn,
+      stateMr: rawStateMr,
+      stateCode: rawStateCode.isNotEmpty ? rawStateCode : (stateInfo?.code ?? ''),
       district: distEn,
       districtCode: distCode,
       districtEn: distEn,
       districtMr: distMr,
-      subDistrict: data['sub_district'] as String? ?? data['subDistrict'] as String? ?? '',
-      pincode: data['pincode'] as String? ?? '',
-      email: data['email'] as String? ?? '',
-      living: data['living'] as String? ?? '',
-      profession: data['profession'] as String? ?? '',
-      education: data['education'] as String? ?? '',
-      bloodGroup: data['blood_group'] as String? ?? data['bloodGroup'] as String? ?? '',
-      emergencyContactName: data['emergency_contact_name'] as String? ?? '',
-      emergencyContactPhone: data['emergency_contact_phone'] as String? ?? '',
+      subDistrict: rawTalukaEn,
+      subDistrictMr: rawTalukaMr,
+      pincode: residence['pincode'] as String? ??
+          data['pincode'] as String? ??
+          '',
+      email: personal['email'] as String? ??
+          data['email'] as String? ??
+          '',
+      living: personal['living_status'] as String? ??
+          data['living'] as String? ??
+          '',
+      profession: occupation['category_mr'] as String? ??
+          occupation['category'] as String? ??
+          data['profession'] as String? ??
+          data['living'] as String? ??
+          '',
+      education: studentDetails['qualification'] as String? ??
+          data['education'] as String? ??
+          '',
+      bloodGroup: emergency['blood_group'] as String? ??
+          data['blood_group'] as String? ??
+          data['bloodGroup'] as String? ??
+          '',
+      emergencyContactName: emergency['contact_name'] as String? ??
+          data['emergency_contact_name'] as String? ??
+          '',
+      emergencyContactPhone: emergency['contact_phone'] as String? ??
+          data['emergency_contact_phone'] as String? ??
+          '',
 
-      isNativeAddressSameAsCurrent: data['is_native_address_same'] as bool? ?? true,
-      nativeAddress: data['native_address'] as String? ?? '',
-      nativeState: data['native_state'] as String? ?? 'Maharashtra',
-      nativeStateCode: data['native_state_code'] as String? ?? 'MH',
-      nativeDistrict: data['native_district'] as String? ?? '',
-      nativeTaluka: data['native_taluka'] as String? ?? '',
-      nativeVillage: data['native_village'] as String? ?? '',
-      nativePincode: data['native_pincode'] as String? ?? '',
+      isNativeAddressSameAsCurrent: nativePlace['is_same_as_current'] as bool? ??
+          data['is_native_address_same'] as bool? ??
+          false,
+      nativeAddress: nativeAddressEn,
+      nativeAddressMr: nativeAddressMr,
+      nativeState: nativeStateEn,
+      nativeStateMr: nativeStateMr,
+      nativeStateCode: rawNativeStateCode.isNotEmpty ? rawNativeStateCode : (nativeStateInfo?.code ?? ''),
+      nativeDistrict: nativeDistEn,
+      nativeDistrictMr: nativeDistMr,
+      nativeTaluka: rawNativeTalukaEn,
+      nativeTalukaMr: nativeTalukaMr,
+      nativeVillage: nativeVillageEn,
+      nativeVillageMr: nativeVillageMr,
+      nativePincode: nativePlace['pincode'] as String? ??
+          data['native_pincode'] as String? ??
+          '',
 
-      isPoliticallyActive: data['is_politically_active'] as bool?,
-      politicalParty: data['political_party'] as String? ?? '',
-      politicalRole: data['political_role'] as String? ?? '',
+      isPoliticallyActive: affiliations['is_politically_active'] as bool? ??
+          data['is_politically_active'] as bool?,
+      politicalParty: (affiliations['is_politically_active'] == true || data['is_politically_active'] == true)
+          ? (affiliations['political_party'] as String? ?? data['political_party'] as String? ?? '')
+          : '',
+      politicalRole: (affiliations['is_politically_active'] == true || data['is_politically_active'] == true)
+          ? (affiliations['political_role'] as String? ?? data['political_role'] as String? ?? '')
+          : '',
 
-      isAssociatedWithNgo: data['is_associated_with_ngo'] as bool?,
-      ngoName: data['ngo_name'] as String? ?? '',
-      ngoRole: data['ngo_role'] as String? ?? '',
+      isAssociatedWithNgo: affiliations['is_associated_with_ngo'] as bool? ??
+          data['is_associated_with_ngo'] as bool?,
+      ngoName: (affiliations['is_associated_with_ngo'] == true || data['is_associated_with_ngo'] == true)
+          ? (affiliations['ngo_name'] as String? ?? data['ngo_name'] as String? ?? '')
+          : '',
+      ngoRole: (affiliations['is_associated_with_ngo'] == true || data['is_associated_with_ngo'] == true)
+          ? (affiliations['ngo_role'] as String? ?? data['ngo_role'] as String? ?? '')
+          : '',
 
-      isOrganDonorPledged: data['is_organ_donor_pledged'] as bool? ?? false,
-      hasOrganDonationConsentAnswered: data['has_organ_donation_answered'] as bool? ?? (data['is_organ_donor_pledged'] != null),
+      isOrganDonorPledged: pledges['is_organ_donor_pledged'] as bool? ??
+          data['is_organ_donor_pledged'] as bool? ??
+          false,
+      hasOrganDonationConsentAnswered: pledges['has_answered_organ_donation'] as bool? ??
+          data['has_organ_donation_answered'] as bool? ??
+          (pledges['is_organ_donor_pledged'] != null || data['is_organ_donor_pledged'] != null),
 
-      jobDesignation: data['job_designation'] as String? ?? '',
-      jobCompany: data['job_company'] as String? ?? '',
-      businessType: data['business_type'] as String? ?? '',
-      educationLevel: data['education_level'] as String? ?? '',
-      educationOther: data['education_other'] as String? ?? '',
+      jobDesignation: jobDetails['designation'] as String? ??
+          data['job_designation'] as String? ??
+          '',
+      jobCompany: jobDetails['company'] as String? ??
+          data['job_company'] as String? ??
+          '',
+      businessType: businessDetails['business_type'] as String? ??
+          data['business_type'] as String? ??
+          '',
+      educationLevel: studentDetails['qualification'] as String? ??
+          data['education_level'] as String? ??
+          '',
+      educationOther: studentDetails['qualification_other'] as String? ??
+          data['education_other'] as String? ??
+          '',
       cropsProduced: parsedCrops,
-      unemployedEducation: data['unemployed_education'] as String? ?? '',
-      unemployedPreferredSector: data['unemployed_preferred_sector'] as String? ?? '',
-      unemployedSkills: data['unemployed_skills'] as String? ?? '',
-      willingToRelocate: data['willing_to_relocate'] as bool?,
+      unemployedEducation: unemployedDetails['highest_qualification'] as String? ??
+          data['unemployed_education'] as String? ??
+          '',
+      unemployedPreferredSector: unemployedDetails['preferred_sector'] as String? ??
+          data['unemployed_preferred_sector'] as String? ??
+          '',
+      unemployedSkills: unemployedDetails['skills_and_licenses'] as String? ??
+          data['unemployed_skills'] as String? ??
+          '',
+      willingToRelocate: unemployedDetails['willing_to_relocate'] as bool? ??
+          data['willing_to_relocate'] as bool?,
 
-      roleType: data['role_type'] as String? ?? 'member',
-      designation: data['designation'] as String? ?? '',
-      isOfficial: data['is_official'] as bool? ?? false,
-      officialLevel: data['official_level'] as String?,
-      officialRoleCode: data['official_role_code'] as String?,
-      officialRoleMr: data['official_role_mr'] as String?,
-      officialRoleEn: data['official_role_en'] as String?,
-      officialFullTitleMr: data['official_full_title_mr'] as String?,
-      officialFullTitleEn: data['official_full_title_en'] as String?,
-      officialVibhag: data['official_vibhag'] as String?,
-      officialDistrict: data['official_district'] as String?,
-      officialTaluka: data['official_taluka'] as String?,
-      photoBase64: data['photo_base64'] as String? ?? data['photo'] as String?,
-      photoUrl: data['photo_url'] as String?,
-      memberId: data['member_id'] as String?,
-      referralId: data['referral_id'] as String? ?? 'NONE',
+      roleType: membership['role_type'] as String? ??
+          data['role_type'] as String? ??
+          'member',
+      designation: membership['designation'] as String? ??
+          data['designation'] as String? ??
+          '',
+      isOfficial: official['is_official'] as bool? ??
+          data['is_official'] as bool? ??
+          false,
+      officialLevel: official['level'] as String? ?? data['official_level'] as String?,
+      officialRoleCode: official['role_code'] as String? ?? data['official_role_code'] as String?,
+      officialRoleMr: official['role_name_mr'] as String? ?? data['official_role_mr'] as String?,
+      officialRoleEn: official['role_name_en'] as String? ?? data['official_role_en'] as String?,
+      officialFullTitleMr: official['full_title_mr'] as String? ?? data['official_full_title_mr'] as String?,
+      officialFullTitleEn: official['full_title_en'] as String? ?? data['official_full_title_en'] as String?,
+      officialVibhag: official['jurisdiction_vibhag'] as String? ?? data['official_vibhag'] as String?,
+      officialDistrict: official['jurisdiction_district'] as String? ?? data['official_district'] as String?,
+      officialTaluka: official['jurisdiction_taluka'] as String? ?? data['official_taluka'] as String?,
+      photoBase64: media['photo_base64'] as String? ?? data['photo_base64'] as String? ?? data['photo'] as String?,
+      photoUrl: media['photo_url'] as String? ?? data['photo_url'] as String?,
+      memberId: memId,
+      referralId: membership['referral_id'] as String? ?? data['referral_id'] as String? ?? 'NONE',
       isCardIssued: isIssued,
-      isRegistered: data['is_registered'] as bool? ?? true,
-      isValid: data['is_valid'] as bool? ?? true,
-      cardIssuedDate: _parseDateTime(data['card_issued_date']),
-      createdAt: _parseDateTime(data['created_at']),
-      updatedAt: _parseDateTime(data['updated_at']),
+      isRegistered: membership['is_registered'] as bool? ?? data['is_registered'] as bool? ?? true,
+      isValid: membership['is_valid'] as bool? ?? data['is_valid'] as bool? ?? true,
+      cardIssuedDate: _parseDateTime(membership['card_issued_date'] ?? data['card_issued_date']),
+      createdAt: _parseDateTime(data['created_at'] ?? membership['created_at']),
+      updatedAt: _parseDateTime(data['updated_at'] ?? membership['updated_at']),
     );
+  }
+
+  static Map<String, dynamic> getSectionFrom(Map<String, dynamic> parent, String key) {
+    final val = parent[key];
+    if (val is Map<String, dynamic>) return val;
+    if (val is Map) return Map<String, dynamic>.from(val);
+    return const <String, dynamic>{};
   }
 
   static DateTime? _parseDateTime(dynamic value) {
@@ -448,93 +700,268 @@ class MemberProfile {
     return null;
   }
 
+  /// Converts the profile into the clean, nested Firestore structure
   Map<String, dynamic> toFirestore() {
-    return {
-      'phone': phone,
-      'first_name_en': firstName,
-      'middle_name_en': middleName,
-      'last_name_en': lastName,
-      'full_name_en': fullNameEn,
-      'first_name_mr': firstNameMr,
-      'middle_name_mr': middleNameMr,
-      'last_name_mr': lastNameMr,
-      'full_name_mr': fullNameMr,
-      'name': fullNameEn,
-      'name_mr': fullNameMr,
-      'date_of_birth': dateOfBirth,
-      'gender': gender,
-      'address': address,
-      'address_mr': addressMr,
-      'city': city,
-      'village': village,
-      'village_mr': villageMr,
-      'sub_district': subDistrict,
-      'state': state,
-      'state_code': stateCode,
-      'district': district,
-      'district_code': districtCode,
-      'district_en': districtEn,
-      'district_mr': districtMr,
-      'pincode': pincode,
-      'email': email,
-      'living': living,
-      'profession': profession,
-      'education': education,
-      'blood_group': bloodGroup,
-      'emergency_contact_name': emergencyContactName,
-      'emergency_contact_phone': emergencyContactPhone,
+    final occRaw = (profession.isNotEmpty ? profession : living).trim();
+    final occLower = occRaw.toLowerCase();
 
-      'is_native_address_same': isNativeAddressSameAsCurrent,
-      'native_address': nativeAddress,
-      'native_state': nativeState,
-      'native_state_code': nativeStateCode,
-      'native_district': nativeDistrict,
-      'native_taluka': nativeTaluka,
-      'native_village': nativeVillage,
-      'native_pincode': nativePincode,
+    final isUnemployed = occLower.contains('बेरोजगार') ||
+        occLower.contains('unemployed') ||
+        occLower.contains('शोधत') ||
+        occLower == 'job-seeker';
+    final isSelfEmployed = occLower.contains('स्वयंरोजगार') || occLower.contains('self-employed');
+    final isJob = (occLower.contains('नोकरी') || occLower.contains('employed') || occLower == 'job') && !isUnemployed;
+    final isBusiness = occLower.contains('व्यवसाय') || occLower.contains('business');
+    final isStudent = occLower.contains('विद्यार्थी') || occLower.contains('student') || occLower.contains('शिक्षण');
+    final isFarmer = occLower.contains('शेती') || occLower.contains('farmer') || occLower.contains('शेतकरी');
+    final isRetired = occLower.contains('निवृत्त') || occLower.contains('retired');
+    final isHomemaker = occLower.contains('गृह') || occLower.contains('homemaker');
 
-      if (isPoliticallyActive != null) 'is_politically_active': isPoliticallyActive,
-      'political_party': politicalParty,
-      'political_role': politicalRole,
+    String occCategory = 'other';
+    if (isSelfEmployed) {
+      occCategory = 'self_employed';
+    } else if (isJob) {
+      occCategory = 'job';
+    } else if (isBusiness) {
+      occCategory = 'business';
+    } else if (isStudent) {
+      occCategory = 'student';
+    } else if (isFarmer) {
+      occCategory = 'farmer';
+    } else if (isUnemployed) {
+      occCategory = 'unemployed';
+    } else if (isRetired) {
+      occCategory = 'retired';
+    } else if (isHomemaker) {
+      occCategory = 'homemaker';
+    }
 
-      if (isAssociatedWithNgo != null) 'is_associated_with_ngo': isAssociatedWithNgo,
-      'ngo_name': ngoName,
-      'ngo_role': ngoRole,
+    final Map<String, dynamic> occMap = {
+      'category': occCategory,
+      'category_mr': occRaw,
+    };
 
-      'is_organ_donor_pledged': isOrganDonorPledged,
-      'has_organ_donation_answered': hasOrganDonationConsentAnswered,
+    if (isJob || isSelfEmployed) {
+      if (jobDesignation.isNotEmpty || jobCompany.isNotEmpty || !isSelfEmployed) {
+        occMap['job_details'] = {
+          'designation': jobDesignation,
+          'company': jobCompany,
+        };
+      }
+    }
+    if (isBusiness || isSelfEmployed) {
+      if (businessType.isNotEmpty || !isSelfEmployed) {
+        occMap['business_details'] = {
+          'business_type': businessType,
+        };
+      }
+    }
+    if (isStudent) {
+      occMap['student_details'] = {
+        'qualification': educationLevel.isNotEmpty ? educationLevel : education,
+        'qualification_other': educationOther,
+      };
+    }
+    if (isFarmer || cropsProduced.isNotEmpty) {
+      occMap['farming_details'] = {
+        'crops_produced': cropsProduced,
+      };
+    }
+    if (isUnemployed) {
+      occMap['unemployed_details'] = {
+        'highest_qualification': unemployedEducation,
+        if (unemployedEducation.startsWith('Other') || unemployedEducation.startsWith('इतर'))
+          'qualification_other': unemployedEducation,
+        'preferred_sector': unemployedPreferredSector,
+        'skills_and_licenses': unemployedSkills,
+        'willing_to_relocate': willingToRelocate ?? true,
+      };
+    }
 
-      'job_designation': jobDesignation,
-      'job_company': jobCompany,
-      'business_type': businessType,
-      'education_level': educationLevel,
-      'education_other': educationOther,
-      'crops_produced': cropsProduced,
-      'unemployed_education': unemployedEducation,
-      'unemployed_preferred_sector': unemployedPreferredSector,
-      'unemployed_skills': unemployedSkills,
-      if (willingToRelocate != null) 'willing_to_relocate': willingToRelocate,
+    final stateObj = GeoConstants.findState(state.isNotEmpty ? state : stateCode);
+    final stateEnVal = state.isNotEmpty ? state : (stateObj?.nameEn ?? '');
+    final stateMrVal = (stateMr.isNotEmpty && stateMr != districtMr) ? stateMr : (stateObj?.nameMr ?? '');
+    final stateCodeVal = stateCode.isNotEmpty ? stateCode : (stateObj?.code ?? '');
 
-      'role_type': roleType,
-      'designation': designation,
+    final distObj = (district.isNotEmpty || districtEn.isNotEmpty || districtMr.isNotEmpty || districtCode.isNotEmpty) && stateObj != null
+        ? stateObj.districts.firstWhere(
+            (d) =>
+                d.code.toLowerCase() == districtCode.toLowerCase() ||
+                d.nameEn.toLowerCase() == districtEn.toLowerCase() ||
+                d.nameEn.toLowerCase() == district.toLowerCase() ||
+                d.nameMr == districtMr,
+            orElse: () => DistrictInfo(code: districtCode, nameEn: districtEn.isNotEmpty ? districtEn : district, nameMr: districtMr),
+          )
+        : null;
+    final distEnVal = districtEn.isNotEmpty ? districtEn : (distObj?.nameEn ?? (district.isNotEmpty ? district : ''));
+    final distMrVal = districtMr.isNotEmpty ? districtMr : (distObj?.nameMr ?? '');
+    final distCodeVal = districtCode.isNotEmpty ? districtCode : (distObj?.code ?? '');
+
+    final talukaObj = distObj != null && (subDistrict.isNotEmpty || subDistrictMr.isNotEmpty)
+        ? distObj.talukas.firstWhere(
+            (t) =>
+                t.nameEn.toLowerCase() == subDistrict.toLowerCase() ||
+                t.nameMr == subDistrict ||
+                (subDistrictMr.isNotEmpty && t.nameMr == subDistrictMr),
+            orElse: () => TalukaInfo(
+              nameEn: subDistrict,
+              nameMr: subDistrictMr.isNotEmpty ? subDistrictMr : subDistrict,
+            ),
+          )
+        : null;
+    final talukaEnVal = subDistrict.isNotEmpty ? subDistrict : (talukaObj?.nameEn ?? '');
+    final talukaMrVal = (subDistrictMr.isNotEmpty && subDistrictMr != districtMr)
+        ? subDistrictMr
+        : (talukaObj?.nameMr ?? '');
+
+    final nativeStateObj = GeoConstants.findState(nativeState.isNotEmpty ? nativeState : nativeStateCode);
+    final nativeStateEnVal = nativeState.isNotEmpty ? nativeState : (nativeStateObj?.nameEn ?? '');
+    final nativeStateMrVal = nativeStateMr.isNotEmpty ? nativeStateMr : (nativeStateObj?.nameMr ?? '');
+    final nativeStateCodeVal = nativeStateCode.isNotEmpty ? nativeStateCode : (nativeStateObj?.code ?? '');
+
+    final nativeDistObj = (nativeDistrict.isNotEmpty || nativeDistrictMr.isNotEmpty)
+        ? (nativeStateObj != null
+            ? nativeStateObj.districts.firstWhere(
+                (d) =>
+                    d.nameEn.toLowerCase() == nativeDistrict.toLowerCase() ||
+                    d.nameMr == nativeDistrict ||
+                    (nativeDistrictMr.isNotEmpty && d.nameMr == nativeDistrictMr),
+                orElse: () => DistrictInfo(code: '', nameEn: nativeDistrict, nameMr: nativeDistrictMr.isNotEmpty ? nativeDistrictMr : nativeDistrict),
+              )
+            : DistrictConstants.districts.firstWhere(
+                (d) =>
+                    d.nameEn.toLowerCase() == nativeDistrict.toLowerCase() ||
+                    d.code.toLowerCase() == nativeDistrict.toLowerCase() ||
+                    d.nameMr == nativeDistrict ||
+                    (nativeDistrictMr.isNotEmpty && d.nameMr == nativeDistrictMr),
+                orElse: () => DistrictInfo(code: '', nameEn: nativeDistrict, nameMr: nativeDistrictMr.isNotEmpty ? nativeDistrictMr : nativeDistrict),
+              ))
+        : null;
+    final nativeDistEnVal = nativeDistrict.isNotEmpty ? nativeDistrict : (nativeDistObj?.nameEn ?? '');
+    final nativeDistMrVal = nativeDistrictMr.isNotEmpty ? nativeDistrictMr : (nativeDistObj?.nameMr ?? '');
+
+    final nativeTalukaObj = nativeDistObj != null && (nativeTaluka.isNotEmpty || nativeTalukaMr.isNotEmpty)
+        ? nativeDistObj.talukas.firstWhere(
+            (t) =>
+                t.nameEn.toLowerCase() == nativeTaluka.toLowerCase() ||
+                t.nameMr == nativeTaluka ||
+                (nativeTalukaMr.isNotEmpty && t.nameMr == nativeTalukaMr),
+            orElse: () => TalukaInfo(nameEn: nativeTaluka, nameMr: nativeTalukaMr.isNotEmpty ? nativeTalukaMr : nativeTaluka),
+          )
+        : null;
+    final nativeTalukaEnVal = nativeTaluka.isNotEmpty ? nativeTaluka : (nativeTalukaObj?.nameEn ?? '');
+    final nativeTalukaMrVal = nativeTalukaMr.isNotEmpty ? nativeTalukaMr : (nativeTalukaObj?.nameMr ?? '');
+
+    final Map<String, dynamic> nativeMap = {
+      'is_same_as_current': isNativeAddressSameAsCurrent,
+      'address': isNativeAddressSameAsCurrent ? '' : nativeAddress,
+      'address_en': isNativeAddressSameAsCurrent ? '' : nativeAddress,
+      'address_mr': isNativeAddressSameAsCurrent
+          ? ''
+          : (nativeAddressMr.isNotEmpty ? nativeAddressMr : (nativeAddress.isNotEmpty ? BilingualHelper.transliterateToMarathi(nativeAddress) : '')),
+      'village': isNativeAddressSameAsCurrent ? '' : nativeVillage,
+      'village_en': isNativeAddressSameAsCurrent ? '' : nativeVillage,
+      'village_mr': isNativeAddressSameAsCurrent
+          ? ''
+          : (nativeVillageMr.isNotEmpty ? nativeVillageMr : (nativeVillage.isNotEmpty ? BilingualHelper.transliterateToMarathi(nativeVillage) : '')),
+      'taluka': isNativeAddressSameAsCurrent ? '' : (nativeTaluka.isNotEmpty ? nativeTalukaEnVal : ''),
+      'taluka_en': isNativeAddressSameAsCurrent ? '' : (nativeTaluka.isNotEmpty ? nativeTalukaEnVal : ''),
+      'taluka_mr': isNativeAddressSameAsCurrent ? '' : ((nativeTaluka.isNotEmpty || nativeTalukaMr.isNotEmpty) ? nativeTalukaMrVal : ''),
+      'district': isNativeAddressSameAsCurrent ? '' : (nativeDistrict.isNotEmpty ? nativeDistEnVal : ''),
+      'district_en': isNativeAddressSameAsCurrent ? '' : (nativeDistrict.isNotEmpty ? nativeDistEnVal : ''),
+      'district_mr': isNativeAddressSameAsCurrent ? '' : ((nativeDistrict.isNotEmpty || nativeDistrictMr.isNotEmpty) ? nativeDistMrVal : ''),
+      'state': isNativeAddressSameAsCurrent ? '' : (nativeState.isNotEmpty ? nativeStateEnVal : ''),
+      'state_en': isNativeAddressSameAsCurrent ? '' : (nativeState.isNotEmpty ? nativeStateEnVal : ''),
+      'state_mr': isNativeAddressSameAsCurrent ? '' : (nativeState.isNotEmpty ? nativeStateMrVal : ''),
+      'state_code': isNativeAddressSameAsCurrent ? '' : (nativeState.isNotEmpty ? nativeStateCodeVal : ''),
+      'pincode': isNativeAddressSameAsCurrent ? '' : nativePincode,
+    };
+
+    final bool polActive = isPoliticallyActive == true;
+    final bool ngoActive = isAssociatedWithNgo == true;
+    final Map<String, dynamic> affiliationsMap = {
+      'is_politically_active': isPoliticallyActive,
+      'political_party': polActive ? politicalParty : '',
+      'political_role': polActive ? politicalRole : '',
+      'is_associated_with_ngo': isAssociatedWithNgo,
+      'ngo_name': ngoActive ? ngoName : '',
+      'ngo_role': ngoActive ? ngoRole : '',
+    };
+
+    final Map<String, dynamic> officialMap = {
       'is_official': isOfficial,
-      if (officialLevel != null) 'official_level': officialLevel,
-      if (officialRoleCode != null) 'official_role_code': officialRoleCode,
-      if (officialRoleMr != null) 'official_role_mr': officialRoleMr,
-      if (officialRoleEn != null) 'official_role_en': officialRoleEn,
-      if (officialFullTitleMr != null) 'official_full_title_mr': officialFullTitleMr,
-      if (officialFullTitleEn != null) 'official_full_title_en': officialFullTitleEn,
-      if (officialVibhag != null) 'official_vibhag': officialVibhag,
-      if (officialDistrict != null) 'official_district': officialDistrict,
-      if (officialTaluka != null) 'official_taluka': officialTaluka,
-      if (photoBase64 != null) 'photo_base64': photoBase64,
-      if (photoUrl != null) 'photo_url': photoUrl,
-      if (memberId != null) 'member_id': memberId,
-      'referral_id': referralId ?? 'NONE',
-      'is_profile_complete': isProfileComplete,
-      'is_card_issued': isCardIssued,
-      'is_registered': isRegistered,
-      'is_valid': isValid,
+      if (isOfficial) ...{
+        if (officialLevel != null) 'level': officialLevel,
+        if (officialRoleCode != null) 'role_code': officialRoleCode,
+        if (officialRoleMr != null) 'role_name_mr': officialRoleMr,
+        if (officialRoleEn != null) 'role_name_en': officialRoleEn,
+        if (officialFullTitleMr != null) 'full_title_mr': officialFullTitleMr,
+        if (officialFullTitleEn != null) 'full_title_en': officialFullTitleEn,
+        if (officialVibhag != null) 'jurisdiction_vibhag': officialVibhag,
+        if (officialDistrict != null) 'jurisdiction_district': officialDistrict,
+        if (officialTaluka != null) 'jurisdiction_taluka': officialTaluka,
+      },
+    };
+
+    return {
+      'personal': {
+        'first_name_en': firstName,
+        'first_name_mr': firstNameMr,
+        'middle_name_en': middleName,
+        'middle_name_mr': middleNameMr,
+        'last_name_en': lastName,
+        'last_name_mr': lastNameMr,
+        'full_name_en': fullNameEn,
+        'full_name_mr': fullNameMr,
+        'date_of_birth': dateOfBirth,
+        'gender': gender.isNotEmpty ? BilingualHelper.normalizeGenderToEn(gender) : null,
+        'email': email,
+        'living_status': living.isNotEmpty ? living : null,
+      },
+      'residence': {
+        'address_en': address,
+        'address_mr': addressMr.isNotEmpty ? addressMr : BilingualHelper.transliterateToMarathi(address),
+        'village_en': village.isNotEmpty ? village : city,
+        'village_mr': villageMr.isNotEmpty ? villageMr : BilingualHelper.transliterateToMarathi(village.isNotEmpty ? village : city),
+        'taluka_en': talukaEnVal,
+        'taluka_mr': talukaMrVal,
+        'district_en': distEnVal,
+        'district_mr': distMrVal,
+        'district_code': distCodeVal,
+        'state_en': stateEnVal,
+        'state_mr': stateMrVal,
+        'state_code': stateCodeVal,
+        'pincode': pincode,
+      },
+      'native_place': nativeMap,
+      'occupation': occMap,
+      'emergency': {
+        'blood_group': bloodGroup.isNotEmpty ? bloodGroup : null,
+        'contact_name': emergencyContactName.isNotEmpty ? emergencyContactName : null,
+        'contact_phone': emergencyContactPhone.isNotEmpty ? emergencyContactPhone : null,
+      },
+      'affiliations': affiliationsMap,
+      'pledges': {
+        'has_answered_organ_donation': hasOrganDonationConsentAnswered,
+        'is_organ_donor_pledged': isOrganDonorPledged,
+      },
+      'official': officialMap,
+      'media': {
+        if (photoBase64 != null) 'photo_base64': photoBase64,
+        if (photoUrl != null) 'photo_url': photoUrl,
+      },
+      'membership': {
+        'phone': phone,
+        'member_id': memberId ?? 'PENDING',
+        'referral_id': referralId ?? 'NONE',
+        'role_type': roleType,
+        'designation': designation,
+        'is_registered': isRegistered,
+        'is_profile_complete': isProfileComplete,
+        'is_card_issued': isCardIssued,
+        if (cardIssuedDate != null) 'card_issued_date': cardIssuedDate,
+        'is_valid': isValid,
+      },
       'updated_at': FieldValue.serverTimestamp(),
     };
   }
@@ -557,12 +984,14 @@ class MemberProfile {
     String? village,
     String? villageMr,
     String? state,
+    String? stateMr,
     String? stateCode,
     String? district,
     String? districtCode,
     String? districtEn,
     String? districtMr,
     String? subDistrict,
+    String? subDistrictMr,
     String? pincode,
     String? email,
     String? living,
@@ -573,11 +1002,16 @@ class MemberProfile {
     String? emergencyContactPhone,
     bool? isNativeAddressSameAsCurrent,
     String? nativeAddress,
+    String? nativeAddressMr,
     String? nativeState,
+    String? nativeStateMr,
     String? nativeStateCode,
     String? nativeDistrict,
+    String? nativeDistrictMr,
     String? nativeTaluka,
+    String? nativeTalukaMr,
     String? nativeVillage,
+    String? nativeVillageMr,
     String? nativePincode,
     bool? isPoliticallyActive,
     String? politicalParty,
@@ -626,12 +1060,14 @@ class MemberProfile {
       village: village ?? this.village,
       villageMr: villageMr ?? this.villageMr,
       state: state ?? this.state,
+      stateMr: stateMr ?? this.stateMr,
       stateCode: stateCode ?? this.stateCode,
       district: district ?? this.district,
       districtCode: districtCode ?? this.districtCode,
       districtEn: districtEn ?? this.districtEn,
       districtMr: districtMr ?? this.districtMr,
       subDistrict: subDistrict ?? this.subDistrict,
+      subDistrictMr: subDistrictMr ?? this.subDistrictMr,
       pincode: pincode ?? this.pincode,
       email: email ?? this.email,
       living: living ?? this.living,
@@ -642,11 +1078,16 @@ class MemberProfile {
       emergencyContactPhone: emergencyContactPhone ?? this.emergencyContactPhone,
       isNativeAddressSameAsCurrent: isNativeAddressSameAsCurrent ?? this.isNativeAddressSameAsCurrent,
       nativeAddress: nativeAddress ?? this.nativeAddress,
+      nativeAddressMr: nativeAddressMr ?? this.nativeAddressMr,
       nativeState: nativeState ?? this.nativeState,
+      nativeStateMr: nativeStateMr ?? this.nativeStateMr,
       nativeStateCode: nativeStateCode ?? this.nativeStateCode,
       nativeDistrict: nativeDistrict ?? this.nativeDistrict,
+      nativeDistrictMr: nativeDistrictMr ?? this.nativeDistrictMr,
       nativeTaluka: nativeTaluka ?? this.nativeTaluka,
+      nativeTalukaMr: nativeTalukaMr ?? this.nativeTalukaMr,
       nativeVillage: nativeVillage ?? this.nativeVillage,
+      nativeVillageMr: nativeVillageMr ?? this.nativeVillageMr,
       nativePincode: nativePincode ?? this.nativePincode,
       isPoliticallyActive: isPoliticallyActive ?? this.isPoliticallyActive,
       politicalParty: politicalParty ?? this.politicalParty,

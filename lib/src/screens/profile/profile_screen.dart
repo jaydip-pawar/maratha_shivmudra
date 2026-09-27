@@ -7,6 +7,7 @@ import 'package:maratha_shivmudra/core/di/di.dart';
 import 'package:maratha_shivmudra/core/models/member_profile.dart';
 import 'package:maratha_shivmudra/core/routes/route_config.gr.dart';
 import 'package:maratha_shivmudra/core/services/member_profile_service.dart';
+import 'package:maratha_shivmudra/core/services/user_session_service.dart';
 import 'package:maratha_shivmudra/core/utils/colors.dart';
 import 'package:maratha_shivmudra/main.dart';
 import 'package:maratha_shivmudra/src/screens/profile/widgets/profile_content_view.dart';
@@ -41,15 +42,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _profile = null;
           _isLoading = false;
         });
+        context.router.replaceAll([const LandingRoute()]);
       }
       return;
     }
 
     final profile = await MemberProfileService.instance.getProfile(_userPhone);
 
+    if (profile == null) {
+      // User was deleted or profile does not exist in database!
+      await UserSessionService.instance.forceDestruct(
+        reason: 'ProfileScreen: Profile for $_userPhone not found in Firestore',
+      );
+      if (mounted) {
+        setState(() {
+          _profile = null;
+          _isLoading = false;
+        });
+        context.router.replaceAll([const LandingRoute()]);
+      }
+      return;
+    }
+
     if (mounted) {
       setState(() {
-        _profile = profile ?? MemberProfile(phone: _userPhone);
+        _profile = profile;
         _isLoading = false;
       });
     }
@@ -62,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, locale, _) {
         final isMarathi = locale.languageCode == 'mr';
 
-        if (_isLoading) {
+        if (_isLoading || _profile == null) {
           return const Scaffold(
             backgroundColor: AppColors.darkBg,
             body: Center(
@@ -71,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        final p = _profile ?? MemberProfile(phone: _userPhone);
+        final p = _profile!;
 
         return Scaffold(
           backgroundColor: AppColors.darkBg,

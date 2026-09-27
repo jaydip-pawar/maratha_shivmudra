@@ -69,8 +69,15 @@ class _LandingSideDrawerState extends State<LandingSideDrawer> {
         }
         final userPhone = phone.trim();
         final p = await MemberProfileService.instance.getProfile(userPhone);
+        if (p == null) {
+          await UserSessionService.instance.forceDestruct(
+            reason: 'SideDrawer: Member profile not found in DB',
+          );
+          if (mounted) setState(() => _profile = null);
+          return;
+        }
         if (mounted) {
-          setState(() => _profile = p ?? MemberProfile(phone: userPhone));
+          setState(() => _profile = p);
         }
       } else {
         if (mounted) setState(() => _profile = null);

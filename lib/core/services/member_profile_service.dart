@@ -65,13 +65,36 @@ class MemberProfileService {
         memberId: issuedMemberId ?? 'PENDING',
         district: profile.districtEn,
         taluka: profile.subDistrict,
+        village: '${profile.village} ${profile.villageMr}'.trim(),
       );
 
       final dataToSave = profile.toFirestore();
       dataToSave['search_tokens'] = searchTokens;
       if (issuedMemberId != null && issuedMemberId != 'PENDING') {
-        dataToSave['member_id'] = issuedMemberId;
-        dataToSave['is_card_issued'] = true;
+        final membership = dataToSave['membership'] as Map<String, dynamic>? ?? {};
+        membership['member_id'] = issuedMemberId;
+        membership['is_card_issued'] = true;
+        dataToSave['membership'] = membership;
+      }
+
+      // If political or NGO active is false, explicitly delete associated fields from Firestore
+      if (profile.isPoliticallyActive == false) {
+        dataToSave['political_party'] = FieldValue.delete();
+        dataToSave['political_role'] = FieldValue.delete();
+        final aff = dataToSave['affiliations'] as Map<String, dynamic>?;
+        if (aff != null) {
+          aff['political_party'] = FieldValue.delete();
+          aff['political_role'] = FieldValue.delete();
+        }
+      }
+      if (profile.isAssociatedWithNgo == false) {
+        dataToSave['ngo_name'] = FieldValue.delete();
+        dataToSave['ngo_role'] = FieldValue.delete();
+        final aff = dataToSave['affiliations'] as Map<String, dynamic>?;
+        if (aff != null) {
+          aff['ngo_name'] = FieldValue.delete();
+          aff['ngo_role'] = FieldValue.delete();
+        }
       }
 
       await memberRef.set(dataToSave, SetOptions(merge: true));
@@ -88,7 +111,9 @@ class MemberProfileService {
     try {
       final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
       await _db.collection('members').doc(cleanPhone).set({
-        'photo_base64': base64String,
+        'media': {
+          'photo_base64': base64String,
+        },
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       return true;
@@ -108,10 +133,16 @@ class MemberProfileService {
     try {
       final snap = await _db
           .collection('members')
+          .where('membership.is_registered', isEqualTo: true)
+          .count()
+          .get();
+      if ((snap.count ?? 0) > 0) return snap.count ?? 0;
+      final fallbackSnap = await _db
+          .collection('members')
           .where('is_registered', isEqualTo: true)
           .count()
           .get();
-      return snap.count ?? 0;
+      return fallbackSnap.count ?? 0;
     } catch (e) {
       debugPrint('Error getting registered count via query: $e');
       return 0;
@@ -123,11 +154,18 @@ class MemberProfileService {
     try {
       final snap = await _db
           .collection('members')
+          .where('membership.is_registered', isEqualTo: true)
+          .where('membership.is_card_issued', isEqualTo: true)
+          .count()
+          .get();
+      if ((snap.count ?? 0) > 0) return snap.count ?? 0;
+      final fallbackSnap = await _db
+          .collection('members')
           .where('is_registered', isEqualTo: true)
           .where('is_card_issued', isEqualTo: true)
           .count()
           .get();
-      return snap.count ?? 0;
+      return fallbackSnap.count ?? 0;
     } catch (e) {
       debugPrint('Error getting issued card count via query: $e');
       return 0;
@@ -143,16 +181,16 @@ class MemberProfileService {
     try {
       Query<Map<String, dynamic>> q = _db
           .collection('members')
-          .where('is_registered', isEqualTo: true);
+          .where('membership.is_registered', isEqualTo: true);
 
       if (stateCode != null && stateCode.isNotEmpty && stateCode != 'ALL_INDIA') {
-        q = q.where('state_code', isEqualTo: stateCode);
+        q = q.where('residence.state_code', isEqualTo: stateCode);
       }
       if (districtEn != null && districtEn.isNotEmpty && districtEn != 'ALL') {
-        q = q.where('district_en', isEqualTo: districtEn);
+        q = q.where('residence.district_en', isEqualTo: districtEn);
       }
       if (taluka != null && taluka.isNotEmpty && taluka != 'ALL') {
-        q = q.where('sub_district', isEqualTo: taluka);
+        q = q.where('residence.taluka_en', isEqualTo: taluka);
       }
 
       final snap = await q.count().get();

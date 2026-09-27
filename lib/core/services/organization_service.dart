@@ -93,20 +93,23 @@ class OrganizationService {
       batch.set(
         memberRef,
         {
-          'is_official': true,
-          'is_promoted': false,
-          'official_level': level.code,
-          'official_role_code': role.code,
-          'official_role_mr': role.nameMr,
-          'official_role_en': role.nameEn,
-          'official_full_title_mr': official.fullTitleMr,
-          'official_full_title_en': official.fullTitleEn,
-          'official_vibhag': vibhag,
-          'official_vibhag_mr': vibhagMr,
-          'official_district': district,
-          'official_district_mr': districtMr,
-          'official_taluka': taluka,
-          'official_taluka_mr': talukaMr,
+          'official': {
+            'is_official': true,
+            'level': level.code,
+            'role_code': role.code,
+            'role_name_mr': role.nameMr,
+            'role_name_en': role.nameEn,
+            'full_title_mr': official.fullTitleMr,
+            'full_title_en': official.fullTitleEn,
+            'jurisdiction_vibhag': vibhag,
+            'jurisdiction_district': district,
+            'jurisdiction_taluka': taluka,
+            'appointment_date': FieldValue.serverTimestamp(),
+          },
+          'membership': {
+            'is_promoted': false,
+          },
+          'updated_at': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
@@ -123,8 +126,11 @@ class OrganizationService {
   Future<bool> promoteMember(String phone) async {
     try {
       await _membersCol.doc(phone).set({
-        'is_promoted': true,
-        'promoted_at': FieldValue.serverTimestamp(),
+        'membership': {
+          'is_promoted': true,
+          'promoted_at': FieldValue.serverTimestamp(),
+        },
+        'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       return true;
     } catch (e) {
@@ -137,8 +143,11 @@ class OrganizationService {
   Future<bool> unpromoteMember(String phone) async {
     try {
       await _membersCol.doc(phone).set({
-        'is_promoted': false,
-        'promoted_at': FieldValue.delete(),
+        'membership': {
+          'is_promoted': false,
+          'promoted_at': null,
+        },
+        'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       return true;
     } catch (e) {
