@@ -4,5 +4,5 @@ mixin NetworkConstant {
   static const String products = 'products';
   
   static const String twoFactorBaseUrl =
-      'https://2factor.in/API/V1/3957ddbf-681b-11f1-8f15-0200cd936042/SMS/';
+      'https://2factor.in/API/V1/8b93ac75-5c3c-11f1-8352-0200cd936042/SMS/';
 }
